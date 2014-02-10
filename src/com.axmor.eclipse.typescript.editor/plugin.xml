@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            name="TypeScript Editor"
+            extensions="ts"
+            icon="icons/typescript_file.png"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            class="com.axmor.eclipse.typescript.editor.TypeScriptEditor"
+            default="true"
+            id="com.axmor.eclipse.typescript.editor.TypeScriptEditor">
+      </editor>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.editors.documentProviders">
+      <provider
+            class="com.axmor.eclipse.typescript.editor.TypeScriptDocumentProvider"
+            inputTypes="org.eclipse.ui.IStorageEditorInput"
+            extensions="ts"
+            id="com.axmor.eclipse.typescript.editor.TypeScriptDocumentProvider">
+      </provider>
+   </extension>
+   
+   <extension
+       point="org.eclipse.ui.contexts">
+      <context
+           name="Editing TypeScript Source"
+           description="Editing TypeScript Source Context"
+           parentId="org.eclipse.ui.textEditorScope"
+           id="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope">
+      </context>
+   </extension>
+	
+   <extension
+      point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectors">
+      <hyperlinkDetector
+           activate="true"
+           class="com.axmor.eclipse.typescript.editor.TypeScriptElementHyperlinkDetector"
+	       description="A hyperlink detector for Type Script source code elements"
+    	   id="com.axmor.eclipse.typescript.AntElementHyperlinkDetector"
+	       name="TypeScript Element"
+    	   targetId="com.axmor.eclipse.typescript.sourceFiles">
+      </hyperlinkDetector>
+   </extension>
+     
+   <extension
+       point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectorTargets">
+  	  <target
+           id="com.axmor.eclipse.typescript.sourceFiles"
+    	   name="Type Script Editor">
+           <context type="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+  	  </target>
+   </extension>
+	
+   <extension point="org.eclipse.ui.commands">
+      <category
+           name="Source"
+           description="TypeScript Source Actions"
+           id="com.axmor.eclipse.typescript.category.source">
+      </category>
+      <category
+           name="Navigate"
+           description="TypeScript Navigate Actions"
+           id="com.axmor.eclipse.typescript.category.navigate">
+      </category>
+      <command 
+           name="Toggle Comment" 
+           description="Toggle comment the selected lines"
+           categoryId="com.axmor.eclipse.typescript.category.source" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.ToggleCommentHandler" 
+           id="com.axmor.eclipse.typescript.edit.toggle.comment" />
+      <command 
+           name="Open Declaration" 
+           description="Open an editor on the selected element"
+           categoryId="com.axmor.eclipse.typescript.category.navigate" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.OpenHandler" 
+           id="com.axmor.eclipse.typescript.navigate.open.declaration" />
+      <command 
+           name="Format" 
+           description="Format the selected text"
+           categoryId="com.axmor.eclipse.typescript.category.source" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.FormatCodeHandler" 
+           id="com.axmor.eclipse.typescript.edit.format" />
+   </extension>
+	
+    <extension point="org.eclipse.ui.bindings">
+      <key
+           sequence="M1+/"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.edit.toggle.comment"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="F3"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.navigate.open.declaration"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="M1+M2+F"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.edit.format"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+    </extension>
+	      
+</plugin>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+    <extension point="org.eclipse.core.resources.natures" id="typescriptNature" name="Typescript Project">
+        <runtime>
+            <run class="com.axmor.eclipse.typescript.builder.builder.TypescriptNature"/>
+        </runtime>
+        <builder id="com.axmor.eclipse.typescript.builder.typescriptBuilder"/>
+    </extension>
+
+    <extension point="org.eclipse.core.resources.builders" id="typescriptBuilder" name="Typescript Project Builder">
+        <builder hasNature="true">
+            <run class="com.axmor.eclipse.typescript.builder.builder.TypescriptBuilder"/>
+        </builder>
+    </extension>
+
+    <extension point="org.eclipse.core.resources.markers" id="tsProblem" name="TypeScript Problem">
+        <super type="org.eclipse.core.resources.problemmarker"/>
+        <persistent value="true"/>
+    </extension>
+ 
+	<extension point="org.eclipse.ui.commands">
+	   <command name="Add TypeScript Support" defaultHandler="com.axmor.eclipse.typescript.builder.builder.AddTypeScriptSupportHandler" id="com.axmor.eclipse.typescript.builder.AddTypeScriptSupport"/>
+       <command name="Remove TypeScript Support" defaultHandler="com.axmor.eclipse.typescript.builder.builder.RemoveTypeScriptSupportHandler" id="com.axmor.eclipse.typescript.builder.RemoveTypeScriptSupport"/>
+	</extension>
+	
+    <extension point="org.eclipse.ui.menus">
+        <menuContribution locationURI="popup:org.eclipse.ui.projectConfigure">
+            <command label="Add TypeScript Support" commandId="com.axmor.eclipse.typescript.builder.AddTypeScriptSupport">
+                <visibleWhen>
+                    <with variable="activeMenuSelection">
+                        <iterate ifEmpty="false">
+                            <adapt type="org.eclipse.core.resources.IProject">
+                                <and>
+                                    <test property="org.eclipse.core.resources.open" value="true"/> 
+                                    <not><test property="org.eclipse.core.resources.projectNature" value="com.axmor.eclipse.typescript.builder.typescriptNature"/></not>
+                                </and>
+                            </adapt>
+                        </iterate>
+                    </with> 
+                </visibleWhen>
+            </command>
+            <command label="Remove TypeScript Support" commandId="com.axmor.eclipse.typescript.builder.RemoveTypeScriptSupport">
+                <visibleWhen>
+                    <with variable="activeMenuSelection">
+                        <iterate ifEmpty="false">
+                            <adapt type="org.eclipse.core.resources.IProject">
+                                <and>
+                                    <test property="org.eclipse.core.resources.open" value="true"/> 
+                                    <test property="org.eclipse.core.resources.projectNature" value="com.axmor.eclipse.typescript.builder.typescriptNature"/>
+                                </and>
+                            </adapt>
+                        </iterate>
+                    </with> 
+                </visibleWhen>
+            </command>
+        </menuContribution>
+    </extension>
+
+    <extension id="typeScriptPropertyPage" point="org.eclipse.ui.propertyPages">
+        <page id="com.axmor.eclipse.typescript.builder.ui.TypescriptProjectPropertiesPage" class="com.axmor.eclipse.typescript.builder.ui.TypescriptProjectPropertiesPage" name="TypeScript">
+            <enabledWhen>
+                <adapt type="org.eclipse.core.resources.IProject">
+                    <test property="org.eclipse.core.resources.projectNature" value="com.axmor.eclipse.typescript.builder.typescriptNature"/>
+                </adapt>
+            </enabledWhen>
+        </page> 
+    </extension>
+</plugin>

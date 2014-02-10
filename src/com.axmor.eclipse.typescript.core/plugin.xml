@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<extension
+	      point="org.eclipse.ui.preferencePages">
+    <page
+          class="com.axmor.eclipse.typescript.core.ui.TypescriptWorkbenchPreferencePage"
+          id="com.axmor.eclipse.typescript.core.ui.TypescriptWorkbenchPreferencePage"
+          name="TypeScript">
+    </page>
+
+    <page
+          class="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
+          id="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
+          category="com.axmor.eclipse.typescript.core.ui.TypescriptWorkbenchPreferencePage"
+          name="Editor">
+    </page>
+	</extension>
+</plugin>
