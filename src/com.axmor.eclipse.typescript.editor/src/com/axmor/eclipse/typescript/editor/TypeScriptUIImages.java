@@ -75,6 +75,7 @@ public class TypeScriptUIImages {
         declareRegistryImage(TypeScriptImageKeys.IMG_METHOD_PUBLIC, ICONS_PATH + "methpub_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_PACKAGE, ICONS_PATH + "package_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_STATIC, ICONS_PATH + "static_co.gif");
+        declareRegistryImage(TypeScriptImageKeys.IMG_SEARCH_REF_OBJ, ICONS_PATH + "search_ref_obj.gif");
     }
 
     /**

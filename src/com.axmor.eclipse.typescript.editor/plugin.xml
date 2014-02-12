@@ -55,6 +55,17 @@
   	  </target>
    </extension>
 	
+   <extension
+    	id="TypeScriptSearchResultPage"
+        point="org.eclipse.search.searchResultViewPages">
+		<viewPage
+			id="com.axmor.eclipse.typescript.TypeScriptSearchResultPage"
+			searchResultClass="com.axmor.eclipse.typescript.editor.search.TypeScriptSearchResult"
+			helpContextId="com.axmor.eclipse.typescript.search_result"
+			class="com.axmor.eclipse.typescript.editor.search.TypeScriptSearchResultPage">
+		</viewPage>
+   </extension>
+	
    <extension point="org.eclipse.ui.commands">
       <category
            name="Source"
@@ -65,6 +76,11 @@
            name="Navigate"
            description="TypeScript Navigate Actions"
            id="com.axmor.eclipse.typescript.category.navigate">
+      </category>
+      <category
+           name="Search"
+           description="TypeScript Search Actions"
+           id="com.axmor.eclipse.typescript.category.search">
       </category>
       <command 
            name="Toggle Comment" 
@@ -84,6 +100,12 @@
            categoryId="com.axmor.eclipse.typescript.category.source" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.FormatCodeHandler" 
            id="com.axmor.eclipse.typescript.edit.format" />
+      <command 
+           name="References in Workspace" 
+           description="Search for references to the selected element in the workspace"
+           categoryId="com.axmor.eclipse.typescript.category.search" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.FindReferencesHandler" 
+           id="com.axmor.eclipse.typescript.search.references" />
    </extension>
 	
     <extension point="org.eclipse.ui.bindings">
@@ -101,6 +123,11 @@
            sequence="M1+M2+F"
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.edit.format"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="M1+M2+G"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.search.references"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
     </extension>
 	      

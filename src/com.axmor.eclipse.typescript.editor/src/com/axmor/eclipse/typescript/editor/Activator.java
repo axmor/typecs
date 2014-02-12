@@ -51,7 +51,7 @@ public class Activator extends AbstractUIPlugin {
 	public static Activator getDefault() {
 		return plugin;
 	}
-
+	
     /**
      * The method first checks, if the thread calling this method has an associated display. If so,
      * this display is returned. Otherwise the method returns the default display.
