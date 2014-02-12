@@ -13,6 +13,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.axmor.eclipse.typescript.core.index.TypeScriptIndexManager;
+
 /**
  * The activator class controls the plug-in life cycle.
  */
@@ -24,6 +26,9 @@ public class Activator extends AbstractUIPlugin {
     /** The shared instance. */
     private static Activator plugin;
 
+    /** Index manager. */
+    private TypeScriptIndexManager indexManager;
+
     /**
      * The constructor.
      */
@@ -34,12 +39,15 @@ public class Activator extends AbstractUIPlugin {
     public final void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
+        indexManager = new TypeScriptIndexManager();
+        indexManager.startIndex();
     }
 
     @Override
     public final void stop(BundleContext context) throws Exception {
         plugin = null;
         super.stop(context);
+        indexManager.stopIndex();
         TypeScriptAPIFactory.stopTypeScriptAPIs();
     }
 

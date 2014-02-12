@@ -74,7 +74,9 @@ Modified version of Eclipse CheckStyle for TypeScript project
     <module name="IllegalInstantiation"/>
     <module name="InnerAssignment"/>
     <module name="MagicNumber">
+      <property name="severity" value="ignore"/>
       <property name="ignoreNumbers" value="-1, 0, 1, 2, 3, 4"/>
+      <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
     </module>
     <module name="MissingSwitchDefault"/>
     <module name="RedundantThrows">
