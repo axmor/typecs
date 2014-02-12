@@ -100,12 +100,18 @@
            categoryId="com.axmor.eclipse.typescript.category.source" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.FormatCodeHandler" 
            id="com.axmor.eclipse.typescript.edit.format" />
+      
       <command 
            name="References in Workspace" 
            description="Search for references to the selected element in the workspace"
            categoryId="com.axmor.eclipse.typescript.category.search" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.FindReferencesHandler" 
            id="com.axmor.eclipse.typescript.search.references" />
+           name="Rename"
+           description="Rename all references of the selected element"
+           categoryId="com.axmor.eclipse.typescript.category.source" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.RenameCodeHandler" 
+           id="com.axmor.eclipse.typescript.edit.rename" />
    </extension>
 	
     <extension point="org.eclipse.ui.bindings">
@@ -129,6 +135,53 @@
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.search.references"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="M1+R"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.edit.rename"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
     </extension>
 	      
+    <extension point="org.eclipse.compare.contentViewers">
+
+          <contentTypeBinding
+                contentTypeId="com.axmor.eclipse.typescript.core.ts" 
+                contentViewerId="com.axmor.eclipse.typescript.editor.compare.TypeScriptViewer"/>
+
+          <viewer
+                id="com.axmor.eclipse.typescript.editor.compare.TypeScriptViewer" 
+                extensions="ts,d.ts"
+                class="com.axmor.eclipse.typescript.editor.compare.TypeScriptViewerCreator"/>
+    </extension>
+    
+    <extension point="org.eclipse.compare.contentMergeViewers">
+
+          <contentTypeBinding
+                contentTypeId="com.axmor.eclipse.typescript.core.ts"
+                contentMergeViewerId="com.axmor.eclipse.typescript.editor.TypeScriptMergeViewer"/>
+
+          <viewer
+                id="com.axmor.eclipse.typescript.editor.TypeScriptMergeViewer" 
+                extensions="ts,d.ts"
+                class="com.axmor.eclipse.typescript.editor.compare.TypeScriptMergeViewerCreator"/>
+    </extension>	
+    
+    <extension point="org.eclipse.ui.menus">
+        <menuContribution
+            locationURI="popup:#TextEditorContext?after=group.add">
+            
+            <menu label="Refactor">
+                <visibleWhen checkEnabled="true">
+                    <with variable="activeEditor">
+                        <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+                    </with>
+                </visibleWhen>
+                <command
+                    commandId="com.axmor.eclipse.typescript.edit.rename" 
+                    label="Rename..."
+                    style="toggle">
+                </command>
+            </menu>
+        </menuContribution>
+    </extension>      
 </plugin>

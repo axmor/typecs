@@ -81,7 +81,7 @@ public class TypeScriptEditorUtils {
      *            the given offset
      * @return the region
      */
-    public IRegion findWord(IDocument document, int offset) {
+    public static IRegion findWord(IDocument document, int offset) {
         int start = -2;
         int end = -1;
 
