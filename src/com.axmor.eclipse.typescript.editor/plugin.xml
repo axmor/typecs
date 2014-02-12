@@ -107,6 +107,8 @@
            categoryId="com.axmor.eclipse.typescript.category.search" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.FindReferencesHandler" 
            id="com.axmor.eclipse.typescript.search.references" />
+
+      <command 
            name="Rename"
            description="Rename all references of the selected element"
            categoryId="com.axmor.eclipse.typescript.category.source" 
