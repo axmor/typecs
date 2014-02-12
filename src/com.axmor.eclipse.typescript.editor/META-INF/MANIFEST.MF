@@ -15,4 +15,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.ide
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
-Import-Package: com.ibm.icu.text
+Import-Package: com.ibm.icu.text,
+ org.eclipse.search.core.text,
+ org.eclipse.search.internal.ui.text,
+ org.eclipse.search.ui,
+ org.eclipse.search.ui.text

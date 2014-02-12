@@ -43,5 +43,8 @@ public class TypeScriptImageKeys {
     public static final String IMG_METHOD_PUBLIC = PLUGIN_ID + "IMG_METHOD_PUBLIC";
     public static final String IMG_CONSTRUCTOR = PLUGIN_ID + "IMG_CONSTRUCTOR";
     public static final String IMG_STATIC = PLUGIN_ID + "IMG_STATIC";
+    
+    /** "Search reference on object" image **/
+    public static final String IMG_SEARCH_REF_OBJ = PLUGIN_ID + "IMG_SEARCH_REF_OBJ";
 
 }
