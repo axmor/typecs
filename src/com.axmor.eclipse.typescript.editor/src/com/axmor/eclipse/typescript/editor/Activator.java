@@ -1,5 +1,6 @@
 package com.axmor.eclipse.typescript.editor;
 
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.widgets.Display;
@@ -82,4 +83,13 @@ public class Activator extends AbstractUIPlugin {
         return TypeScriptUIImages.initializeImageRegistry();
     }
 	
+    /**
+     * Print error message to Error log.
+     * 
+     * @param e
+     *            exception
+     */
+    public static void error(final Exception e) {
+        plugin.getLog().log(new Status(Status.ERROR, PLUGIN_ID, e.getMessage(), e));
+    }
 }
