@@ -305,14 +305,7 @@ public class TypeScriptSearchResultPage extends AbstractTextSearchViewPage {
             if (searchResult == null) {
                 return;
             }
-            // AbstractTreeViewer treeViewer = (AbstractTreeViewer)
-            // TypeScriptSearchResultPage.this.getViewer();
             for (int i = 0; i < updatedElements.length; i++) {
-                // if (searchResult.getMatchCount(updatedElements[i]) > 0) {
-                // // do insert
-                // } else {
-                // // do remove
-                // }
                 // change events to line elements are reported in text search
                 LineElement lineElement = (LineElement) updatedElements[i];
                 int nMatches = lineElement.getNumberOfMatches(searchResult);
