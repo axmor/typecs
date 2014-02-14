@@ -38,8 +38,7 @@ public class TypeScriptElementHyperlinkDetector extends AbstractHyperlinkDetecto
         IDocumentProvider documentProvider = textEditor.getDocumentProvider();
         IEditorInput editorInput = textEditor.getEditorInput();
         IDocument document = documentProvider.getDocument(editorInput);
-        TypeScriptEditorUtils utils = new TypeScriptEditorUtils();
-        IRegion wordRegion = utils.findWord(document, region.getOffset());
+        IRegion wordRegion = TypeScriptEditorUtils.findWord(document, region.getOffset());
         if (wordRegion == null || wordRegion.getLength() == 0) {
             return null;
         }    

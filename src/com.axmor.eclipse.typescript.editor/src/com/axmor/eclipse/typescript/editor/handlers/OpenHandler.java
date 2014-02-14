@@ -30,8 +30,7 @@ public class OpenHandler extends AbstractHandler {
         if (editor == null) {
             return null;
         }
-        TypeScriptEditorUtils utils = new TypeScriptEditorUtils();
-        utils.openDeclaration(editor);
+        TypeScriptEditorUtils.openDeclaration(editor);
         return null;
     }
 

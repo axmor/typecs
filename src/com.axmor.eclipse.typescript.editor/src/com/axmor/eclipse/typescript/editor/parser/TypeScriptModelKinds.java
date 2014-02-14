@@ -11,7 +11,6 @@ package com.axmor.eclipse.typescript.editor.parser;
  * Class to get kinds of model objects
  *  
  * @author Asya Vorobyova
- *
  */
 public class TypeScriptModelKinds {
     
@@ -19,19 +18,33 @@ public class TypeScriptModelKinds {
      * Model kinds
      */
     public enum Kinds {
+        /** Primitive type. */
         PRIMITIVE_TYPE,
+        /** Keyword. */
         KEYWORD,
+        /** Class. */
         CLASS, 
+        /** Interface. */
         INTERFACE,
+        /** Module. */
         MODULE,
+        /** Property. */
         PROPERTY,
+        /** Method. */
         METHOD,
+        /** Constructor. */
         CONSTRUCTOR,
+        /** Function. */
         FUNCTION,
+        /** Variable. */
         VAR,
+        /** Enumeration. */
         ENUM,
+        /** Private modifier. */
         PRIVATE,
+        /** Public modifier. */
         PUBLIC,
+        /** Static modifier. */
         STATIC;
         
         @Override
