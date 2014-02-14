@@ -1,6 +1,11 @@
 package com.axmor.eclipse.typescript.editor.color;
 
-import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.*;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_COMMENT;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_JAVA_DOC;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_KEYWORD;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_NUMBER;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_REFERENCE;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_STRING;
 
 import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.swt.graphics.Color;
@@ -13,7 +18,10 @@ import org.eclipse.swt.graphics.RGB;
  *
  */
 public enum TypeScriptColorRegistry {
+    
+    /** Singleton instance. */
     COLOR_REGISTRY;
+    
     /**
      * Create a singleton instance
      */

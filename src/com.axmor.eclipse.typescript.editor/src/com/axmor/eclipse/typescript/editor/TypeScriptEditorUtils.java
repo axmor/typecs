@@ -35,7 +35,14 @@ import us.monoid.json.JSONObject;
  * @author Asya Vorobyova
  * 
  */
-public class TypeScriptEditorUtils {
+public final class TypeScriptEditorUtils {
+
+    /**
+     * Protect from initialization.
+     */
+    private TypeScriptEditorUtils() {
+        
+    }
 
     /**
      * Opens declaration for a selection in a given editor
@@ -43,7 +50,7 @@ public class TypeScriptEditorUtils {
      * @param editor
      *            a text editor
      */
-    public void openDeclaration(TypeScriptEditor editor) {
+    public static void openDeclaration(TypeScriptEditor editor) {
         ISelection selection = editor.getSelectionProvider().getSelection();
         IFile file = ((FileEditorInput) editor.getEditorInput()).getFile();
         JSONArray typeDef = editor.getApi().getTypeDefinition(file, ((ITextSelection) selection).getOffset());
@@ -93,15 +100,14 @@ public class TypeScriptEditorUtils {
                 c = document.getChar(pos);
                 if (!Character.isJavaIdentifierPart(c)) {
                     // Check for surrogates
-                    if (UTF16.isSurrogate(c)) {
+                    if (!UTF16.isSurrogate(c)) {
                         /*
-                         * XXX: Here we should create the code point and test whether it is a Java
+                         * Here we should create the code point and test whether it is a Java
                          * identifier part. Currently this is not possible because
                          * java.lang.Character in 1.4 does not support surrogates and because
                          * com.ibm.icu.lang.UCharacter.isJavaIdentifierPart(int) is not correctly
                          * implemented.
                          */
-                    } else {
                         break;
                     }
                 }
@@ -115,16 +121,15 @@ public class TypeScriptEditorUtils {
             while (pos < length) {
                 c = document.getChar(pos);
                 if (!Character.isJavaIdentifierPart(c)) {
-                    if (UTF16.isSurrogate(c)) {
+                    if (!UTF16.isSurrogate(c)) {
+                        break;
                         /*
-                         * XXX: Here we should create the code point and test whether it is a Java
+                         * Here we should create the code point and test whether it is a Java
                          * identifier part. Currently this is not possible because
                          * java.lang.Character in 1.4 does not support surrogates and because
                          * com.ibm.icu.lang.UCharacter.isJavaIdentifierPart(int) is not correctly
                          * implemented.
                          */
-                    } else {
-                        break;
                     }
 
                 }

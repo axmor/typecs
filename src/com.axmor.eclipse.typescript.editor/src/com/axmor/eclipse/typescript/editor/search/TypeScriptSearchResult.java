@@ -31,7 +31,7 @@ import com.axmor.eclipse.typescript.editor.parser.TypeScriptImageKeys;
  */
 public class TypeScriptSearchResult extends AbstractTextSearchResult implements IEditorMatchAdapter, IFileMatchAdapter {
     /** Empty array of matches **/
-    private final Match[] EMPTY_ARR = new Match[0];
+    private static final Match[] EMPTY_ARR = new Match[0];
 
     /**
      * Query that fills result matches

@@ -55,8 +55,7 @@ public class TypeScriptElementHyperlink implements IHyperlink {
 
     @Override
     public void open() {
-        TypeScriptEditorUtils utils = new TypeScriptEditorUtils();
-        utils.openDeclaration(editor);
+        TypeScriptEditorUtils.openDeclaration(editor);
     }
 
 }

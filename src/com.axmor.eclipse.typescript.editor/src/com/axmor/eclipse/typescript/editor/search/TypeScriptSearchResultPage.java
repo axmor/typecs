@@ -34,7 +34,11 @@ import org.eclipse.ui.PartInitException;
  * @author Asya Vorobyova
  * 
  */
+@SuppressWarnings("restriction")
 public class TypeScriptSearchResultPage extends AbstractTextSearchViewPage {
+
+    /** An empty array **/
+    private static final Object[] EMPTY_ARR = new Object[0];
 
     /**
      *  The maximal number of top level elements to be shown in a viewer
@@ -66,8 +70,9 @@ public class TypeScriptSearchResultPage extends AbstractTextSearchViewPage {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected void evaluateChangedElements(Match[] matches, Set changedElements) {
+    protected void evaluateChangedElements(Match[] matches, @SuppressWarnings("rawtypes") Set changedElements) {
         for (int i = 0; i < matches.length; i++) {
             changedElements.add(((FileMatch) matches[i]).getLineElement());
         }
@@ -123,9 +128,6 @@ public class TypeScriptSearchResultPage extends AbstractTextSearchViewPage {
      * Class that organizes content view for a tree viewer
      */
     private class TypeScriptSearchContentProvider implements ITreeContentProvider {
-        /** An empty array **/
-        private final Object[] EMPTY_ARR = new Object[0];
-
         /** Search result **/
         private AbstractTextSearchResult searchResult;
 
@@ -358,7 +360,7 @@ public class TypeScriptSearchResultPage extends AbstractTextSearchViewPage {
 
         @Override
         public Object[] getChildren(Object parentElement) {
-            Set children = (Set) childrenMap.get(parentElement);
+            Set<Object> children = (Set<Object>) childrenMap.get(parentElement);
             if (children == null) {
                 return EMPTY_ARR;
             }    
