@@ -33,31 +33,30 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
     /** Bridge instance. */
     private TypeScriptBridge bridge;
+    /** project location. */
+    private IPath location;
 
     /**
      * @param project
      *            project
      */
     public TypeScriptAPIImpl(IProject project) {
-        IPath location = null;
         if (project != null && project.exists() && project.isAccessible()) {
             location = project.getLocation();
         } else {
             location = ResourcesPlugin.getWorkspace().getRoot().getLocation();
         }
-
-        try {
-            bridge = new TypeScriptBridge(location.toFile().getCanonicalFile());
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-        Executors.newSingleThreadExecutor().execute(bridge);
+        initBridge();
     }
 
     @Override
     public JSONArray getScriptModel(IFile file) {
+        checkBridge();
         JSONObject obj = bridge.invokeBridgeMethod("getScriptLexicalStructure", file, (String) null);
         try {
+            if (!obj.has("model")) {
+                return new JSONArray();
+            }
             return obj.getJSONArray("model");
         } catch (JSONException e) {
             throw Throwables.propagate(e);
@@ -66,16 +65,19 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
     @Override
     public void updateFileContent(IFile file, String content) {
+        checkBridge();
         bridge.invokeBridgeMethod("setFileContent", file, content);
     }
 
     @Override
     public JSONObject getCompletion(IFile file, int position) {
+        checkBridge();
         return bridge.invokeBridgeMethod("getCompletions", file, String.valueOf(position));
     }
 
     @Override
     public JSONObject getCompletionDetails(IFile file, int position, String entryName) {
+        checkBridge();
         try {
             JSONObject params = new JSONObject();
             params.put("position", String.valueOf(position));
@@ -88,11 +90,13 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
     @Override
     public JSONObject getSignature(IFile file, int position) {
+        checkBridge();
         return bridge.invokeBridgeMethod("getSignature", file, String.valueOf(position));
     }
 
     @Override
     public JSONArray getTypeDefinition(IFile file, int position) {
+        checkBridge();
         JSONObject object = bridge.invokeBridgeMethod("getTypeDefinition", file, String.valueOf(position));
         try {
             if (!object.isNull("model")) {
@@ -106,6 +110,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
     @Override
     public JSONObject compile(IFile file, TypeScriptCompilerSettings settings) {
+        checkBridge();
         try {
             JSONObject params = new JSONObject();
             params.put("propagateEnumConstants", false);
@@ -150,6 +155,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
     @Override
     public JSONArray getFormattingCode(IFile file, int start, int end) {
+        checkBridge();
         try {
             TypeScriptEditorSettings s = TypeScriptEditorSettings.load();
 
@@ -183,6 +189,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
     @Override
     public JSONArray getReferencesAtPosition(IFile file, int position) {
+        checkBridge();
         JSONObject object = bridge.invokeBridgeMethod("getReferencesAtPosition", file, String.valueOf(position));
         try {
             if (!object.isNull("model")) {
@@ -193,9 +200,36 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             throw Throwables.propagate(e);
         }
     }
+
+    @Override
+    public void addFile(IFile file) {
+        checkBridge();
+        bridge.invokeBridgeMethod("addFile", file, (String) null);
+    }
     
     @Override
     public void dispose() {
         bridge.stop();
+    }
+
+    /**
+     * Initializes TS bridge. 
+     */
+    private void initBridge() {
+        try {
+            bridge = new TypeScriptBridge(location.toFile().getCanonicalFile());
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+        Executors.newSingleThreadExecutor().execute(bridge);
+    }
+
+    /**
+     * Checks if bridge is available.
+     */
+    private void checkBridge() {
+        if (bridge.isStopped()) {
+            initBridge();
+        }
     }
 }

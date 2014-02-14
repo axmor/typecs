@@ -71,8 +71,7 @@ exports.addDefaultLibrary = function() {
 
 exports.addFile = function(fileName) {
   log.debug('tss.addFile:' + fileName);
-//  var code = readFile(fileName).contents;
-//  this.addScript(fileName, code);
+  files[fileName] = null;
 };
 
 exports.resolveRelativePath = function(path, directory) {
@@ -105,7 +104,7 @@ exports.setBaseSourceDirectory = function(src) {
 
 exports.setFileContent = function(file, content) {
   log.debug('tss.setFileContent: ' + file);
-  files[file] = TypeScript.ScriptSnapshot.fromString(content);
+  files[file] = TypeScript.ScriptSnapshot.fromString(content ? content : '');
 }
 
 function readDir(base, dir, files) {
@@ -121,66 +120,3 @@ function readDir(base, dir, files) {
     }
   };
 }
-
-//    // use this to test "clean" re-typecheck speed
-//    public reTypeCheck() {
-//        var settings = new TypeScript.CompilationSettings();
-//
-//        if (!this.compiler) {
-//            this.compiler = new TypeScript.TypeScriptCompiler(new DiagnosticsLogger(), settings);
-//
-//            this.compiler.addSourceUnit("lib.d.ts", this.libScriptSnapshot, ByteOrderMark.None, 0, false, []);
-//            this.compiler.addSourceUnit("compiler.ts", this.compilerScriptSnapshot, ByteOrderMark.None, 0, false, []);
-//            this.compiler.pullTypeCheck();
-//        }
-//
-//        this.compiler.semanticInfoChain.update();
-//        this.compiler.semanticInfoChain.forceTypeCheck("compiler.ts");
-//        this.compiler.getSemanticDiagnostics("compiler.ts");
-//    }
-//
-//    public newParse(): TypeScript.SyntaxTree {
-//        return TypeScript.Parser.parse(compilerFileName, this.simpleText, false,
-//            TypeScript.getParseOptions(new TypeScript.CompilationSettings()));
-//    }
-//
-//    public newIncrementalParse(tree: TypeScript.SyntaxTree): TypeScript.SyntaxTree {
-//        var width = 100;
-//        var span = new TypeScript.TextSpan(TypeScript.IntegerUtilities.integerDivide(compilerString.length - width, 2), width);
-//        var range = new TypeScript.TextChangeRange(span, width);
-//        return TypeScript.Parser.incrementalParse(tree, range, this.simpleText);
-//    }
-
-
-//    public compiler: TypeScript.TypeScriptCompiler;
-//    private simpleText = TypeScript.SimpleText.fromString(compilerString);
-//    private libScriptSnapshot = TypeScript.ScriptSnapshot.fromString(libString);
-//    private compilerScriptSnapshot = TypeScript.ScriptSnapshot.fromString(compilerString);
-
-//    public compile() {
-//        var settings = new TypeScript.CompilationSettings();
-//        settings.generateDeclarationFiles = true;
-//        settings.outFileOption = "Output.ts";
-//
-//        this.compiler = new TypeScript.TypeScriptCompiler(new DiagnosticsLogger(), settings);
-//
-//        this.compiler.addSourceUnit("lib.d.ts", this.libScriptSnapshot, ByteOrderMark.None, 0, false, []);
-//        this.compiler.addSourceUnit("compiler.ts", this.compilerScriptSnapshot, ByteOrderMark.None, 0, false, []);
-//
-//        this.compiler.pullTypeCheck();
-//
-//        var emitterIOHost = {
-//            writeFile: (fileName: string, contents: string, writeByteOrderMark: boolean) => { },
-//            directoryExists: (a: string) => false,
-//            fileExists: (a: string) => true,
-//            resolvePath: (a: string) => a,
-//        };
-//
-//        var mapInputToOutput = (inputFile: string, outputFile: string): void => { };
-//
-//        // TODO: if there are any emit diagnostics.  Don't proceed.
-//        var emitDiagnostics = this.compiler.emitAll(emitterIOHost, mapInputToOutput);
-//
-//        var emitDeclarationsDiagnostics = this.compiler.emitAllDeclarations();
-//    }
-

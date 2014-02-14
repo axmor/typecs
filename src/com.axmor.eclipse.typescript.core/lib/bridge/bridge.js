@@ -5,13 +5,17 @@ var args = require('./args.js');
 // logging
 var log = require('./log.js');
 
+// activity indicator
+var activity = false;
+
 log.debug(args);
 
 // init service
 var tsc = require('./ts_' + args.version + '/ets_io.js');
 var tss = require('./ts_' + args.version + '/ets_service.js');
 
-//tss.getScriptLexicalStructure('test_ts.ts');
+//tss.getScriptLexicalStructure('test_ts1.ts');
+//tss.getScriptLexicalStructure('test_ts2.ts');
 
 if (args.serv) {
   var net = require('net');
@@ -21,6 +25,7 @@ if (args.serv) {
     socket.allowHalfOpen = true; 
 
     socket.on('data', function (d) {
+      activity = true;
       data += d.toString();
     });        
     
@@ -36,6 +41,11 @@ if (args.serv) {
           case 'setFileContent':                            
             log.debug('bridge.setFileContent: ' + o.file);
             tss.setFileContent(o.file, o.params);
+            socket.end(JSON.stringify({ 'status': 0}));
+            break;
+          case 'addFile':                            
+            log.debug('bridge.addFile: ' + o.file);
+            tss.addFile(o.file);
             socket.end(JSON.stringify({ 'status': 0}));
             break;
           case 'getScriptLexicalStructure':                            
@@ -93,5 +103,16 @@ if (args.serv) {
           server.close();
         }, 1000);
       }
-  });
+  });                                    
+  
+  setInterval(inactivityCheck, 1000 * 60 * 10); // 10 munites check inactivity
+  
+  function inactivityCheck() {
+    log.debug('inactivityCheck: ' + activity);
+    if (!activity) {
+      log.info('Exit by inactivity period exceed.');
+      process.exit();
+    }
+    activity = false;
+  }
 }

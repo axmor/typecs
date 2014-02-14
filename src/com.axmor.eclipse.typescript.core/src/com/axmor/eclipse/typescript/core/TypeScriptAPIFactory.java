@@ -13,7 +13,6 @@ import java.util.Map;
 import org.eclipse.core.resources.IProject;
 
 import com.axmor.eclipse.typescript.core.internal.TypeScriptAPIImpl;
-import com.axmor.eclipse.typescript.core.internal.TypeScriptAPITestImpl;
 
 /**
  * API Provider.
@@ -21,9 +20,6 @@ import com.axmor.eclipse.typescript.core.internal.TypeScriptAPITestImpl;
  * @author Konstantin Zaitcev
  */
 public final class TypeScriptAPIFactory {
-    /** For testing purpose only. */
-    private static final String ETS_FAKE = "ETS.FAKE"; //$NON-NLS-1$
-
     /** Singleton instance. */
     private static Map<IProject, TypeScriptAPI> apis = new HashMap<>();
 
@@ -41,8 +37,7 @@ public final class TypeScriptAPIFactory {
      */
     public static synchronized TypeScriptAPI getTypeScriptAPI(final IProject project) {
         if (!apis.containsKey(project)) {
-            apis.put(project, System.getProperty(ETS_FAKE) != null ? new TypeScriptAPITestImpl()
-                    : new TypeScriptAPIImpl(project));
+            apis.put(project, new TypeScriptAPIImpl(project));
         }
         return apis.get(project);
     }
