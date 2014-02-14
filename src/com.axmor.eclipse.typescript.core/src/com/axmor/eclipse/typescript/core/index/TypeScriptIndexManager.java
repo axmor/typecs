@@ -4,9 +4,10 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/ 
+ *******************************************************************************/
 package com.axmor.eclipse.typescript.core.index;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -16,6 +17,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
 import com.axmor.eclipse.typescript.core.Activator;
+import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
 
 /**
@@ -32,7 +34,7 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
         job = new IndexJob();
         job.setSystem(true);
         job.schedule();
-        
+
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_CHANGE);
     }
 
@@ -45,7 +47,7 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
             job.getIndexer().close();
         }
     }
-    
+
     @Override
     public void resourceChanged(IResourceChangeEvent event) {
         try {
@@ -59,6 +61,9 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
                                 job.getIndexer().removeFromIndex(resource.getFullPath().toString());
                             } else {
                                 job.getChangedResources().add(resource.getFullPath().toString());
+                            }
+                            if (delta.getKind() == IResourceDelta.ADDED) {
+                                TypeScriptAPIFactory.getTypeScriptAPI(resource.getProject()).addFile((IFile) resource);
                             }
                         }
                     }

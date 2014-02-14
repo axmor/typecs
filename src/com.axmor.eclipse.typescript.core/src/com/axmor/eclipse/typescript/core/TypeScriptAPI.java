@@ -103,4 +103,12 @@ public interface TypeScriptAPI extends IDisposable {
      * @return array of references of declaration under given position
      */
     JSONArray getReferencesAtPosition(IFile file, int position);
+
+    /**
+     * Notify TS api that a new file was added to project.
+     * 
+     * @param file
+     *            resource that was added
+     */
+    void addFile(IFile file);
 }

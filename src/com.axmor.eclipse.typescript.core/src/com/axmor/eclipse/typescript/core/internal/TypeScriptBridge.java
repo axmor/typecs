@@ -17,11 +17,11 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -34,6 +34,8 @@ import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
+import com.axmor.eclipse.typescript.core.i18n.Messages;
+import com.axmor.eclipse.typescript.core.ui.ErrorDialog;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.io.CharStreams;
@@ -45,6 +47,8 @@ import com.google.common.io.Closeables;
  * @author Konstantin Zaitcev
  */
 public class TypeScriptBridge implements Runnable {
+    /** Indicate that problem with bridge was notified. */
+    private static final AtomicBoolean NOTIFY_ERROR = new AtomicBoolean(false);
 
     /** Wait lock constant. */
     private static final int WAIT_TIMEOUT = 10;
@@ -101,22 +105,39 @@ public class TypeScriptBridge implements Runnable {
         if (stopped) {
             return;
         }
+
         try {
             File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
 
             ProcessBuilder ps = new ProcessBuilder("node", "bridge.js", "version=" + version, "src=\""
-                    + baseDirectory.getAbsolutePath().replace('\\', '/') + "\"", "serv=true", "log=debug")
+                    + baseDirectory.getAbsolutePath().replace('\\', '/') + "\"", "serv=true", "log=error")
                     .directory(new File(bundleFile, LIB_BRIDGE));
 
             p = ps.start();
             String portLine = new BufferedReader(new InputStreamReader(p.getErrorStream())).readLine();
             if (!portLine.startsWith("@") && !portLine.endsWith("@")) {
-                throw new IOException("Cannot start TS bridge " + portLine);
+                throw new IOException(Messages.TSBridge_cannotStart + portLine);
             }
             port = Integer.parseInt(portLine.substring(1, portLine.length() - 1));
             lock.countDown();
-            
-            MessageConsole console = new MessageConsole("TS Bridge Console", null);
+        } catch (IOException e) {
+            lock.countDown();
+            Activator.getDefault().getLog()
+                    .log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(), e));
+
+            if (!NOTIFY_ERROR.getAndSet(true)) {
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        ErrorDialog.open(new Shell(), Messages.TSBridge_InitErrorTitle,
+                                Messages.TSBridge_InitErrorMessage);
+                    }
+                });
+            }
+        }
+
+        if (p != null) {
+            MessageConsole console = new MessageConsole(Messages.TSBridge_Console, null);
 
             outStream = console.newMessageStream();
             errorStream = console.newMessageStream();
@@ -134,20 +155,11 @@ public class TypeScriptBridge implements Runnable {
             connectStreams(p.getErrorStream(), errorStream);
             connectStreams(p.getInputStream(), outStream);
             ConsolePlugin.getDefault().getConsoleManager().addConsoles(new IConsole[] { console });
-            p.waitFor();
-        } catch (IOException | InterruptedException e) {
-            Activator.getDefault().getLog()
-                    .log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(), e));
-        }
-
-        if (!stopped) {
-            Display.getDefault().syncExec(new Runnable() {
-                @Override
-                public void run() {
-                    MessageDialog.openError(new Shell(), "TypeScript Runtime Error",
-                            "Error in TypeScript Runtime Initialization.");
-                }
-            });
+            try {
+                p.waitFor();
+            } catch (InterruptedException e) {
+                // ignore exception
+            }
         }
     }
 
@@ -157,7 +169,7 @@ public class TypeScriptBridge implements Runnable {
     public synchronized void stop() {
         if (!stopped) {
             stopped = true;
-            outStream.println("TS Bridge Terminated");
+            outStream.println("TS bridge closed");
             try {
                 Closeables.close(outStream, true);
                 Closeables.close(errorStream, true);
@@ -166,6 +178,13 @@ public class TypeScriptBridge implements Runnable {
             }
             p.destroy();
         }
+    }
+
+    /**
+     * @return the stopped
+     */
+    public boolean isStopped() {
+        return stopped;
     }
 
     /**
@@ -218,6 +237,9 @@ public class TypeScriptBridge implements Runnable {
                 lock.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 // ignore exception
+            }
+            if (port == 0) {
+                return EMPTY_JSON_OBJECT;
             }
             try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
                 JSONObject obj = new JSONObject().put("method", method);

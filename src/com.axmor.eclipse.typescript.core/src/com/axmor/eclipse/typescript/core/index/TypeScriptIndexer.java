@@ -30,7 +30,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 
 import us.monoid.json.JSONArray;
-import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
@@ -145,7 +144,7 @@ public class TypeScriptIndexer {
                     break;
                 }
             }
-        } catch (IOException | JSONException e) {
+        } catch (Exception e) {
             Activator.error(e);
         }
     }

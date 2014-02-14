@@ -14,6 +14,10 @@ import org.eclipse.osgi.util.NLS;
  */
 public class Messages extends NLS {
     private static final String BUNDLE_NAME = "com.axmor.eclipse.typescript.core.i18n.messages"; //$NON-NLS-1$
+    public static String TSBridge_cannotStart;
+    public static String TSBridge_Console;
+    public static String TSBridge_InitErrorMessage;
+    public static String TSBridge_InitErrorTitle;
     public static String TypeScriptBridge_NodeJSStopError;
     public static String TypescriptWorkbenchPreferencePage_compiler_version;
     static {

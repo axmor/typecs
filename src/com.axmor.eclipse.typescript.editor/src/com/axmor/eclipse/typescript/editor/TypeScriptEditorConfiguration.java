@@ -173,7 +173,6 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
      * A content assist processor which computes completions and sets code completion preferences
      * 
      * @author Asya Vorobyova
-     *
      */
     private class TypeScriptAssistProcessor implements IContentAssistProcessor {
 
@@ -183,6 +182,9 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
             try {
                 TypeScriptUIImages imagesFactory = new TypeScriptUIImages();
                 String replacement = extractPrefix(viewer.getDocument().get(), offset);
+                if (!completionList.has("entries")) {
+                    return new ICompletionProposal[0];
+                }
                 JSONArray completions = completionList.getJSONArray("entries");
                 int completionsLength = completions.length();
                 List<ICompletionProposal> result = new ArrayList<ICompletionProposal>(completionsLength);

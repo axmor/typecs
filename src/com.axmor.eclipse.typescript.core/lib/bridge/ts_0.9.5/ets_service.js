@@ -21,6 +21,10 @@ exports.setFileContent = function(file, params) {
   }
 }
 
+exports.addFile = function(file) {
+  tsh.addFile(file);
+}
+
 exports.getScriptLexicalStructure = function(file) {
   return ts.getScriptLexicalStructure(file);
 }
