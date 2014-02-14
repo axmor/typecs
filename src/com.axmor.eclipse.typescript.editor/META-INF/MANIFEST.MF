@@ -17,6 +17,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ltk.ui.refactoring,
  com.ibm.icu;bundle-version="50.1.1",
  org.eclipse.compare,
- org.eclipse.search
+ org.eclipse.search,
+ org.eclipse.pde.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
