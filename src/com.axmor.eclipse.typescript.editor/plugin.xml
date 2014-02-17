@@ -82,18 +82,21 @@
            description="TypeScript Search Actions"
            id="com.axmor.eclipse.typescript.category.search">
       </category>
+      
       <command 
            name="Toggle Comment" 
            description="Toggle comment the selected lines"
            categoryId="com.axmor.eclipse.typescript.category.source" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.ToggleCommentHandler" 
            id="com.axmor.eclipse.typescript.edit.toggle.comment" />
+           
       <command 
            name="Open Declaration" 
            description="Open an editor on the selected element"
            categoryId="com.axmor.eclipse.typescript.category.navigate" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.OpenHandler" 
            id="com.axmor.eclipse.typescript.navigate.open.declaration" />
+           
       <command 
            name="Format" 
            description="Format the selected text"
@@ -114,6 +117,14 @@
            categoryId="com.axmor.eclipse.typescript.category.source" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.RenameCodeHandler" 
            id="com.axmor.eclipse.typescript.edit.rename" />
+
+      <command 
+           name="Quick Outline" 
+           description="Show the quick outline for the editor input"
+           categoryId="com.axmor.eclipse.typescript.category.navigate" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.QuickOutlineHandler" 
+           id="com.axmor.eclipse.typescript.navigate.show.outline" />
+           
    </extension>
 	
     <extension point="org.eclipse.ui.bindings">
@@ -141,6 +152,11 @@
            sequence="M1+R"
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.edit.rename"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="M1+O"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.navigate.show.outline"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
     </extension>
 	      

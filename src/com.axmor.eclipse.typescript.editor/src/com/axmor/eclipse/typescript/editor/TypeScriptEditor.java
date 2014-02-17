@@ -173,13 +173,23 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
      * 
      * @return an outline page
      */
-    private TypeScriptContentOutlinePage getOutlinePage() {
+    public TypeScriptContentOutlinePage getOutlinePage() {
         if (contentOutlinePage == null) {
             contentOutlinePage = new TypeScriptContentOutlinePage();
             contentOutlinePage.addPostSelectionChangedListener(selectionChangedListener);
             setOutlinePageInput(((FileEditorInput) getEditorInput()).getFile());
         }
         return contentOutlinePage;
+    }
+
+
+    /**
+     * Returns current source viewer
+     * 
+     * @return source viewer
+     */
+    public ISourceViewer getViewer() {
+        return getSourceViewer();
     }
 
     /**
@@ -333,7 +343,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
     @Override
     protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
         ISourceViewer viewer = 
-                new ProjectionViewer(parent, ruler, getOverviewRuler(), isOverviewRulerVisible(), styles);
+                new TypeScriptProjectionViewer(parent, ruler, getOverviewRuler(), isOverviewRulerVisible(), styles);
+        
 
         // ensure decoration support has been created and configured.
         getSourceViewerDecorationSupport(viewer);

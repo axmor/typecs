@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.text.AbstractInformationControlManager;
 import org.eclipse.jface.text.DefaultInformationControl;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
@@ -23,12 +24,16 @@ import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector;
+import org.eclipse.jface.text.information.IInformationPresenter;
+import org.eclipse.jface.text.information.IInformationProvider;
+import org.eclipse.jface.text.information.InformationPresenter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.source.DefaultAnnotationHover;
 import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 
@@ -62,6 +67,11 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
      * TypeScript editor
      */
     private TypeScriptEditor editor;
+
+    /**
+     * An outline presenter to implement quick outline functionality
+     */
+    private InformationPresenter outlinePresenter;
 
     /**
      * @param file
@@ -101,6 +111,54 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
         reconciler.setRepairer(dr, TypeScriptPartitionScanner.TS_REFERENCE);
 
         return reconciler;
+    }
+
+    /**
+     * Creates presenter to show quick outline dialog at the text viewer's
+     * current document position.
+     *  
+     * @param sourceViewer current viewer
+     * @return presenter
+     */
+    public IInformationPresenter getOutlinePresenter(ISourceViewer sourceViewer) {
+        if (editor.getOutlinePage() == null) {
+            return null;
+        }
+        if (outlinePresenter != null) {
+            return outlinePresenter;
+        }
+        // Define a new outline presenter
+        outlinePresenter = new InformationPresenter(getOutlinePresenterControlCreator(sourceViewer));
+        outlinePresenter.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
+        outlinePresenter.setAnchor(AbstractInformationControlManager.ANCHOR_GLOBAL);
+        // Define a new outline provider
+        IInformationProvider provider = new TypeScriptSourceInfoProvider(editor);
+        // Set the provider on all defined content types
+        String[] contentTypes = getConfiguredContentTypes(sourceViewer);
+        for (int i = 0; i < contentTypes.length; i++) {
+            outlinePresenter.setInformationProvider(provider, contentTypes[i]);
+        }
+        // Set the presenter size constraints
+        outlinePresenter.setSizeConstraints(50, 20, true, false);
+
+        return outlinePresenter;
+    }
+
+    /**
+     * Returns the outline presenter control creator. The creator is a 
+     * factory creating outline presenter controls for the given source viewer. 
+     *
+     * @param sourceViewer the source viewer to be configured by this configuration
+     * @return an information control creator
+     */
+    private IInformationControlCreator getOutlinePresenterControlCreator(ISourceViewer sourceViewer) {
+        return new IInformationControlCreator() {
+            public IInformationControl createInformationControl(Shell parent) {
+                int shellStyle = SWT.RESIZE;
+                TypeScriptQuickOutlineDialog dialog = new TypeScriptQuickOutlineDialog(parent, shellStyle, editor.getOutlinePage());
+                return dialog;
+            }
+        };
     }
 
     @Override
@@ -229,8 +287,10 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
         /**
          * Calculates word part before a position corresponding to an offset
          * 
-         * @param text a document to get word in
-         * @param offset the given offset
+         * @param text
+         *            a document to get word in
+         * @param offset
+         *            the given offset
          * @return the word
          */
         private String extractPrefix(String text, int offset) {
