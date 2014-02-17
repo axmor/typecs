@@ -6,6 +6,7 @@ import java.util.HashMap;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DefaultInformationControl;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
@@ -182,7 +183,6 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
         return contentOutlinePage;
     }
 
-
     /**
      * Returns current source viewer
      * 
@@ -249,6 +249,15 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
             textWidget.setRedraw(false);
 
+            String documentPart = sourceViewer.getDocument().get(offset, length);
+            String name = reference.getString("name");
+            if (name != null) {
+                int nameoffset = documentPart.indexOf(reference.getString("name"));
+                if (nameoffset != -1) {
+                    offset += nameoffset;
+                    length = name.length();
+                }
+            }
             if (length > 0) {
                 setHighlightRange(offset, length, moveCursor);
             }
@@ -263,7 +272,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
                 sourceViewer.setSelectedRange(offset, length);
                 markInNavigationHistory();
             }
-        } catch (JSONException e) {
+        } catch (JSONException | BadLocationException e) {
             throw Throwables.propagate(e);
         } finally {
             textWidget.setRedraw(true);
@@ -330,8 +339,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
         viewer.doOperation(ProjectionViewer.TOGGLE);
 
         annotationModel = viewer.getProjectionAnnotationModel();
-        ArrayList<Position> positions = 
-                getPositions(api.getScriptModel(((FileEditorInput) getEditorInput()).getFile()));
+        ArrayList<Position> positions = getPositions(api.getScriptModel(((FileEditorInput) getEditorInput()).getFile()));
         updateFoldingStructure(positions);
     }
 
@@ -342,9 +350,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
     @Override
     protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
-        ISourceViewer viewer = 
-                new TypeScriptProjectionViewer(parent, ruler, getOverviewRuler(), isOverviewRulerVisible(), styles);
-        
+        ISourceViewer viewer = new TypeScriptProjectionViewer(parent, ruler, getOverviewRuler(),
+                isOverviewRulerVisible(), styles);
 
         // ensure decoration support has been created and configured.
         getSourceViewerDecorationSupport(viewer);
@@ -355,7 +362,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
     /**
      * Updates folding structure
      * 
-     * @param positions a list of positions
+     * @param positions
+     *            a list of positions
      */
     public void updateFoldingStructure(ArrayList<Position> positions) {
         Annotation[] annotations = new Annotation[positions.size()];

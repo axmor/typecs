@@ -97,11 +97,11 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
      * 
      * @param parent The parent shell
      * @param shellStyle The shell style
-     * @param page The outline page
+     * @param editor Current ts editor
      */
-    public TypeScriptQuickOutlineDialog(Shell parent, int shellStyle, TypeScriptContentOutlinePage page) {
+    public TypeScriptQuickOutlineDialog(Shell parent, int shellStyle, TypeScriptEditor editor) {
         super(parent, shellStyle, true, true, false, true, true, null, null);
-        outlinePage = page;
+        outlinePage = editor.getOutlinePage();
         initialize();
         // Create all controls early to preserve the life cycle of the original implementation.
         create();
