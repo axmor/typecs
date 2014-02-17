@@ -155,7 +155,7 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
         return new IInformationControlCreator() {
             public IInformationControl createInformationControl(Shell parent) {
                 int shellStyle = SWT.RESIZE;
-                TypeScriptQuickOutlineDialog dialog = new TypeScriptQuickOutlineDialog(parent, shellStyle, editor.getOutlinePage());
+                TypeScriptQuickOutlineDialog dialog = new TypeScriptQuickOutlineDialog(parent, shellStyle, editor);
                 return dialog;
             }
         };

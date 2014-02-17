@@ -167,4 +167,5 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
             setViewerInput(model);
         }
     }
+    
 }
