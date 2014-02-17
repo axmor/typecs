@@ -50,7 +50,6 @@ import org.eclipse.swt.widgets.TreeItem;
  * Class that implements a quick outline dialog
  * 
  * @author Asya Vorobyova
- * 
  */
 @SuppressWarnings("restriction")
 public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInformationControl,

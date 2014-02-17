@@ -20,10 +20,16 @@ import com.google.common.base.Throwables;
  *
  */
 public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
+    
+    /**
+     * ts file model
+     */
     private JSONArray model;
     
     /**
-     * @param model
+     * Constructor
+     * 
+     * @param model file model
      */
     public TypeScriptOutlineContentProvider(JSONArray model) {
         super();
