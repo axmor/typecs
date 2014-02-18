@@ -2,3 +2,4 @@
 .*/target/
 .*\.orig
 .*/\.checkstyle
+tools/axmor.keystore
