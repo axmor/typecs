@@ -5,6 +5,7 @@ Bundle-SymbolicName: com.axmor.eclipse.typescript.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.core.Activator
 Bundle-Vendor: Axmor Software
+Eclipse-BundleShape: dir
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,

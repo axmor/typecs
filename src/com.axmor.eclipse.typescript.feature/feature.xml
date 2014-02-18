@@ -23,7 +23,8 @@ the Eclipse Foundation.
          id="com.axmor.eclipse.typescript.core"
          download-size="0"
          install-size="0"
-         version="0.0.0"/>
+         version="0.0.0"
+         unpack="true"/>
 
    <plugin
          id="com.axmor.eclipse.typescript.builder"
