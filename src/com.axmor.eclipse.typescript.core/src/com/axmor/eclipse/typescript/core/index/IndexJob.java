@@ -9,6 +9,7 @@ package com.axmor.eclipse.typescript.core.index;
 
 import java.util.Set;
 
+import org.apache.lucene.store.NRTCachingDirectory;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceProxy;
 import org.eclipse.core.resources.IResourceProxyVisitor;
@@ -36,12 +37,18 @@ public class IndexJob extends Job {
     private Set<String> changedResources = Sets.newConcurrentHashSet();
     /** Indexer. */
     private TypeScriptIndexer indexer;
-
+    /** Caching indexed directory. */
+    private NRTCachingDirectory idxDir;
+    
     /**
      * @param name
      */
     public IndexJob() {
         super("Indexing TypeScript source files");
+        if (indexer == null) {
+            this.indexer = new TypeScriptIndexer();
+            idxDir = indexer.getIdxDir();
+        }
     }
     
     /**
@@ -60,8 +67,7 @@ public class IndexJob extends Job {
     
     @Override
     protected IStatus run(IProgressMonitor monitor) {
-        if (indexer == null) {
-            this.indexer = new TypeScriptIndexer();
+        if (changedResources.size() == 0) {
             try {
                 ResourcesPlugin.getWorkspace().getRoot().accept(new IResourceProxyVisitor() {
                     @Override
@@ -105,5 +111,12 @@ public class IndexJob extends Job {
         }
     }
     
-    
+    /**
+     * Get index directory
+     * 
+     * @return caching directory
+     */
+    public NRTCachingDirectory getIndexDirectory() {
+        return idxDir;
+    }
 }

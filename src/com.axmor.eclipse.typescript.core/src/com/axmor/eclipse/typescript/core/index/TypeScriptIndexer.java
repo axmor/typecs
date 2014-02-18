@@ -57,6 +57,13 @@ public class TypeScriptIndexer {
     private NRTCachingDirectory idxDir;
 
     /**
+     * @return the idxDir
+     */
+    public NRTCachingDirectory getIdxDir() {
+        return idxDir;
+    }
+
+    /**
      * Performs index setup and initial cleanup.
      */
     public TypeScriptIndexer() {
@@ -91,7 +98,7 @@ public class TypeScriptIndexer {
         }
 
     }
-
+    
     /**
      * Removes all instances from index related to given file.
      * 
