@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.core.index;
 
+import org.apache.lucene.store.NRTCachingDirectory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -27,11 +28,22 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
     /** Index job. */
     private IndexJob job;
 
+    /** Caching indexed directory. */
+    private NRTCachingDirectory idxDir;
+    
+    /**
+     * @return the idxDir
+     */
+    public NRTCachingDirectory getIdxDir() {
+        return idxDir;
+    }
+
     /**
      * Starts indexing process.
      */
     public void startIndex() {
         job = new IndexJob();
+        idxDir = job.getIndexDirectory();
         job.setSystem(true);
         job.schedule();
 

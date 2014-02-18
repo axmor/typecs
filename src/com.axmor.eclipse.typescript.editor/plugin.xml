@@ -187,7 +187,26 @@
     <extension point="org.eclipse.ui.menus">
         <menuContribution
             locationURI="popup:#TextEditorContext?after=group.add">
-            
+<!--            <menu label="Source">
+                <visibleWhen checkEnabled="true">
+                    <with variable="activeEditor">
+                        <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+                    </with>
+                </visibleWhen>
+                <command
+                    commandId="com.axmor.eclipse.typescript.edit.toggle.comment" 
+                    label="Toggle Comment"
+                    style="toggle">
+                </command>
+                <separator
+                     name="com.axmor.eclipse.typescript.editor.separator1">
+                </separator>
+                <command
+                    commandId="com.axmor.eclipse.typescript.edit.format" 
+                    label="Format"
+                    style="toggle">
+                </command>
+            </menu> -->
             <menu label="Refactor">
                 <visibleWhen checkEnabled="true">
                     <with variable="activeEditor">
@@ -200,6 +219,52 @@
                     style="toggle">
                 </command>
             </menu>
+<!--            <separator
+                  name="com.axmor.eclipse.typescript.editor.separator1">
+            </separator> -->
         </menuContribution>
+<!--        <menuContribution
+            locationURI="popup:#TextEditorContext?after=com.axmor.eclipse.typescript.editor.separator1">
+            <menu label="References">
+                <visibleWhen checkEnabled="true">
+                    <with variable="activeEditor">
+                        <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+                    </with>
+                </visibleWhen>
+                <command
+                    commandId="com.axmor.eclipse.typescript.search.references" 
+                    label="Workspace"
+                    style="toggle">
+                <visibleWhen checkEnabled="true">
+                    <with variable="activeEditor">
+                        <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+                    </with>
+                </visibleWhen>
+                </command>
+            </menu>    
+        </menuContribution>
+        <menuContribution
+            locationURI="popup:#TextEditorContext?endof=group.open">
+                <command
+                    commandId="com.axmor.eclipse.typescript.navigate.open.declaration" 
+                    label="Open Declaration"
+                    style="toggle">
+                <visibleWhen checkEnabled="true">
+                    <with variable="activeEditor">
+                        <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+                    </with>
+                </visibleWhen>
+                </command>
+                <command
+                    commandId="com.axmor.eclipse.typescript.navigate.show.outline" 
+                    label="Quick Outline"
+                    style="toggle">
+                <visibleWhen checkEnabled="true">
+                    <with variable="activeEditor">
+                        <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+                    </with>
+                </visibleWhen>
+                </command>
+        </menuContribution>-->
     </extension>      
 </plugin>
