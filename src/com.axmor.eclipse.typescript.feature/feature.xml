@@ -1,30 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="com.axmor.eclipse.typescript.feature"
-      label="Eclipse TypeScript Feature"
+      label="%featureName"
       version="1.0.0.qualifier"
-      provider-name="Axmor Software">
+      provider-name="%providerName">
 
    <description>
-      Add TypeScript language support in Eclipse IDE
+      %description
    </description>
 
    <copyright>
-      Copyright © 2014 Axmor Software
+      %copyright
    </copyright>
 
-   <license url="">
-This program and the accompanying materials are licensed under
-the terms of the Eclipse Public License v1.0 as published by
-the Eclipse Foundation.      
+   <license url="%licenseURL">
+      %license
    </license>
 
    <plugin
          id="com.axmor.eclipse.typescript.core"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
    <plugin
          id="com.axmor.eclipse.typescript.builder"
