@@ -187,7 +187,7 @@
     <extension point="org.eclipse.ui.menus">
         <menuContribution
             locationURI="popup:#TextEditorContext?after=group.add">
-<!--            <menu label="Source">
+            <menu label="Source">
                 <visibleWhen checkEnabled="true">
                     <with variable="activeEditor">
                         <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
@@ -206,7 +206,7 @@
                     label="Format"
                     style="toggle">
                 </command>
-            </menu> -->
+            </menu>
             <menu label="Refactor">
                 <visibleWhen checkEnabled="true">
                     <with variable="activeEditor">
@@ -219,11 +219,11 @@
                     style="toggle">
                 </command>
             </menu>
-<!--            <separator
+            <separator
                   name="com.axmor.eclipse.typescript.editor.separator1">
             </separator> -->
         </menuContribution>
-<!--        <menuContribution
+        <menuContribution
             locationURI="popup:#TextEditorContext?after=com.axmor.eclipse.typescript.editor.separator1">
             <menu label="References">
                 <visibleWhen checkEnabled="true">
@@ -265,6 +265,6 @@
                     </with>
                 </visibleWhen>
                 </command>
-        </menuContribution>-->
+        </menuContribution>
     </extension>      
 </plugin>
