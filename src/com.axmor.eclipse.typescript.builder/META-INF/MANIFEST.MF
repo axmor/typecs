@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Eclipse TypeScript Builder
+Bundle-Name: TypEcs Builder Plugin
 Bundle-SymbolicName: com.axmor.eclipse.typescript.builder;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.builder.Activator

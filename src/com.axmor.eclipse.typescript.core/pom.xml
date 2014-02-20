@@ -13,5 +13,5 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 
-  <name>Eclipse TypeScript Core Plugin</name>
+  <name>TypEcs Core Plugin</name>
 </project>
