@@ -28,6 +28,9 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import com.axmor.eclipse.typescript.core.index.TypeScriptIndexManager;
+import com.axmor.eclipse.typescript.core.index.TypeScriptIndexer.DocumentKind;
+import com.axmor.eclipse.typescript.core.index.TypeScriptIndexer.TypeVisibility;
+import com.google.common.base.Throwables;
 
 /**
  * The activator class controls the plug-in life cycle.
@@ -88,45 +91,138 @@ public class Activator extends AbstractUIPlugin {
     /**
      * Gets results for Open Type action
      * 
-     * @param pattern text to search
+     * @param pattern
+     *            text to search
      * @return results
      */
-    public String[] getSearchResults(String pattern) {
+    public TypeDocument[] getSearchResults(String pattern) {
         IndexReader ireader;
         ScoreDoc[] hits = null;
-        String[] docs = null;
+        TypeDocument[] docs = null;
         try {
             ireader = IndexReader.open(indexManager.getIdxDir());
             IndexSearcher isearcher = new IndexSearcher(ireader);
-         // Parse a simple query that searches for "text":
+            // Parse a simple query that searches for "text":
 
-            Sort sort = new Sort(new SortField[] {
-                    SortField.FIELD_SCORE,
-                    new SortField("score", SortField.INT)});
+            Sort sort = new Sort(new SortField[] { SortField.FIELD_SCORE, new SortField("score", SortField.INT) });
             TopFieldCollector topField = TopFieldCollector.create(sort, 100, true, true, true, false);
-            
+
             QueryParser parser = new QueryParser(Version.LUCENE_35, "name", new StandardAnalyzer(Version.LUCENE_35));
             parser.setAllowLeadingWildcard(true);
             parser.setAutoGeneratePhraseQueries(false);
-            Query query = parser.parse("name:(*" + pattern.toLowerCase() + "*) or terms:(" + pattern.toLowerCase() + "*)");
+            Query query = parser.parse("name:(*" + pattern.toLowerCase() + "*) or terms:(*" + pattern.toLowerCase()
+                    + "*)");
             isearcher.search(query, topField);
             hits = topField.topDocs().scoreDocs;
             // Iterate through the results:
-            docs = new String[hits.length];
+            docs = new TypeDocument[hits.length];
+            String innerName;
             for (int i = 0; i < hits.length; i++) {
                 Document hitDoc = isearcher.doc(hits[i].doc);
                 System.out.println(hitDoc.get("name") + ":" + hits[i].score + ":" + hitDoc.get("file"));
-                docs[i] = hitDoc.toString();
-            }            
+                innerName = hitDoc.get("name");
+                String[] terms = hitDoc.get("name").split(".");
+                if (terms.length > 0) {
+                    for (int j = 0; j < terms.length; j++) {
+                        if (terms[j].toLowerCase().contains(pattern.toLowerCase())) {
+                            innerName = terms[j];
+                            break;
+                        }
+                    }
+                }
+                int typeInt = Integer.parseInt(hitDoc.get("type"));
+                String type = "";
+                for (int k = 0; k < DocumentKind.values().length; k++) {
+                    if (typeInt == DocumentKind.values()[k].getIntValue()) {
+                        type = DocumentKind.values()[k].getStringValue();
+                        break;
+                    }
+                }
+                int visibilityInt = Integer.parseInt(hitDoc.get("visibility"));
+                String visibility = "";
+                for (int k = 0; k < TypeVisibility.values().length; k++) {
+                    if (visibilityInt == TypeVisibility.values()[k].getIntValue()) {
+                        visibility = TypeVisibility.values()[k].getStringValue();
+                        break;
+                    }
+                }
+                docs[i] = new TypeDocument(innerName, hitDoc.get("file"), hitDoc.get("project"), hitDoc.get("offset"),
+                        type, visibility);
+            }
             isearcher.close();
             ireader.close();
         } catch (IOException | ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw Throwables.propagate(e);
         }
         return docs;
     }
-    
+
+    /**
+     * Class for storing document fields
+     * 
+     * @author Asya Vorobyova
+     */
+    public class TypeDocument {
+        /** name of type */
+        private String name;
+        /** type file */
+        private String file;
+        /** type project */
+        private String project;
+        /** type offset in file */
+        private String offset;
+        /** document type */
+        private String type;
+        /** type visibility */
+        private String visibility;
+
+        /**
+         * @param name name
+         * @param file file
+         * @param project project
+         * @param offset offset
+         * @param type type
+         * @param visibility visibility 
+         */
+        public TypeDocument(String name, String file, String project, String offset, String type, String visibility) {
+            super();
+            this.name = name;
+            this.file = file;
+            this.project = project;
+            this.offset = offset;
+            this.type = type;
+            this.visibility = visibility;
+        }
+
+        /**
+         * Gets String value of key
+         * 
+         * @param key key
+         * @return value
+         */
+        public String getString(String key) {
+            if (key.equals("name")) {
+                return name;
+            }
+            if (key.equals("file")) {
+                return file;
+            }
+            if (key.equals("project")) {
+                return project;
+            }
+            if (key.equals("offset")) {
+                return offset;
+            }
+            if (key.equals("type")) {
+                return type;
+            }
+            if (key.equals("visibility")) {
+                return visibility;
+            }
+            return null;
+        }
+    }
+
     /**
      * Print error message to Error log.
      * 

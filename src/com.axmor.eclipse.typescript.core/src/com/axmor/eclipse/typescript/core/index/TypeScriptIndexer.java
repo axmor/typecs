@@ -57,6 +57,79 @@ public class TypeScriptIndexer {
     private NRTCachingDirectory idxDir;
 
     /**
+     * Enum for hardcoding of document kind case
+     * 
+     * @author Asya Vorobyova
+     */
+    public enum DocumentKind {
+        /** interface case */
+        INTERFACE,
+        /** enum case */
+        ENUM,
+        /** class case */
+        CLASS;
+
+        /**
+         * Gets corresponding int identifier
+         * 
+         * @return int value
+         */
+        public int getIntValue() {
+            if (name().equals("INTERFACE")) {
+                return 1;
+            }
+            if (name().equals("ENUM")) {
+                return 2;
+            }
+            if (name().equals("CLASS")) {
+                return 3;
+            }
+            return 0;
+        }
+        
+        /**
+         * @return string value
+         */
+        public String getStringValue() {
+            return name().toLowerCase();
+        }
+    }
+
+    /**
+     * Enum for hardcoding of type modifier case
+     * 
+     * @author Asya Vorobyova
+     */
+    public enum TypeVisibility {
+        /** public */
+        PUBLIC,
+        /** private */
+        PRIVATE;
+
+        /**
+         * Gets corresponding int identifier
+         * 
+         * @return int value
+         */
+        public int getIntValue() {
+            if (name().equals("PUBLIC")) {
+                return 0;
+            }
+            if (name().equals("PRIVATE")) {
+                return 1;
+            }
+            return -1;
+        }
+        
+        /**
+         * @return string value
+         */
+        public String getStringValue() {
+            return name().toLowerCase();
+        }
+    }
+
+    /**
      * @return the idxDir
      */
     public NRTCachingDirectory getIdxDir() {
@@ -98,7 +171,7 @@ public class TypeScriptIndexer {
         }
 
     }
-    
+
     /**
      * Removes all instances from index related to given file.
      * 
@@ -138,14 +211,21 @@ public class TypeScriptIndexer {
                 }
                 switch (kind) {
                 case "interface":
-                    addDocumentToIndex(name, project, path, 1, 0, offset, file.getModificationStamp());
+                    addDocumentToIndex(name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
+                            file.getModificationStamp());
                     break;
                 case "enum":
-                    addDocumentToIndex(name, project, path, 2, 0, offset, file.getModificationStamp());
+                    addDocumentToIndex(name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
+                            file.getModificationStamp());
                     break;
                 case "class":
-                    addDocumentToIndex(name, project, path, 3, "private".equals(modifier) ? 1 : 0, offset,
-                            file.getModificationStamp());
+                    addDocumentToIndex(
+                            name,
+                            project,
+                            path,
+                            DocumentKind.CLASS.getIntValue(),
+                            "private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
+                                    .getIntValue(), offset, file.getModificationStamp());
                     break;
                 default:
                     break;
