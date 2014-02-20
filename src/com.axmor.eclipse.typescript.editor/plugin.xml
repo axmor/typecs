@@ -94,8 +94,15 @@
            name="Open Declaration" 
            description="Open an editor on the selected element"
            categoryId="com.axmor.eclipse.typescript.category.navigate" 
-           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.OpenHandler" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.OpenDeclarationHandler" 
            id="com.axmor.eclipse.typescript.navigate.open.declaration" />
+
+      <command 
+           name="Open Type" 
+           description="Open a type in a TypeScript Editor"
+           categoryId="com.axmor.eclipse.typescript.category.navigate" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.OpenTypeHandler" 
+           id="com.axmor.eclipse.typescript.navigate.open.type" />
            
       <command 
            name="Format" 
@@ -137,6 +144,11 @@
            sequence="F3"
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.navigate.open.declaration"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="M1+M2+T"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.navigate.open.type"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
       <key
            sequence="M1+M2+F"
