@@ -136,7 +136,6 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
         doc.addDocumentListener(listener);
         ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
         ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
-        //TypeDocument[] results = com.axmor.eclipse.typescript.core.Activator.getDefault().getSearchResults("Student");
     }
 
     /**

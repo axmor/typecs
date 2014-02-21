@@ -8,6 +8,7 @@
 package com.axmor.eclipse.typescript.editor;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.text.BadLocationException;
@@ -17,7 +18,6 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
@@ -36,12 +36,11 @@ import us.monoid.json.JSONObject;
  * 
  */
 public final class TypeScriptEditorUtils {
-
     /**
      * Protect from initialization.
      */
     private TypeScriptEditorUtils() {
-        
+
     }
 
     /**
@@ -64,15 +63,19 @@ public final class TypeScriptEditorUtils {
                     editor.selectAndReveal(objectOffset, 0);
                 } else {
                     // open the editor for a corresponding file and select needful declaration
-                    IPath path = new Path(containerName);
-                    IFile newFile = file.getProject().getFile(path);
-                    IEditorPart editorPart = IDE.openEditor(Activator.getDefault().getWorkbench()
-                            .getActiveWorkbenchWindow().getActivePage(), newFile, true);
-                    if (editorPart != null && editorPart instanceof AbstractTextEditor) {
-                        ((AbstractTextEditor) editorPart).selectAndReveal(objectOffset, 0);
+                    if (containerName.equals("lib.d.ts")) {
+                        return;
+                    } else {
+                        IPath path = new Path(containerName);
+                        IFile newFile = file.getProject().getFile(path);
+                        IEditorPart editorPart = IDE.openEditor(Activator.getDefault().getWorkbench()
+                                .getActiveWorkbenchWindow().getActivePage(), newFile, true);
+                        if (editorPart != null && editorPart instanceof AbstractTextEditor) {
+                            ((AbstractTextEditor) editorPart).selectAndReveal(objectOffset, 0);
+                        }
                     }
                 }
-            } catch (JSONException | PartInitException e) {
+            } catch (JSONException | CoreException e) {
                 throw Throwables.propagate(e);
             }
         }
