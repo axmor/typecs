@@ -25,7 +25,6 @@ public class OpenDeclarationHandler extends AbstractHandler {
 
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
-        //ISelection selection = HandlerUtil.getCurrentSelection(event);
         TypeScriptEditor editor = (TypeScriptEditor) HandlerUtil.getActiveEditor(event);
         if (editor == null) {
             return null;

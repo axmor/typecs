@@ -18,6 +18,7 @@ Require-Bundle: org.eclipse.ui,
  com.ibm.icu;bundle-version="50.1.1",
  org.eclipse.compare,
  org.eclipse.search,
- org.eclipse.pde.ui
+ org.eclipse.pde.ui,
+ org.eclipse.core.filesystem
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
