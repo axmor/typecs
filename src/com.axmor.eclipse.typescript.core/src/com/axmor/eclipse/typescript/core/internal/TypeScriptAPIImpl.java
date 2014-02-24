@@ -102,7 +102,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
             }
-            return null;
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
