@@ -4,7 +4,7 @@ Bundle-Name: TypEcs Core Plugin
 Bundle-SymbolicName: com.axmor.eclipse.typescript.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.core.Activator
-Bundle-Vendor: Axmor Software
+Bundle-Vendor: Axmor Software Inc.
 Eclipse-BundleShape: dir
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
