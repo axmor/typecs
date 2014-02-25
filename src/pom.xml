@@ -13,6 +13,7 @@
     <tycho.version>0.19.0</tycho.version>
   </properties>
   <modules>
+    <module>com.axmor.eclipse.typescript</module>
     <module>com.axmor.eclipse.typescript.core</module>
     <module>com.axmor.eclipse.typescript.builder</module>
     <module>com.axmor.eclipse.typescript.editor</module>
