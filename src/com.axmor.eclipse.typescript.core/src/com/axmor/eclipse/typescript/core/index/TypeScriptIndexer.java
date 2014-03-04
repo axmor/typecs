@@ -231,6 +231,7 @@ public class TypeScriptIndexer {
                     break;
                 }
             }
+            iwriter.commit();
         } catch (Exception e) {
             Activator.error(e);
         }
@@ -353,6 +354,17 @@ public class TypeScriptIndexer {
         try {
             iwriter.close(true);
             idxDir.close();
+        } catch (IOException e) {
+            Activator.error(e);
+        }
+    }
+    
+    /**
+     * Flushes changes on disk.
+     */
+    public void flush() {
+        try {
+            iwriter.commit();
         } catch (IOException e) {
             Activator.error(e);
         }

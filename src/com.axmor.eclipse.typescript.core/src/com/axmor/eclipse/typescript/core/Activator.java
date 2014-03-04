@@ -12,6 +12,7 @@ import java.io.IOException;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
@@ -119,7 +120,6 @@ public class Activator extends AbstractUIPlugin {
             String innerName;
             for (int i = 0; i < hits.length; i++) {
                 Document hitDoc = isearcher.doc(hits[i].doc);
-                System.out.println(hitDoc.get("name") + ":" + hits[i].score + ":" + hitDoc.get("file"));
                 innerName = hitDoc.get("name");
                 String[] terms = hitDoc.get("name").split(".");
                 if (terms.length > 0) {
@@ -151,6 +151,9 @@ public class Activator extends AbstractUIPlugin {
             }
             isearcher.close();
             ireader.close();
+        } catch (IndexNotFoundException e) {
+            indexManager.flush();
+            docs = new TypeDocument[0];
         } catch (IOException | ParseException e) {
             throw Throwables.propagate(e);
         }

@@ -59,6 +59,13 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
             job.getIndexer().close();
         }
     }
+    
+    /**
+     * Flushes changes on disk.
+     */
+    public void flush() {
+        job.getIndexer().flush();
+    }
 
     @Override
     public void resourceChanged(IResourceChangeEvent event) {
