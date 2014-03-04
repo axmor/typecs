@@ -130,7 +130,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             } else {
                 params.put("moduleGenTarget", 2);
             }
-            if (settings.getTarget() != null && settings.getTarget().toLowerCase().endsWith("js")) {
+            if (settings.getTarget() != null && settings.getTarget().toLowerCase().endsWith(".js")) {
                 params.put("outFileOption", settings.getTarget());
                 params.put("outDirOption", "");
             } else {
