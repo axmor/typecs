@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package com.axmor.eclipse.typescript.builder.ui;
+package com.axmor.eclipse.typescript.core.ui;
 
 import static com.axmor.eclipse.typescript.core.TypeScriptResources.TS_EXT;
 
