@@ -64,6 +64,9 @@ public final class TypeScriptImageKeys {
     /** "Search reference on object" image **/
     public static final String IMG_SEARCH_REF_OBJ = PLUGIN_ID + "IMG_SEARCH_REF_OBJ";
 
+    /** "Type Definition" file image **/
+    public static final String IMG_DTS_FILE = PLUGIN_ID + "IMG_DTS_FILE";
+
     /**
      * Protect from initialization.
      */

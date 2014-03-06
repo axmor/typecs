@@ -76,7 +76,9 @@ public class TypeScriptUIImages {
         declareRegistryImage(TypeScriptImageKeys.IMG_PACKAGE, ICONS_PATH + "package_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_STATIC, ICONS_PATH + "static_co.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_SEARCH_REF_OBJ, ICONS_PATH + "search_ref_obj.gif");
-    }
+
+        declareRegistryImage(TypeScriptImageKeys.IMG_DTS_FILE, "$nl$/icons/typescript_def_file.png");
+}
 
     /**
      * Declare an Image in the registry table.

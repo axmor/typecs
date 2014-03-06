@@ -132,6 +132,12 @@
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.QuickOutlineHandler" 
            id="com.axmor.eclipse.typescript.navigate.show.outline" />
            
+      <command 
+           name="Add TypeScript Definition" 
+           description="Add TypeScript definition file for popular JavaScript libraries from online repository"
+           categoryId="com.axmor.eclipse.typescript.category.source" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.AddTypeScriptDefinitionHandler" 
+           id="com.axmor.eclipse.typescript.edit.add_def" />
    </extension>
 	
     <extension point="org.eclipse.ui.bindings">
@@ -169,6 +175,11 @@
            sequence="M1+O"
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.navigate.show.outline"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="M1+M2+D"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.edit.add_def"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
     </extension>
 	      
@@ -218,6 +229,11 @@
                     label="Format"
                     style="toggle">
                 </command>
+                <command
+                    commandId="com.axmor.eclipse.typescript.edit.add_def" 
+                    label="Add TypeScript Definition from Catalog..."
+                    style="toggle">
+                </command>
             </menu>
             <menu label="Refactor">
                 <visibleWhen checkEnabled="true">
@@ -233,7 +249,7 @@
             </menu>
             <separator
                   name="com.axmor.eclipse.typescript.editor.separator1">
-            </separator> -->
+            </separator>
         </menuContribution>
         <menuContribution
             locationURI="popup:#TextEditorContext?after=com.axmor.eclipse.typescript.editor.separator1">
