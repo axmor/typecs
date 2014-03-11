@@ -17,6 +17,7 @@
     <module>com.axmor.eclipse.typescript.core</module>
     <module>com.axmor.eclipse.typescript.builder</module>
     <module>com.axmor.eclipse.typescript.editor</module>
+    <module>com.axmor.eclipse.typescript.ui</module>
     <module>com.axmor.eclipse.typescript.feature</module>
     <module>com.axmor.eclipse.typescript.repository</module>
   </modules>
