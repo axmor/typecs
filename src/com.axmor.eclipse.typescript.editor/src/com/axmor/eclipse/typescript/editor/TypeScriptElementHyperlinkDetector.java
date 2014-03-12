@@ -18,7 +18,6 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptKeywordRuler;
-import com.google.common.base.Throwables;
 
 /**
  * Class that tries to find a hyperlink at a given location in a given text viewer.
@@ -48,7 +47,7 @@ public class TypeScriptElementHyperlinkDetector extends AbstractHyperlinkDetecto
                 return null;
             }
         } catch (BadLocationException e) {
-            throw Throwables.propagate(e);
+            Activator.error(e);
         }
         return new IHyperlink[] { new TypeScriptElementHyperlink(textEditor, wordRegion) };
     }

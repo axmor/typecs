@@ -342,4 +342,21 @@ public class TypeScriptBridge implements Runnable {
             return false;
         }
     }
+
+    /**
+     * @return path to lib.d.ts file.
+     */
+    public static String getStdLibPath() {
+        try {
+            String version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
+
+            if (Strings.isNullOrEmpty(version)) {
+                version = "0.9.5";
+            }
+            File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
+            return new File(bundleFile, LIB_BRIDGE + "/ts_" + version + "/lib.d.ts").getCanonicalPath();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 }
