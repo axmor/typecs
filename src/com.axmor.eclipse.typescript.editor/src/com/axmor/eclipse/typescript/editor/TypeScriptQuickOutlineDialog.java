@@ -409,12 +409,6 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
         return null;
     }
 
-    @Override
-    protected Control createInfoTextArea(Composite parent) {
-        // TODO Auto-generated method stub
-        return super.createInfoTextArea(parent);
-    }
-
 
     @Override
     public void widgetDisposed(DisposeEvent e) {
