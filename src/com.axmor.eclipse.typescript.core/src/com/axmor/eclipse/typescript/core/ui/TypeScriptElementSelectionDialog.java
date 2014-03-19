@@ -65,11 +65,13 @@ public class TypeScriptElementSelectionDialog {
      * 
      * @param path
      *            initial path that will be selected on dialog open.
+     * @param folderOnly
+     *            <code>true</code> if display only folder
      * 
      * @return selected project root or resource. If user press <b>cancel</b> it returns
      *         <code>null</code>
      */
-    public IResource open(String path) {
+    public IResource open(String path, final boolean folderOnly) {
         ElementTreeSelectionDialog dialog = new ElementTreeSelectionDialog(shell, new WorkbenchLabelProvider(),
                 new BaseWorkbenchContentProvider() {
                     @Override
@@ -81,10 +83,16 @@ public class TypeScriptElementSelectionDialog {
 
                             try {
                                 for (IResource resource : ((IContainer) element).members()) {
-                                    if (resource.getType() == IResource.FOLDER
-                                            || TS_EXT.equalsIgnoreCase(resource.getProjectRelativePath()
-                                                    .getFileExtension())) {
-                                        childrens.add(resource);
+                                    if (folderOnly) {
+                                        if (resource.getType() == IResource.FOLDER && !resource.isVirtual()) {
+                                            childrens.add(resource);
+                                        }
+                                    } else {
+                                        if ((resource.getType() == IResource.FOLDER && !resource.isVirtual())
+                                                || TS_EXT.equalsIgnoreCase(resource.getProjectRelativePath()
+                                                        .getFileExtension())) {
+                                            childrens.add(resource);
+                                        }
                                     }
                                 }
                             } catch (CoreException e) {

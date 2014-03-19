@@ -199,7 +199,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
             @Override
             public void widgetSelected(SelectionEvent e) {
                 IResource resource = new TypeScriptElementSelectionDialog(getShell(), title, message, project)
-                        .open(text.getText());
+                        .open(text.getText(), false);
                 if (resource != null) {
                     text.setText(resource.getProjectRelativePath().toString());
                 }

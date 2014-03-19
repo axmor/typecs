@@ -113,7 +113,7 @@ public class AddTypeScriptDefinitionDialog extends FilteredItemsSelectionDialog 
             @Override
             public void widgetSelected(SelectionEvent e) {
                 IResource resource = new TypeScriptElementSelectionDialog(getShell(), "", "", project).open(targetDir
-                        .getText());
+                        .getText(), true);
                 if (resource != null) {
                     targetDir.setText(resource.getProjectRelativePath().toString());
                     getDialogSettings().put("target_dir", targetDir.getText());
