@@ -18,6 +18,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.window.Window;
@@ -62,7 +63,8 @@ public class AddTypeScriptDefinitionHandler extends AbstractHandler {
                     if (!file.exists()) {
                         createFile(file, new Resty().bytes(def.getUrl()).stream());
                     }
-                    document.replace(0, 0, "/// <reference path=\"" + def.getId() + "\"/>\n");
+                    IPath relativePath = file.getFullPath().makeRelativeTo(editorInput.getFile().getParent().getFullPath());
+                    document.replace(0, 0, "/// <reference path=\"" + relativePath + "\"/>\n");
                 } catch (Exception e) {
                     throw Throwables.propagate(e);
                 }
