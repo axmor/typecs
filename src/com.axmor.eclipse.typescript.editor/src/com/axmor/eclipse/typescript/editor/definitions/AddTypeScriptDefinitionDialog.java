@@ -21,6 +21,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -107,6 +109,12 @@ public class AddTypeScriptDefinitionDialog extends FilteredItemsSelectionDialog 
         }
 
         targetDir.setText(getDialogSettings().get("target_dir"));
+        targetDir.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e) {
+                getDialogSettings().put("target_dir", targetDir.getText());
+            }
+        });
 
         Button button = SWTFactory.createPushButton(composite, "Browse...", null);
         button.addSelectionListener(new SelectionAdapter() {
@@ -116,7 +124,6 @@ public class AddTypeScriptDefinitionDialog extends FilteredItemsSelectionDialog 
                         .getText(), true);
                 if (resource != null) {
                     targetDir.setText(resource.getProjectRelativePath().toString());
-                    getDialogSettings().put("target_dir", targetDir.getText());
                 }
 
                 super.widgetSelected(e);
