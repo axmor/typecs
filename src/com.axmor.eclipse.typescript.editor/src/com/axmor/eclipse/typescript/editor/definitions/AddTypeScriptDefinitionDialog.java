@@ -10,7 +10,7 @@ package com.axmor.eclipse.typescript.editor.definitions;
 import java.util.Comparator;
 import java.util.List;
 
-import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -37,6 +37,7 @@ import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
 import com.axmor.eclipse.typescript.core.ui.SWTFactory;
 import com.axmor.eclipse.typescript.core.ui.TypeScriptElementSelectionDialog;
 import com.axmor.eclipse.typescript.editor.Activator;
+import com.google.common.base.Strings;
 
 /**
  * @author Konstantin Zaitcev
@@ -85,8 +86,12 @@ public class AddTypeScriptDefinitionDialog extends FilteredItemsSelectionDialog 
     /**
      * @return the targetDir
      */
-    public IFolder getTargetDir() {
-        return project.getFolder(getDialogSettings().get("target_dir"));
+    public IContainer getTargetDir() {
+        String folder = getDialogSettings().get("target_dir");
+        if (Strings.isNullOrEmpty(folder)) {
+            return project;
+        }
+        return project.getFolder(folder);
     }
 
     @Override
