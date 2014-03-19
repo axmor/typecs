@@ -18,6 +18,7 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
@@ -57,7 +58,7 @@ public class AddTypeScriptDefinitionHandler extends AbstractHandler {
             for (Object obj : result) {
                 TypeScriptDefinition def = (TypeScriptDefinition) obj;
                 try {
-                    IFile file = dialog.getTargetDir().getFile(def.getId());
+                    IFile file = dialog.getTargetDir().getFile(new Path(def.getId()));
                     if (!file.exists()) {
                         createFile(file, new Resty().bytes(def.getUrl()).stream());
                     }
