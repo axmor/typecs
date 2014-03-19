@@ -124,47 +124,51 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
     private void compileFile(IFile file, TypeScriptCompilerSettings settings, IProgressMonitor monitor) {
         JSONObject json = TypeScriptAPIFactory.getTypeScriptAPI(getProject()).compile(file, settings);
         try {
-            JSONArray files = json.getJSONArray("files");
-            for (int i = 0; i < files.length(); i++) {
-                String fileName = files.getString(i);
-                IFile ifile = getFileByPath(fileName);
-                if (ifile != null) {
-                    ifile.refreshLocal(IResource.DEPTH_ZERO, monitor);
+            if (json.has("files")) {
+                JSONArray files = json.getJSONArray("files");
+                for (int i = 0; i < files.length(); i++) {
+                    String fileName = files.getString(i);
+                    IFile ifile = getFileByPath(fileName);
+                    if (ifile != null) {
+                        ifile.refreshLocal(IResource.DEPTH_ZERO, monitor);
+                    }
                 }
             }
 
-            JSONArray errors = json.getJSONArray("errors");
-            for (int i = 0; i < errors.length(); i++) {
-                JSONObject error = errors.getJSONObject(i);
-                IMarker marker = null;
-                if (error.has("file") && !error.isNull("file")) {
-                    IFile ifile = getFileByPath(error.getString("file"));
-                    marker = (ifile != null ? ifile : getProject()).createMarker(MARKER_TYPE);
-                } else {
-                    marker = getProject().createMarker(MARKER_TYPE);
-                }
-                marker.setAttribute(IMarker.MESSAGE, error.getString("text"));
-                marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
-                if (error.has("code")) {
-                    marker.setAttribute(IMarker.LOCATION, "TS" + error.getInt("code"));
-                }
-
-                if (error.has("severity")) {
-                    switch (error.getInt("severity")) {
-                    case 0:
-                        marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
-                        break;
-                    case 1:
-                        marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-                        break;
-                    default:
-                        marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
-                        break;
+            if (json.has("errors")) {
+                JSONArray errors = json.getJSONArray("errors");
+                for (int i = 0; i < errors.length(); i++) {
+                    JSONObject error = errors.getJSONObject(i);
+                    IMarker marker = null;
+                    if (error.has("file") && !error.isNull("file")) {
+                        IFile ifile = getFileByPath(error.getString("file"));
+                        marker = (ifile != null ? ifile : getProject()).createMarker(MARKER_TYPE);
+                    } else {
+                        marker = getProject().createMarker(MARKER_TYPE);
                     }
+                    marker.setAttribute(IMarker.MESSAGE, error.getString("text"));
+                    marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
+                    if (error.has("code")) {
+                        marker.setAttribute(IMarker.LOCATION, "TS" + error.getInt("code"));
+                    }
+    
+                    if (error.has("severity")) {
+                        switch (error.getInt("severity")) {
+                        case 0:
+                            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
+                            break;
+                        case 1:
+                            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+                            break;
+                        default:
+                            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
+                            break;
+                        }
+                    }
+    
+                    marker.setAttribute(IMarker.CHAR_START, error.getInt("start"));
+                    marker.setAttribute(IMarker.CHAR_END, error.getInt("start") + error.getInt("length"));
                 }
-
-                marker.setAttribute(IMarker.CHAR_START, error.getInt("start"));
-                marker.setAttribute(IMarker.CHAR_END, error.getInt("start") + error.getInt("length"));
             }
         } catch (JSONException | CoreException e) {
             throw Throwables.propagate(e);
