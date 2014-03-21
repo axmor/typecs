@@ -40,6 +40,7 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
+import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
 import com.google.common.base.Throwables;
 
@@ -136,6 +137,11 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
         doc.addDocumentListener(listener);
         ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
         ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
+    }
+
+    @Override
+    public boolean isEditable() {
+        return getEditorInput().getName().endsWith(TypeScriptResources.TS_STD_LIB) ? false : super.isEditable();
     }
 
     /**

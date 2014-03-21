@@ -63,16 +63,12 @@ public final class TypeScriptEditorUtils {
                     editor.selectAndReveal(objectOffset, 0);
                 } else {
                     // open the editor for a corresponding file and select needful declaration
-                    if (containerName.equals("lib.d.ts")) {
-                        return;
-                    } else {
-                        IPath path = new Path(containerName);
-                        IFile newFile = file.getProject().getFile(path);
-                        IEditorPart editorPart = IDE.openEditor(Activator.getDefault().getWorkbench()
-                                .getActiveWorkbenchWindow().getActivePage(), newFile, true);
-                        if (editorPart != null && editorPart instanceof AbstractTextEditor) {
-                            ((AbstractTextEditor) editorPart).selectAndReveal(objectOffset, 0);
-                        }
+                    IPath path = new Path(containerName);
+                    IFile newFile = file.getProject().getFile(path);
+                    IEditorPart editorPart = IDE.openEditor(Activator.getDefault().getWorkbench()
+                            .getActiveWorkbenchWindow().getActivePage(), newFile, true);
+                    if (editorPart != null && editorPart instanceof AbstractTextEditor) {
+                        ((AbstractTextEditor) editorPart).selectAndReveal(objectOffset, 0);
                     }
                 }
             } catch (JSONException | CoreException e) {

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: TypEcs Core Plugin
 Bundle-SymbolicName: com.axmor.eclipse.typescript.core;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.5.0.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.core.Activator
 Bundle-Vendor: Axmor Software Inc.
 Eclipse-BundleShape: dir
@@ -39,4 +39,9 @@ Export-Package: com.axmor.eclipse.typescript.core,
  com.google.common.util.concurrent,
  com.google.common.xml,
  com.google.thirdparty.publicsuffix,
- us.monoid.json
+ us.monoid.json,
+ us.monoid.util,
+ us.monoid.web,
+ us.monoid.web.auth,
+ us.monoid.web.jp.javacc,
+ us.monoid.web.mime

@@ -43,9 +43,11 @@ if (args.serv) {
             tss.setFileContent(o.file, o.params);
             socket.end(JSON.stringify({ 'status': 0}));
             break;
-          case 'addFile':                            
-            log.debug('bridge.addFile: ' + o.file);
-            tss.addFile(o.file);
+          case 'addFile':
+            if (o.file !== 'std-lib/lib.d.ts') {                            
+              log.debug('bridge.addFile: ' + o.file);
+              tss.addFile(o.file);
+            }
             socket.end(JSON.stringify({ 'status': 0}));
             break;
           case 'getScriptLexicalStructure':                            

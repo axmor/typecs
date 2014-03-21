@@ -69,8 +69,7 @@ public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
                 }
                 return getChildren(kind, name);
             } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Activator.error(e);
             }
         } else if (parentElement instanceof JSONArray) {
             return getChildren("", "");

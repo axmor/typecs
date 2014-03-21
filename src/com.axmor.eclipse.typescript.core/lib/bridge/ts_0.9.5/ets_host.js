@@ -7,7 +7,7 @@ var TypeScript = null;
 
 exports.init = function(ts) {
   TypeScript = ts;
-  files['lib.d.ts'] = TypeScript.ScriptSnapshot.fromString(fs.readFileSync('./ts_' + args.version + '/lib.d.ts').toString());
+  files['std-lib/lib.d.ts'] = TypeScript.ScriptSnapshot.fromString(fs.readFileSync('./ts_' + args.version + '/lib.d.ts').toString());
 }
 
 // logger
