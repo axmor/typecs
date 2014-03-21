@@ -10,18 +10,25 @@ package com.axmor.eclipse.typescript.core.internal;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
+import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.ui.PlatformUI;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
+import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
 import com.axmor.eclipse.typescript.core.TypeScriptEditorSettings;
+import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.google.common.base.Throwables;
 
 /**
@@ -40,9 +47,24 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
      * @param project
      *            project
      */
-    public TypeScriptAPIImpl(IProject project) {
+    public TypeScriptAPIImpl(final IProject project) {
         if (project != null && project.exists() && project.isAccessible()) {
             location = project.getLocation();
+            PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    IFolder libFolder = project.getFolder(TypeScriptResources.TS_STD_LIB_FOLDER);
+                    if (!libFolder.exists()) {
+                        try {
+                            libFolder.create(IResource.VIRTUAL, true, null);
+                            IFile libFile = libFolder.getFile(TypeScriptResources.TS_STD_LIB);
+                            libFile.createLink(URIUtil.toURI(TypeScriptBridge.getStdLibPath()), IResource.NONE, null);
+                        } catch (CoreException e) {
+                            Activator.error(e);
+                        }
+                    }
+                }
+            });
         } else {
             location = ResourcesPlugin.getWorkspace().getRoot().getLocation();
         }

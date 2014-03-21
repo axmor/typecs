@@ -2,7 +2,7 @@
 <feature
       id="com.axmor.eclipse.typescript.feature"
       label="%featureName"
-      version="1.0.0.qualifier"
+      version="1.5.0.qualifier"
       provider-name="%providerName"
       plugin="com.axmor.eclipse.typescript">
 
@@ -39,6 +39,13 @@
 
    <plugin
          id="com.axmor.eclipse.typescript.editor"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript.ui"
          download-size="0"
          install-size="0"
          version="0.0.0"

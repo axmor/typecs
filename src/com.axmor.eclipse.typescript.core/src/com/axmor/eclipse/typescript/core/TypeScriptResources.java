@@ -24,6 +24,12 @@ public final class TypeScriptResources {
     /** TypeScript definition file extension with dot. */
     public static final String TS_DEF_EXT_DOT = ".d.ts";
 
+    /** TypeScript standard library definition file. */
+    public static final String TS_STD_LIB = "lib.d.ts";
+
+    /** TypeScript standard library definition folder name. */
+    public static final String TS_STD_LIB_FOLDER = "std-lib";
+
     /**
      * Hide from initialization.
      */

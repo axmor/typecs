@@ -29,6 +29,7 @@ import com.axmor.eclipse.typescript.builder.Activator;
 import com.axmor.eclipse.typescript.builder.i18n.Messages;
 import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
 import com.axmor.eclipse.typescript.core.ui.SWTFactory;
+import com.axmor.eclipse.typescript.core.ui.TypeScriptElementSelectionDialog;
 
 /**
  * TypeScript build properties page.
@@ -198,7 +199,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
             @Override
             public void widgetSelected(SelectionEvent e) {
                 IResource resource = new TypeScriptElementSelectionDialog(getShell(), title, message, project)
-                        .open(text.getText());
+                        .open(text.getText(), false);
                 if (resource != null) {
                     text.setText(resource.getProjectRelativePath().toString());
                 }

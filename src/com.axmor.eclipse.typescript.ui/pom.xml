@@ -7,11 +7,11 @@
     <artifactId>product</artifactId>
     <version>1</version>
   </parent>
-  
-  <groupId>com.axmor.eclipse.typescript</groupId>
-  <artifactId>com.axmor.eclipse.typescript.repository</artifactId>
-  <version>1.5.0-SNAPSHOT</version>
-  <packaging>eclipse-repository</packaging>
 
-  <name>TypEcs Update Site Repository</name>
+  <groupId>com.axmor.eclipse.typescript</groupId>
+  <artifactId>com.axmor.eclipse.typescript.ui</artifactId>
+  <version>1.5.0-SNAPSHOT</version>
+  <packaging>eclipse-plugin</packaging>
+
+  <name>TypEcs UI Plugin</name>
 </project>

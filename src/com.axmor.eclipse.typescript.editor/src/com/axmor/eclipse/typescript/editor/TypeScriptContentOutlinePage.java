@@ -47,7 +47,6 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
 
     /** A constructor */
     public TypeScriptContentOutlinePage() {
-        // TODO Auto-generated constructor stub
     }
 
     @Override
