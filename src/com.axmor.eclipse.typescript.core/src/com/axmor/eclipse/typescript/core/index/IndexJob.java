@@ -45,10 +45,8 @@ public class IndexJob extends Job {
      */
     public IndexJob() {
         super("Indexing TypeScript source files");
-        if (indexer == null) {
-            this.indexer = new TypeScriptIndexer();
-            idxDir = indexer.getIdxDir();
-        }
+        this.indexer = new TypeScriptIndexer();
+        this.idxDir = indexer.getIdxDir();
     }
     
     /**
