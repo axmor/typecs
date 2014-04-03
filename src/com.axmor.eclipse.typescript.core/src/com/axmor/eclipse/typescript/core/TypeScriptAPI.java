@@ -19,7 +19,9 @@ import us.monoid.json.JSONObject;
  * @author Konstantin Zaitcev
  */
 public interface TypeScriptAPI extends IDisposable {
-
+    /** The latest default TypeScript version. */
+    String DEFAULT_TS_VERSION = "1.0.0";
+    
     /**
      * @param file
      *            TS file.

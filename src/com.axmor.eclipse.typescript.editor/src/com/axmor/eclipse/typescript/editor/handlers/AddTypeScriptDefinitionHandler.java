@@ -40,7 +40,11 @@ import com.google.common.io.ByteStreams;
  * @author Konstantin Zaitcev
  */
 public class AddTypeScriptDefinitionHandler extends AbstractHandler {
-
+    static {
+        Resty.ignoreAllCerts();
+        System.setProperty("jsse.enableSNIExtension", "false");
+    }
+    
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
         Shell shell = Activator.getDefault().getWorkbench().getActiveWorkbenchWindow().getShell();
