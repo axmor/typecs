@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/com.axmor.eclipse.typescript.feature_1.5.0.qualifier.jar" id="com.axmor.eclipse.typescript.feature" version="1.5.0.qualifier">
+   <feature url="features/com.axmor.eclipse.typescript.feature_1.5.1.qualifier.jar" id="com.axmor.eclipse.typescript.feature" version="1.5.1.qualifier">
       <category name="typescript"/>
    </feature>
    <category-def name="typescript" label="TypEcs - TypeScript IDE for Eclipse"/>
