@@ -15,6 +15,8 @@ var tsc = require('./ts_' + args.version + '/ets_io.js');
 var tss = require('./ts_' + args.version + '/ets_service.js');
 
 //tss.getScriptLexicalStructure('test_ts1.ts');
+//tss.setFileContent('test_ts1.ts', 'asdasd');
+//tss.getScriptLexicalStructure('test_ts1.ts');
 //tss.getScriptLexicalStructure('test_ts2.ts');
 
 if (args.serv) {

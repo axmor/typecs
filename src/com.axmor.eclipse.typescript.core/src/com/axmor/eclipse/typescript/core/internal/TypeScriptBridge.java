@@ -36,6 +36,7 @@ import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
+import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.i18n.Messages;
 import com.axmor.eclipse.typescript.core.ui.ErrorDialog;
 import com.google.common.base.Strings;
@@ -98,7 +99,7 @@ public class TypeScriptBridge implements Runnable {
         this.version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
 
         if (Strings.isNullOrEmpty(this.version)) {
-            this.version = "0.9.5";
+            this.version = TypeScriptAPI.DEFAULT_TS_VERSION;
         }
     }
 
@@ -351,7 +352,7 @@ public class TypeScriptBridge implements Runnable {
             String version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
 
             if (Strings.isNullOrEmpty(version)) {
-                version = "0.9.5";
+                version = TypeScriptAPI.DEFAULT_TS_VERSION;
             }
             File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
             return new File(bundleFile, LIB_BRIDGE + "/ts_" + version + "/lib.d.ts").getCanonicalPath();
