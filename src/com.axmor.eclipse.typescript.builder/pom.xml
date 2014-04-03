@@ -10,7 +10,7 @@
 
   <groupId>com.axmor.eclipse.typescript</groupId>
   <artifactId>com.axmor.eclipse.typescript.builder</artifactId>
-  <version>1.5.0-SNAPSHOT</version>
+  <version>1.5.1-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 
   <name>TypEcs Builder Plugin</name>
