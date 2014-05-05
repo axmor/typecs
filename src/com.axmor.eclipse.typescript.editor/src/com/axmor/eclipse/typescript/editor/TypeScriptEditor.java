@@ -122,6 +122,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
      */
     public TypeScriptEditor() {
         super();
+        setRulerContextMenuId("#TypeScriptEditorRulerContext"); //$NON-NLS-1$
+        setEditorContextMenuId("#TypeScriptEditorContext"); //$NON-NLS-1$
         setSourceViewerConfiguration(new TypeScriptEditorConfiguration());
     }
 

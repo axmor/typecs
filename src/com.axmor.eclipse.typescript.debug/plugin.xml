@@ -1,41 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
-<plugin
->
-   <extension
-         point="org.eclipse.debug.core.launchConfigurationTypes">
-      <launchConfigurationType
-            id="com.axmor.eclipse.typescript.debug.launch_config"
-            modes="debug"
-            delegate="com.axmor.eclipse.typescript.debug.LaunchConfigurationDelegate"
-            name="TypeScript Debug"
-            public="true">
-      </launchConfigurationType>
-   </extension>
-   
-   <extension
-         point="org.eclipse.debug.ui.debugModelPresentations">
-      <debugModelPresentation
-            class="com.axmor.eclipse.typescript.debug.DebugModelPresentation"
-            id="com.axmor.eclipse.typescript.debug.debugModelPresentation">
-      </debugModelPresentation>
-   </extension>
+<plugin>
+  <extension point="org.eclipse.debug.core.launchConfigurationTypes">
+    <launchConfigurationType
+      id="com.axmor.eclipse.typescript.debug.launch_config"
+      modes="run, debug"
+      delegate="com.axmor.eclipse.typescript.debug.launching.LaunchConfigurationDelegate"
+      name="TypeScript Standalone"
+      public="true"/>
+  </extension>
 
-    <extension
-          point="org.eclipse.debug.ui.launchConfigurationTabGroups">
-       <launchConfigurationTabGroup
-             class="com.axmor.eclipse.typescript.debug.LaunchConfigurationTabGroup"
-             id="com.axmor.eclipse.typescript.debug.launchConfigurationTabGroup"
-             type="com.axmor.eclipse.typescript.debug.launch_config">
-       </launchConfigurationTabGroup>
-    </extension>
+  <extension point="org.eclipse.debug.core.breakpoints">
+    <breakpoint 
+      id="com.axmor.eclipse.typescript.debug.breakpoint"
+      class="com.axmor.eclipse.typescript.debug.model.TypeScriptLineBreakpoint"
+      markerType="com.axmor.eclipse.typescript.debug.typeScriptBreakpoint"/>
+  </extension>
     
-    <extension
-          point="org.eclipse.debug.ui.launchConfigurationTypeImages">
-       <launchConfigurationTypeImage
-             configTypeID="com.axmor.eclipse.typescript.debug.launch_config"
-             icon="icons/typecs16.png"
-             id="com.axmor.eclipse.typescript.debug.launchConfigurationTypeImage">
-       </launchConfigurationTypeImage>
-    </extension>
+  <extension point="org.eclipse.core.resources.markers" id="typeScriptBreakpoint">
+    <super type="org.eclipse.debug.core.lineBreakpointMarker"/>
+    <persistent value="true"/>
+  </extension>
 </plugin>

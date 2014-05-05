@@ -209,7 +209,7 @@
     
     <extension point="org.eclipse.ui.menus">
         <menuContribution
-            locationURI="popup:#TextEditorContext?after=group.add">
+            locationURI="popup:#TypeScriptEditorContext?after=group.add">
             <menu label="Source">
                 <visibleWhen checkEnabled="true">
                     <with variable="activeEditor">
@@ -252,7 +252,7 @@
             </separator>
         </menuContribution>
         <menuContribution
-            locationURI="popup:#TextEditorContext?after=com.axmor.eclipse.typescript.editor.separator1">
+            locationURI="popup:#TypeScriptEditorContext?after=com.axmor.eclipse.typescript.editor.separator1">
             <menu label="References">
                 <visibleWhen checkEnabled="true">
                     <with variable="activeEditor">
@@ -272,7 +272,7 @@
             </menu>    
         </menuContribution>
         <menuContribution
-            locationURI="popup:#TextEditorContext?endof=group.open">
+            locationURI="popup:#TypeScriptEditorContext?endof=group.open">
                 <command
                     commandId="com.axmor.eclipse.typescript.navigate.open.declaration" 
                     label="Open Declaration"
