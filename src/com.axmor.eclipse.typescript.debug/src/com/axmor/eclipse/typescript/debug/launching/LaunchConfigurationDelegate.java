@@ -5,21 +5,18 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/ 
-package com.axmor.eclipse.typescript.debug;
+package com.axmor.eclipse.typescript.debug.launching;
 
-import java.net.InetSocketAddress;
+import java.io.IOException;
 
-import org.chromium.sdk.BrowserFactory;
-import org.chromium.sdk.JavascriptVm;
-import org.chromium.sdk.StandaloneVm;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
-import org.eclipse.debug.core.model.IProcess;
-import org.eclipse.debug.core.model.IStreamsProxy;
+import org.eclipse.debug.core.model.RuntimeProcess;
+
+import com.axmor.eclipse.typescript.debug.model.TypeScriptDebugTarget;
 
 /**
  * @author Konstantin Zaitcev
@@ -29,11 +26,14 @@ public class LaunchConfigurationDelegate implements ILaunchConfigurationDelegate
     @Override
     public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
             throws CoreException {
-        TypeScriptDebugProcess debugProcess = new TypeScriptDebugProcess(launch);
-        System.out.println("!!!!");
-//        JavascriptVm standaloneVm =
-//                BrowserFactory.getInstance().createStandalone(new InetSocketAddress("localhost", 9222), null);
-//        standaloneVm.attach(new );
-        //JavascriptVm javascriptVm =  standaloneVm;
+        //new TypeScriptDebugProcess(launch, monitor);
+        try {
+            Process process = Runtime.getRuntime().exec("node --debug-brk=9222 d:\\Programs\\eclipse-4.3.1\\runtime-ts\\warship_sample\\web\\NodeApp.js");
+            RuntimeProcess rprocess = new RuntimeProcess(launch, process, "asdasd", null);
+            launch.addDebugTarget(new TypeScriptDebugTarget(rprocess));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

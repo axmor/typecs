@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+  <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    <launchConfigurationTabGroup
+      class="com.axmor.eclipse.typescript.debug.ui.launching.LaunchConfigurationTabGroup"
+      id="com.axmor.eclipse.typescript.debug.ui.launching.launchConfigurationTabGroup"
+      type="com.axmor.eclipse.typescript.debug.launch_config"/>
+  </extension>
+
+  <extension point="org.eclipse.debug.ui.debugModelPresentations">
+    <debugModelPresentation 
+      id="com.axmor.eclipse.typescript.debug"
+      class="com.axmor.eclipse.typescript.debug.ui.model.TypeScriptModelPresentation"/>
+  </extension>
+
+  <extension point="org.eclipse.core.runtime.adapters">
+    <factory
+      adaptableType="com.axmor.eclipse.typescript.editor.TypeScriptEditor"
+      class="com.axmor.eclipse.typescript.debug.ui.model.TypeScriptBreakpointAdapterFactory">
+      <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
+    </factory>
+  </extension>
+
+  <extension point="org.eclipse.ui.contexts">
+    <context
+      id="com.axmor.eclipse.typescript.debug.ui.debugging"
+      name="Debugging TypeScript"
+      description="Debugging TypeScript"
+      parentId="org.eclipse.debug.ui.debugging"/>
+  </extension>
+ 
+  <extension point="org.eclipse.debug.ui.debugModelContextBindings">
+    <modelContextBinding
+      debugModelId="com.axmor.eclipse.typescript.debug"
+      contextId="com.axmor.eclipse.typescript.debug.ui.debugging"/>
+  </extension>
+                   
+  <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+    <launchConfigurationTypeImage
+      configTypeID="com.axmor.eclipse.typescript.debug.launch_config"
+      icon="icons/typecs16.png"
+      id="com.axmor.eclipse.typescript.debug.ui.launchConfigurationTypeImage"/>
+  </extension>
+ 
+ <extension point="org.eclipse.ui.popupMenus">
+      <viewerContribution
+            targetID="#TypeScriptEditorRulerContext"
+            id="#TypeScriptEditorRulerContext">
+         <action
+               label="Add &amp;Task... "
+               helpContextId="org.eclipse.ui.AddTask_action_context"
+               class="org.eclipse.ui.texteditor.TaskRulerAction"
+               tooltip="Add Task... "
+               menubarPath="add"
+               id="org.eclipse.ui.texteditor.TaskRulerAction">
+         </action>
+         <action
+               label="Add Boo&amp;kmark... "
+               helpContextId="org.eclipse.ui.bookmark_action_context"
+               class="org.eclipse.ui.texteditor.BookmarkRulerAction"
+               tooltip="Add Bookmark... "
+               menubarPath="add"
+               id="org.eclipse.ui.texteditor.BookmarkRulerAction">
+         </action>
+      </viewerContribution>
+      <viewerContribution
+            id="com.axmor.eclipse.typescript.debug.ui.RulerPopupActions"
+            targetID="#TypeScriptEditorRulerContext">
+         <action
+               class="org.eclipse.debug.ui.actions.RulerEnableDisableBreakpointActionDelegate"
+               id="com.axmor.eclipse.typescript.debug.ui.actions.EnableDisableBreakpointRulerActionDelegate"
+               label="&amp;Enable Breakpoint "
+               menubarPath="debug">
+         </action>
+         <action
+               class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+               id="com.axmor.eclipse.typescript.debug.ui.actions.ManageBreakpointRulerActionDelegate"
+               label="Toggle &amp;Breakpoint"
+               menubarPath="debug">
+         </action>
+      </viewerContribution>
+  </extension>
+    <extension
+         point="org.eclipse.ui.editorActions">
+      <editorContribution
+            targetID="com.axmor.eclipse.typescript.editor.TypeScriptEditor"
+            id="com.axmor.eclipse.typescript.debug.ui.BreakpointRulerActions">
+         <action
+               label="Toggle &amp;Breakpoint"
+               class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+               actionID="RulerDoubleClick"
+               id="com.axmor.eclipse.typescript.debug.ui.actions.ManageBreakpointRulerAction">
+         </action>
+      </editorContribution>
+   </extension>
+
+      
+</plugin>

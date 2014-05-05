@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/ 
-package com.axmor.eclipse.typescript.debug;
+package com.axmor.eclipse.typescript.debug.ui.model;
 
 import org.eclipse.debug.core.model.IValue;
 import org.eclipse.debug.ui.IDebugModelPresentation;
@@ -17,7 +17,7 @@ import org.eclipse.ui.IEditorInput;
 /**
  * @author Konstantin Zaitcev
  */
-public class DebugModelPresentation implements IDebugModelPresentation {
+public class TypeScriptModelPresentation implements IDebugModelPresentation {
 
     @Override
     public void addListener(ILabelProviderListener listener) {
