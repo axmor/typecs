@@ -9,7 +9,6 @@ package com.axmor.eclipse.typescript.core.internal;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,7 +21,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -37,6 +35,7 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.core.i18n.Messages;
 import com.axmor.eclipse.typescript.core.ui.ErrorDialog;
 import com.google.common.base.Strings;
@@ -111,7 +110,7 @@ public class TypeScriptBridge implements Runnable {
 
         try {
             File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
-            String nodeJSPath = findNodeJS();
+            String nodeJSPath = TypeScriptUtils.findNodeJS();
             ProcessBuilder ps = new ProcessBuilder(nodeJSPath, "bridge.js", "version=" + version, "src="
                     + baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error")
                     .directory(new File(bundleFile, LIB_BRIDGE));
@@ -304,44 +303,6 @@ public class TypeScriptBridge implements Runnable {
         });
         t.setDaemon(true);
         t.start();
-    }
-
-    /**
-     * @return path to nodejs runtime.
-     * @throws FileNotFoundException
-     *             if cannot found nodejs in any locaiton
-     */
-    private String findNodeJS() throws FileNotFoundException {
-        String[] paths = new String[] { "node", "/usr/local/bin/node" };
-        switch (Platform.getOS()) {
-        case Platform.OS_WIN32:
-            paths = new String[] { "node.exe", "c:\\Program Files\\nodejs\\node.exe",
-                    "c:\\Program Files (x86)\\nodejs\\node.exe" };
-            break;
-        default:
-            break;
-        }
-        for (String path : paths) {
-            if (checkNodeJS(path)) {
-                return path;
-            }
-        }
-        throw new FileNotFoundException();
-    }
-
-    /**
-     * @param path
-     *            path to check
-     * @return <code>true</code> if nodejs exist in this location
-     */
-    private boolean checkNodeJS(String path) {
-        try {
-            File file = FileLocator.getBundleFile(Activator.getDefault().getBundle());
-            ProcessBuilder ps = new ProcessBuilder(path, "-v").directory(new File(file, LIB_BRIDGE));
-            return ps.start().waitFor() == 0;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     /**

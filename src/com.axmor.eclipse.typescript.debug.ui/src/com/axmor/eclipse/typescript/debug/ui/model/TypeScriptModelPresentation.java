@@ -7,12 +7,15 @@
  *******************************************************************************/ 
 package com.axmor.eclipse.typescript.debug.ui.model;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.debug.core.model.ILineBreakpoint;
 import org.eclipse.debug.core.model.IValue;
 import org.eclipse.debug.ui.IDebugModelPresentation;
 import org.eclipse.debug.ui.IValueDetailListener;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.part.FileEditorInput;
 
 /**
  * @author Konstantin Zaitcev
@@ -42,13 +45,20 @@ public class TypeScriptModelPresentation implements IDebugModelPresentation {
 
     @Override
     public IEditorInput getEditorInput(Object element) {
-        System.out.println("getEditorInput");
+        if (element instanceof IFile) {
+            return new FileEditorInput((IFile)element);
+        }
+        if (element instanceof ILineBreakpoint) {
+            return new FileEditorInput((IFile)((ILineBreakpoint)element).getMarker().getResource());
+        }
         return null;
     }
 
     @Override
     public String getEditorId(IEditorInput input, Object element) {
-        System.out.println("getEditorId");
+        if (element instanceof IFile || element instanceof ILineBreakpoint) {
+            return "com.axmor.eclipse.typescript.editor.TypeScriptEditor";
+        }
         return null;
     }
 
@@ -59,13 +69,11 @@ public class TypeScriptModelPresentation implements IDebugModelPresentation {
 
     @Override
     public Image getImage(Object element) {
-        System.out.println("getImage");
         return null;
     }
 
     @Override
     public String getText(Object element) {
-        System.out.println("getText");
         return null;
     }
 

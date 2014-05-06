@@ -4,13 +4,11 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/ 
+ *******************************************************************************/
 package com.axmor.eclipse.typescript.debug.model;
 
 import org.chromium.sdk.CallFrame;
 import org.eclipse.debug.core.DebugException;
-import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.core.model.IRegisterGroup;
 import org.eclipse.debug.core.model.IStackFrame;
 import org.eclipse.debug.core.model.IThread;
@@ -18,9 +16,9 @@ import org.eclipse.debug.core.model.IVariable;
 
 /**
  * @author Konstantin Zaitcev
- *
+ * 
  */
-public class TypeScriptStackFrame implements IStackFrame {
+public class TypeScriptStackFrame extends TypeScriptDebugElement implements IStackFrame {
 
     private CallFrame cframe;
     private IThread thread;
@@ -29,97 +27,84 @@ public class TypeScriptStackFrame implements IStackFrame {
      * @param cframe
      */
     public TypeScriptStackFrame(IThread thread, CallFrame cframe) {
+        super(thread.getDebugTarget());
         this.thread = thread;
         this.cframe = cframe;
     }
 
     @Override
-    public String getModelIdentifier() {
-        return "com.axmor.eclipse.typescript.debug.thread.frame";
-    }
-
-    @Override
-    public IDebugTarget getDebugTarget() {
-        return thread.getDebugTarget();
-    }
-
-    @Override
-    public ILaunch getLaunch() {
-        return thread.getLaunch();
-    }
-
-    @Override
-    public Object getAdapter(Class adapter) {
-        return null;
-    }
-
-    @Override
     public boolean canStepInto() {
-        return false;
+        return getThread().canStepInto();
     }
 
     @Override
     public boolean canStepOver() {
-        return false;
+        return getThread().canStepOver();
     }
 
     @Override
     public boolean canStepReturn() {
-        return false;
+        return getThread().canStepReturn();
     }
 
     @Override
     public boolean isStepping() {
-        return false;
+        return getThread().isStepping();
     }
 
     @Override
     public void stepInto() throws DebugException {
+        getThread().stepInto();
     }
 
     @Override
     public void stepOver() throws DebugException {
+        getThread().stepOver();
     }
 
     @Override
     public void stepReturn() throws DebugException {
+        getThread().stepReturn();
     }
 
     @Override
     public boolean canResume() {
-        return false;
+        return getThread().canResume();
     }
 
     @Override
     public boolean canSuspend() {
-        return false;
+        return getThread().canSuspend();
     }
 
     @Override
     public boolean isSuspended() {
-        return false;
+        return getThread().isSuspended();
     }
 
     @Override
     public void resume() throws DebugException {
+        getThread().resume();
     }
 
     @Override
     public void suspend() throws DebugException {
+        getThread().suspend();
     }
 
     @Override
     public boolean canTerminate() {
-        return false;
+        return getThread().canTerminate();
     }
 
     @Override
     public boolean isTerminated() {
-        return false;
+        return getThread().isTerminated();
     }
 
     @Override
     public void terminate() throws DebugException {
+        getThread().terminate();
     }
 
     @Override
@@ -139,17 +124,17 @@ public class TypeScriptStackFrame implements IStackFrame {
 
     @Override
     public int getLineNumber() throws DebugException {
-        return 0;
+        return cframe.getStatementStartPosition().getLine();
     }
 
     @Override
     public int getCharStart() throws DebugException {
-        return 0;
+        return -1;
     }
 
     @Override
     public int getCharEnd() throws DebugException {
-        return 0;
+        return -1;
     }
 
     @Override
@@ -167,4 +152,35 @@ public class TypeScriptStackFrame implements IStackFrame {
         return false;
     }
 
+    /**
+     * @return the cframe
+     */
+    public CallFrame getCframe() {
+        return cframe;
+    }
+
+    public String getSourceName() {
+        return cframe.getScript().getName();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof TypeScriptStackFrame) {
+            TypeScriptStackFrame sf = (TypeScriptStackFrame) obj;
+            try {
+                return sf.getSourceName().equals(getSourceName()) && sf.getLineNumber() == getLineNumber();
+            } catch (DebugException e) {
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        try {
+            return getSourceName().hashCode() + getLineNumber();
+        } catch (DebugException e) {
+            return getSourceName().hashCode();
+        }
+    }
 }
