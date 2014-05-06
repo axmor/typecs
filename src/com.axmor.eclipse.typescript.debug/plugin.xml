@@ -3,11 +3,26 @@
 <plugin>
   <extension point="org.eclipse.debug.core.launchConfigurationTypes">
     <launchConfigurationType
+      sourceLocatorId="com.axmor.eclipse.typescript.debug.sourceLookupDirector"
+      sourcePathComputerId="com.axmor.eclipse.typescript.debug.sourcePathComputer"
       id="com.axmor.eclipse.typescript.debug.launch_config"
       modes="run, debug"
       delegate="com.axmor.eclipse.typescript.debug.launching.LaunchConfigurationDelegate"
       name="TypeScript Standalone"
       public="true"/>
+  </extension>
+
+  <extension point="org.eclipse.debug.core.sourceLocators">
+    <sourceLocator
+      id="com.axmor.eclipse.typescript.debug.sourceLookupDirector"
+      name="TypeScript Source Lookup Director"
+      class="com.axmor.eclipse.typescript.debug.launching.TypeScriptSourceLookupDirector"/>
+  </extension>
+  
+  <extension point="org.eclipse.debug.core.sourcePathComputers">
+    <sourcePathComputer
+      id="com.axmor.eclipse.typescript.debug.sourcePathComputer"
+      class="com.axmor.eclipse.typescript.debug.launching.TypeScriptSourcePathComputerDelegate"/>
   </extension>
 
   <extension point="org.eclipse.debug.core.breakpoints">

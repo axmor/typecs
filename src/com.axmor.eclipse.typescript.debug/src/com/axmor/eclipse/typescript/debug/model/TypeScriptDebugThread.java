@@ -4,150 +4,111 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/ 
+ *******************************************************************************/
 package com.axmor.eclipse.typescript.debug.model;
 
-import java.util.ArrayList;
-
-import org.chromium.sdk.CallFrame;
-import org.chromium.sdk.DebugContext;
-import org.chromium.sdk.DebugContext.StepAction;
-import org.chromium.sdk.DebugEventListener;
-import org.chromium.sdk.JavascriptVm;
-import org.chromium.sdk.Script;
 import org.eclipse.debug.core.DebugException;
-import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.debug.core.model.IDebugTarget;
-import org.eclipse.debug.core.model.IRegisterGroup;
 import org.eclipse.debug.core.model.IStackFrame;
 import org.eclipse.debug.core.model.IThread;
-import org.eclipse.debug.core.model.IVariable;
 
 /**
  * @author Konstantin Zaitcev
- *
+ * 
  */
-public class TypeScriptDebugThread implements IThread, DebugEventListener {
+public class TypeScriptDebugThread extends TypeScriptDebugElement implements IThread {
 
-    private IDebugTarget debugTarget;
-    private DebugContext ctx = null;
-    private JavascriptVm jsVm;
+    private boolean stepping;
+    private IBreakpoint[] breakpoints;
 
-    public TypeScriptDebugThread(IDebugTarget debugTarget, JavascriptVm jsVm) {
-        this.debugTarget = debugTarget;
-        this.jsVm = jsVm;
-    }
-
-    @Override
-    public String getModelIdentifier() {
-        return "com.axmor.eclipse.typescript.debug.thread";
-    }
-
-    @Override
-    public IDebugTarget getDebugTarget() {
-        return debugTarget;
-    }
-
-    @Override
-    public ILaunch getLaunch() {
-        return debugTarget.getLaunch();
-    }
-
-    @Override
-    public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
-        System.out.println("thread get adapter: " + adapter);
-        return null;
+    public TypeScriptDebugThread(IDebugTarget debugTarget) {
+        super(debugTarget);
     }
 
     @Override
     public boolean canResume() {
-        return ctx != null;
+        return isSuspended();
     }
 
     @Override
     public boolean canSuspend() {
-        return ctx == null;
+        return !isSuspended();
     }
 
     @Override
     public boolean isSuspended() {
-        return ctx != null;
+        return getDebugTarget().isSuspended();
     }
 
     @Override
     public void resume() throws DebugException {
-        ctx.continueVm(StepAction.CONTINUE, 0, null, null);
-        ctx = null;
+        getDebugTarget().resume();
     }
 
     @Override
     public void suspend() throws DebugException {
-        jsVm.suspend(null);
+        getDebugTarget().suspend();
     }
 
     @Override
     public boolean canStepInto() {
-        return ctx != null;
+        return false;
     }
 
     @Override
     public boolean canStepOver() {
-        return ctx != null;
+        return isSuspended();
     }
 
     @Override
     public boolean canStepReturn() {
-        return ctx != null;
+        return false;
     }
 
     @Override
     public boolean isStepping() {
-        return ctx != null;
+        return stepping;
     }
 
     @Override
     public void stepInto() throws DebugException {
-        // TODO Auto-generated method stub
+        // empty block
     }
 
     @Override
     public void stepOver() throws DebugException {
-        // TODO Auto-generated method stub
+        ((TypeScriptDebugTarget) getDebugTarget()).step();
     }
 
     @Override
     public void stepReturn() throws DebugException {
-        // TODO Auto-generated method stub
+        // empty blocks
     }
 
     @Override
     public boolean canTerminate() {
-        return false;
+        return !isTerminated();
     }
 
     @Override
     public boolean isTerminated() {
-        return false;
+        return getDebugTarget().isTerminated();
     }
 
     @Override
     public void terminate() throws DebugException {
-
+        getDebugTarget().terminate();
     }
 
     @Override
     public IStackFrame[] getStackFrames() throws DebugException {
-        ArrayList<IStackFrame> frames = new ArrayList<>();
-        for (CallFrame cframe: ctx.getCallFrames()) {
-            frames.add(new TypeScriptStackFrame(this, cframe));
-        }
-        return (IStackFrame[]) frames.toArray(new IStackFrame[frames.size()]);
+        return ((TypeScriptDebugTarget) getDebugTarget()).getStackFrames();
     }
 
     @Override
     public boolean hasStackFrames() throws DebugException {
-        return ctx != null;
+        return isSuspended();
     }
 
     @Override
@@ -157,54 +118,37 @@ public class TypeScriptDebugThread implements IThread, DebugEventListener {
 
     @Override
     public IStackFrame getTopStackFrame() throws DebugException {
+        IStackFrame[] frames = getStackFrames();
+        if (frames != null && frames.length > 0) {
+            return frames[0];
+        }
         return null;
     }
 
     @Override
     public String getName() throws DebugException {
-        return "TypeScript V8 Thread";
+        return "Main Thread";
     }
 
     @Override
     public IBreakpoint[] getBreakpoints() {
-        return null;
+        if (breakpoints != null) {
+            return breakpoints;
+        }
+        return new IBreakpoint[0];
     }
-
-    @Override
-    public void suspended(DebugContext ctx) {
-        this.ctx = ctx;
-        System.out.println("vm - suspended: " + ctx);
+    
+    /**
+     * @param breakpoints the breakpoints to set
+     */
+    public void setBreakpoints(IBreakpoint[] breakpoints) {
+        this.breakpoints = breakpoints;
     }
-
-    @Override
-    public void disconnected() {
-        System.out.println("vm - disconnected");
+    
+    /**
+     * @param stepping the stepping to set
+     */
+    public void setStepping(boolean stepping) {
+        this.stepping = stepping;
     }
-
-    @Override
-    public VmStatusListener getVmStatusListener() {
-        System.out.println("vm - getVmStatusListener");
-        return null;
-    }
-
-    @Override
-    public void resumed() {
-        System.out.println("vm - resumed");
-    }
-
-    @Override
-    public void scriptCollected(Script script) {
-        System.out.println("vm - scriptCollected: " + script);
-    }
-
-    @Override
-    public void scriptContentChanged(Script script) {
-        System.out.println("vm - scriptContentChanges: " + script);
-    }
-
-    @Override
-    public void scriptLoaded(Script script) {
-        System.out.println("vm - scriptLoaded: " + script);
-    }
-
 }

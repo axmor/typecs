@@ -11,7 +11,9 @@ import static com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConsta
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.debug.core.model.LineBreakpoint;
 
@@ -20,12 +22,26 @@ import org.eclipse.debug.core.model.LineBreakpoint;
  */
 public class TypeScriptLineBreakpoint extends LineBreakpoint {
 
-    public TypeScriptLineBreakpoint(IResource resource, int lineNumber) throws CoreException {
-        IMarker marker = resource.createMarker("com.axmor.eclipse.typescript.debug.typeScriptBreakpoint");
-        setMarker(marker);
-        setEnabled(true);
-        ensureMarker().setAttribute(IMarker.LINE_NUMBER, lineNumber);
-        ensureMarker().setAttribute(IBreakpoint.ID, TS_DEBUG_MODEL);
+    /**
+     * Default constructor need for breakpoint manager for recreate. 
+     */
+    public TypeScriptLineBreakpoint() {
+        // empty block
+    }
+    
+    public TypeScriptLineBreakpoint(final IResource resource, final int lineNumber) throws CoreException {
+        IWorkspaceRunnable runnable = new IWorkspaceRunnable() {
+            public void run(IProgressMonitor monitor) throws CoreException {
+                IMarker marker = resource.createMarker("com.axmor.eclipse.typescript.debug.typeScriptBreakpoint");
+                setMarker(marker);
+                setEnabled(true);
+                marker.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+                marker.setAttribute(IBreakpoint.ID, getModelIdentifier());
+                marker.setAttribute(IMarker.MESSAGE, "Line Breakpoint: " + resource.getName() + " [line: " + lineNumber
+                        + "]");
+            }
+        };
+        run(getMarkerRule(resource), runnable);
     }
 
     @Override
