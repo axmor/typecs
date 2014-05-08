@@ -7,9 +7,18 @@
  *******************************************************************************/ 
 package com.axmor.eclipse.typescript.debug.launching;
 
+import com.axmor.eclipse.typescript.debug.Activator;
+
 /**
  * @author Konstantin Zaitcev
  */
 public interface TypeScriptDebugConstants {
-    public static final String TS_DEBUG_MODEL = "com.axmor.eclipse.typescript.debug"; 
+    public static final String TS_DEBUG_MODEL = "com.axmor.eclipse.typescript.debug";
+    
+    public static final String TS_LAUNCH_STANDALONE_PROJECT = Activator.PLUGIN_ID + ".launchStandaloneProject";
+    public static final String TS_LAUNCH_STANDALONE_FILE = Activator.PLUGIN_ID + ".launchStandaloneFile";
+
+    public static final String TS_LAUNCH_WEB_HOST = Activator.PLUGIN_ID + ".launchWebHost";
+    public static final String TS_LAUNCH_WEB_PORT = Activator.PLUGIN_ID + ".launchWebPort";
+    public static final String TS_LAUNCH_WEB_WIP = Activator.PLUGIN_ID + ".launchWebWip";
 }

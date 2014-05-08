@@ -7,7 +7,11 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.debug.model;
 
+import java.io.File;
+
 import org.chromium.sdk.CallFrame;
+import org.chromium.sdk.Script;
+import org.chromium.sdk.internal.ScriptBase;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.IRegisterGroup;
 import org.eclipse.debug.core.model.IStackFrame;
@@ -139,7 +143,7 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
 
     @Override
     public String getName() throws DebugException {
-        return cframe.getFunctionName();
+        return cframe.getFunctionName() + "() line: " + getLineNumber();
     }
 
     @Override
@@ -160,7 +164,24 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
     }
 
     public String getSourceName() {
-        return cframe.getScript().getName();
+        Script script = cframe.getScript();
+        if (script instanceof ScriptBase) {
+            String name = ((ScriptBase<?>) script).getName();
+            String prefix = "d:\\Programs\\eclipse-4.3.1\\runtime-ts\\warship_sample\\";
+            if (name.startsWith(prefix)) {
+                System.out.println(name);
+                if (script.getSource().contains("//# sourceMappingURL=")) {
+                    String source = script.getSource();
+                    int idx = source.indexOf("//# sourceMappingURL=") + "//# sourceMappingURL=".length();
+                    String mapFile = source.substring(idx, source.indexOf(".map", idx) + ".map".length());
+                    System.out.println(mapFile);
+                    new File(new File(name).getParentFile(), mapFile);
+                }
+                return name.substring(prefix.length()).replaceAll("\\\\", "/").replaceAll(".js", ".ts");
+            }
+            return name;
+        }
+        return script.getName();
     }
 
     @Override

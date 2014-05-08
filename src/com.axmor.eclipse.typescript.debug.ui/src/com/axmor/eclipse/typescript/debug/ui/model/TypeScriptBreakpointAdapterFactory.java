@@ -7,6 +7,8 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.debug.ui.model;
 
+import static com.axmor.eclipse.typescript.core.TypeScriptResources.TS_EXT;
+
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.debug.ui.actions.IToggleBreakpointsTarget;
@@ -26,7 +28,7 @@ public class TypeScriptBreakpointAdapterFactory implements IAdapterFactory {
             IResource resource = (IResource) editorPart.getEditorInput().getAdapter(IResource.class);
             if (resource != null) {
                 String extension = resource.getFileExtension();
-                if (extension != null && extension.equals("ts")) {
+                if (extension != null && extension.equals(TS_EXT)) {
                     return new TypeScriptBreakpointAdapter();
                 }
             }

@@ -3,11 +3,28 @@
 <plugin>
   <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
     <launchConfigurationTabGroup
-      class="com.axmor.eclipse.typescript.debug.ui.launching.LaunchConfigurationTabGroup"
-      id="com.axmor.eclipse.typescript.debug.ui.launching.launchConfigurationTabGroup"
-      type="com.axmor.eclipse.typescript.debug.launch_config"/>
+      class="com.axmor.eclipse.typescript.debug.ui.launching.LaunchStandaloneConfigurationTabGroup"
+      id="com.axmor.eclipse.typescript.debug.ui.launching.launchStandaloneConfigurationTabGroup"
+      type="com.axmor.eclipse.typescript.debug.launch_standalone_config"/>
+
+    <launchConfigurationTabGroup
+      class="com.axmor.eclipse.typescript.debug.ui.launching.LaunchWebConfigurationTabGroup"
+      id="com.axmor.eclipse.typescript.debug.ui.launching.launchWebConfigurationTabGroup"
+      type="com.axmor.eclipse.typescript.debug.launch_web_config"/>
   </extension>
 
+  <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+    <launchConfigurationTypeImage
+      configTypeID="com.axmor.eclipse.typescript.debug.launch_standalone_config"
+      icon="icons/ts_app.png"
+      id="com.axmor.eclipse.typescript.debug.ui.launchStandaloneConfigurationTypeImage"/>
+
+    <launchConfigurationTypeImage
+      configTypeID="com.axmor.eclipse.typescript.debug.launch_web_config"
+      icon="icons/ts_web_app.png"
+      id="com.axmor.eclipse.typescript.debug.ui.launchWebConfigurationTypeImage"/>
+  </extension>
+ 
   <extension point="org.eclipse.debug.ui.debugModelPresentations">
     <debugModelPresentation 
       id="com.axmor.eclipse.typescript.debug"
@@ -36,13 +53,6 @@
       contextId="com.axmor.eclipse.typescript.debug.ui.debugging"/>
   </extension>
                    
-  <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
-    <launchConfigurationTypeImage
-      configTypeID="com.axmor.eclipse.typescript.debug.launch_config"
-      icon="icons/typecs16.png"
-      id="com.axmor.eclipse.typescript.debug.ui.launchConfigurationTypeImage"/>
-  </extension>
- 
  <extension point="org.eclipse.ui.popupMenus">
       <viewerContribution
             targetID="#TypeScriptEditorRulerContext"

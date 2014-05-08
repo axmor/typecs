@@ -6,6 +6,7 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.debug.Activator
 Bundle-Vendor: Axmor Software Inc
 Require-Bundle: org.chromium.sdk;bundle-version="0.3.8",
+ org.chromium.sdk.wip.eclipse;bundle-version="0.3.8",
  org.eclipse.debug.core;bundle-version="3.8.0",
  org.eclipse.core.runtime;bundle-version="3.9.0",
  com.axmor.eclipse.typescript.core
