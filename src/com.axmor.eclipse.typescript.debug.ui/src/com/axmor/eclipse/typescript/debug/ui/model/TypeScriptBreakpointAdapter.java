@@ -23,14 +23,16 @@ import org.eclipse.ui.texteditor.ITextEditor;
 import com.axmor.eclipse.typescript.debug.model.TypeScriptLineBreakpoint;
 
 /**
+ * Adapter to create TypeScript line breakpoint and register at breakpoint manager.
+ * 
  * @author Konstantin Zaitcev
  */
 public class TypeScriptBreakpointAdapter implements IToggleBreakpointsTarget {
 
     @Override
     public void toggleLineBreakpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
-        ITextEditor textEditor = getEditor(part);
-        if (textEditor != null) {
+        if (part != null && part instanceof ITextEditor) {
+            ITextEditor textEditor = (ITextEditor) part;
             IResource resource = (IResource) textEditor.getEditorInput().getAdapter(IResource.class);
             ITextSelection textSelection = (ITextSelection) selection;
             int lineNumber = textSelection.getStartLine();
@@ -56,39 +58,23 @@ public class TypeScriptBreakpointAdapter implements IToggleBreakpointsTarget {
 
     @Override
     public void toggleMethodBreakpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
-        // TODO Auto-generated method stub
-
+        // not supported
     }
 
     @Override
     public boolean canToggleMethodBreakpoints(IWorkbenchPart part, ISelection selection) {
-        // TODO Auto-generated method stub
+        // not supported
         return false;
     }
 
     @Override
     public void toggleWatchpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
-        // TODO Auto-generated method stub
-
+        // not supported
     }
 
     @Override
     public boolean canToggleWatchpoints(IWorkbenchPart part, ISelection selection) {
-        // TODO Auto-generated method stub
+        // not supported
         return false;
-    }
-
-    private ITextEditor getEditor(IWorkbenchPart part) {
-        if (part instanceof ITextEditor) {
-            ITextEditor editorPart = (ITextEditor) part;
-            IResource resource = (IResource) editorPart.getEditorInput().getAdapter(IResource.class);
-            if (resource != null) {
-                String extension = resource.getFileExtension();
-                if (extension != null && extension.equals("ts")) {
-                    return editorPart;
-                }
-            }
-        }
-        return null;
     }
 }

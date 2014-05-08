@@ -7,7 +7,11 @@
  *******************************************************************************/ 
 package com.axmor.eclipse.typescript.debug.ui;
 
+import static com.axmor.eclipse.typescript.debug.ui.DebugUIConstants.IMG_MAIN_TAB;
+
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -64,5 +68,21 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
+	}
+	
+	@Override
+	protected void initializeImageRegistry(ImageRegistry reg) {
+	    reg.put(IMG_MAIN_TAB, getImageDescriptor("icons/main_tab.gif"));
+	}
+	
+	/**
+	 * @param key image key
+	 * @return image by key from registry
+	 */
+	public static Image getImage(String key) {
+	    if (plugin != null) {
+	        return plugin.getImageRegistry().get(key);
+	    }
+	    return null;
 	}
 }

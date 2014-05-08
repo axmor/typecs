@@ -5,10 +5,19 @@
     <launchConfigurationType
       sourceLocatorId="com.axmor.eclipse.typescript.debug.sourceLookupDirector"
       sourcePathComputerId="com.axmor.eclipse.typescript.debug.sourcePathComputer"
-      id="com.axmor.eclipse.typescript.debug.launch_config"
+      id="com.axmor.eclipse.typescript.debug.launch_standalone_config"
       modes="run, debug"
-      delegate="com.axmor.eclipse.typescript.debug.launching.LaunchConfigurationDelegate"
+      delegate="com.axmor.eclipse.typescript.debug.launching.LaunchStandaloneConfigurationDelegate"
       name="TypeScript Standalone"
+      public="true"/>
+
+    <launchConfigurationType
+      sourceLocatorId="com.axmor.eclipse.typescript.debug.sourceLookupDirector"
+      sourcePathComputerId="com.axmor.eclipse.typescript.debug.sourcePathComputer"
+      id="com.axmor.eclipse.typescript.debug.launch_web_config"
+      modes="debug"
+      delegate="com.axmor.eclipse.typescript.debug.launching.LaunchWebConfigurationDelegate"
+      name="TypeScript Web Remote"
       public="true"/>
   </extension>
 

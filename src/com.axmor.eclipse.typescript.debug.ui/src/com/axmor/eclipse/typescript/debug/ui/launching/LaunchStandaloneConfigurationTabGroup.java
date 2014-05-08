@@ -14,12 +14,14 @@ import org.eclipse.debug.ui.ILaunchConfigurationTab;
 import org.eclipse.debug.ui.sourcelookup.SourceLookupTab;
 
 /**
+ * Launch tab group for standalone mode.
+ * 
  * @author Konstantin Zaitcev
  */
-public class LaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup {
+public class LaunchStandaloneConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup {
 
     @Override
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
-        setTabs(new ILaunchConfigurationTab[] { new SourceLookupTab(), new CommonTab() });
+        setTabs(new ILaunchConfigurationTab[] { new LaunchStandaloneMainTab(), new SourceLookupTab(), new CommonTab() });
     }
 }

@@ -10,7 +10,6 @@ package com.axmor.eclipse.typescript.debug.launching;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.debug.core.sourcelookup.ISourcePathComputerDelegate;
@@ -26,7 +25,7 @@ public class TypeScriptSourcePathComputerDelegate implements ISourcePathComputer
     public ISourceContainer[] computeSourceContainers(ILaunchConfiguration configuration, IProgressMonitor monitor)
             throws CoreException {
         ISourceContainer sourceContainer = null;
-        
+        // FIXME: KOS need rewrite
         sourceContainer = new ProjectSourceContainer(ResourcesPlugin.getWorkspace().getRoot().getProject("warship_sample"), false);
         if (sourceContainer == null) {
             sourceContainer = new WorkspaceSourceContainer();

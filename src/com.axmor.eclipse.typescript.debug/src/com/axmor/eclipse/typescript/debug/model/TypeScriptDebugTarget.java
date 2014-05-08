@@ -82,6 +82,12 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget impleme
     }
 
     @Override
+    public void terminate() throws DebugException {
+        vm.detach();
+        super.terminate();
+    }
+    
+    @Override
     public void breakpointAdded(IBreakpoint breakpoint) {
         System.out.println("breakpoint added" + breakpoint);
         if (supportsBreakpoint(breakpoint)) {
@@ -204,11 +210,11 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget impleme
         for (IBreakpoint breakpoint : breakpoints) {
             breakpointAdded(breakpoint);
         }
-//        try {
-//            resume();
-//        } catch (DebugException e) {
-//            // ignore exception
-//        }
+        try {
+            resume();
+        } catch (DebugException e) {
+            // ignore exception
+        }
     }
 
     private void resumedEvent(int detail) {
