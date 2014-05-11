@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
 /**
@@ -374,6 +375,24 @@ public final class SWTFactory {
      */
     public static Text createSingleText(Composite parent, int hspan) {
         Text t = new Text(parent, SWT.SINGLE | SWT.BORDER);
+        t.setFont(parent.getFont());
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+        gd.horizontalSpan = hspan;
+        t.setLayoutData(gd);
+        return t;
+    }
+
+    /**
+     * Creates a new spinner widget
+     * 
+     * @param parent
+     *            the parent composite to add this text widget to
+     * @param hspan
+     *            the horizontal span to take up on the parent composite
+     * @return the new text widget
+     */
+    public static Spinner createSpinner(Composite parent, int hspan) {
+        Spinner t = new Spinner(parent, SWT.BORDER);
         t.setFont(parent.getFont());
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         gd.horizontalSpan = hspan;
