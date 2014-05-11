@@ -18,6 +18,8 @@
     <module>com.axmor.eclipse.typescript.builder</module>
     <module>com.axmor.eclipse.typescript.editor</module>
     <module>com.axmor.eclipse.typescript.ui</module>
+    <module>com.axmor.eclipse.typescript.debug</module>
+    <module>com.axmor.eclipse.typescript.debug.ui</module>
     <module>com.axmor.eclipse.typescript.feature</module>
     <module>com.axmor.eclipse.typescript.repository</module>
     <module>com.axmor.eclipse.typescript.core.test</module>
@@ -184,6 +186,11 @@
       <id>eclipse-kepler</id>
       <layout>p2</layout>
       <url>http://download.eclipse.org/releases/kepler</url>
+    </repository>
+    <repository>
+      <id>chromium-devtools</id>
+      <layout>p2</layout>
+      <url>http://chromedevtools.googlecode.com/svn/update/dev/</url>
     </repository>
   </repositories>
 </project>
