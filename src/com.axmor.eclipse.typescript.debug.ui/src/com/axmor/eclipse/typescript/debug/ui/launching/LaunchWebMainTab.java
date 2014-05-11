@@ -9,6 +9,10 @@ package com.axmor.eclipse.typescript.debug.ui.launching;
 
 import static com.axmor.eclipse.typescript.debug.ui.DebugUIConstants.IMG_MAIN_TAB;
 
+import java.util.List;
+
+import org.chromium.sdk.wip.WipBackend;
+import org.chromium.sdk.wip.eclipse.BackendRegistry;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -24,6 +28,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
 import com.axmor.eclipse.typescript.core.ui.SWTFactory;
@@ -38,7 +43,7 @@ import com.axmor.eclipse.typescript.debug.ui.Activator;
 public class LaunchWebMainTab extends AbstractLaunchConfigurationTab {
 
     private Text hostTxt;
-    private Text portTxt;
+    private Spinner portNum;
     private Combo wipSelection;
 
     @Override
@@ -58,9 +63,9 @@ public class LaunchWebMainTab extends AbstractLaunchConfigurationTab {
      *            parent control
      */
     private void createConnectionEditor(Composite parent) {
-        Group group = SWTFactory.createGroup(parent, "Connection", 2, 1, GridData.FILL_HORIZONTAL);
+        Group group = SWTFactory.createGroup(parent, "Connection", 10, 1, GridData.FILL_HORIZONTAL);
         SWTFactory.createLabel(group, "Host: ", 1);
-        hostTxt = SWTFactory.createSingleText(group, 1);
+        hostTxt = SWTFactory.createSingleText(group, 7);
         hostTxt.addModifyListener(new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e) {
@@ -69,10 +74,12 @@ public class LaunchWebMainTab extends AbstractLaunchConfigurationTab {
         });
 
         SWTFactory.createLabel(group, "Port: ", 1);
-        portTxt = SWTFactory.createSingleText(group, 1);
-        portTxt.addModifyListener(new ModifyListener() {
+        portNum = SWTFactory.createSpinner(group, 1);
+        portNum.setMaximum(Integer.MAX_VALUE);
+        portNum.setMinimum(1024);
+        portNum.addSelectionListener(new SelectionAdapter() {
             @Override
-            public void modifyText(ModifyEvent e) {
+            public void widgetSelected(SelectionEvent e) {
                 updateLaunchConfigurationDialog();
             }
         });
@@ -87,7 +94,12 @@ public class LaunchWebMainTab extends AbstractLaunchConfigurationTab {
     private void createBackendEditor(Composite parent) {
         Group group = SWTFactory.createGroup(parent, "WIP Backend", 2, 1, GridData.FILL_HORIZONTAL);
         SWTFactory.createLabel(group, "WIP: ", 1);
-        wipSelection = SWTFactory.createCombo(group, SWT.NONE, 1, new String[]{"Protocol 1.0"});
+        List<? extends WipBackend> backends = BackendRegistry.INSTANCE.getBackends();
+        String[] items = new String[backends.size()];
+        for (int i = 0; i < backends.size(); i++) {
+            items[i] = backends.get(i).getId();
+        }
+        wipSelection = SWTFactory.createCombo(group, SWT.READ_ONLY, 1, items);
         wipSelection.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -110,16 +122,23 @@ public class LaunchWebMainTab extends AbstractLaunchConfigurationTab {
         }
 
         try {
-            portTxt.setText(configuration.getAttribute(TypeScriptDebugConstants.TS_LAUNCH_WEB_PORT, "9222"));
+            portNum.setSelection(configuration.getAttribute(TypeScriptDebugConstants.TS_LAUNCH_WEB_PORT, 9222));
         } catch (CoreException e) {
-            hostTxt.setText("9222");
+            portNum.setSelection(9222);
         }
-    }
+
+        try {
+            wipSelection.select(configuration.getAttribute(TypeScriptDebugConstants.TS_LAUNCH_WEB_PORT, 0));
+        } catch (CoreException e) {
+            wipSelection.select(0);;
+        }
+}
 
     @Override
     public void performApply(ILaunchConfigurationWorkingCopy configuration) {
         configuration.setAttribute(TypeScriptDebugConstants.TS_LAUNCH_WEB_HOST, hostTxt.getText().trim());
-        configuration.setAttribute(TypeScriptDebugConstants.TS_LAUNCH_WEB_PORT, portTxt.getText().trim());
+        configuration.setAttribute(TypeScriptDebugConstants.TS_LAUNCH_WEB_PORT, portNum.getSelection());
+        configuration.setAttribute(TypeScriptDebugConstants.TS_LAUNCH_WEB_WIP, wipSelection.getSelectionIndex());
     }
 
     @Override
