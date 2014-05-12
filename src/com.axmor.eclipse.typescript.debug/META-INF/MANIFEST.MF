@@ -5,8 +5,8 @@ Bundle-SymbolicName: com.axmor.eclipse.typescript.debug;singleton:=true
 Bundle-Version: 1.5.1.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.debug.Activator
 Bundle-Vendor: Axmor Software Inc
-Require-Bundle: org.chromium.sdk;bundle-version="0.3.8",
- org.chromium.sdk.wip.eclipse;bundle-version="0.3.8",
+Require-Bundle: org.chromium.sdk,
+ org.chromium.sdk.wip.eclipse,
  org.eclipse.debug.core;bundle-version="3.8.0",
  org.eclipse.core.runtime;bundle-version="3.9.0",
  com.axmor.eclipse.typescript.core

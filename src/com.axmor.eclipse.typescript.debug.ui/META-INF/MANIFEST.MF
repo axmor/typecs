@@ -15,7 +15,7 @@ Require-Bundle: com.axmor.eclipse.typescript.debug;bundle-version="1.0.0",
  org.eclipse.ui.ide;bundle-version="3.9.1",
  com.axmor.eclipse.typescript.core,
  com.axmor.eclipse.typescript.builder,
- org.chromium.sdk.wip.eclipse;bundle-version="0.3.8",
- org.chromium.sdk;bundle-version="0.3.8"
+ org.chromium.sdk.wip.eclipse,
+ org.chromium.sdk
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
