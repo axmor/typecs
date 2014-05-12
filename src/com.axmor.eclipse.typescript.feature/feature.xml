@@ -18,6 +18,14 @@
       %license
    </license>
 
+   <includes
+         id="org.chromium.sdk"
+         version="0.0.0"/>
+
+   <includes
+         id="org.chromium.sdk.wipbackends"
+         version="0.0.0"/>
+
    <plugin
          id="com.axmor.eclipse.typescript"
          download-size="0"
