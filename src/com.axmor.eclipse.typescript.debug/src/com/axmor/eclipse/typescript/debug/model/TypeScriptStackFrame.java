@@ -8,15 +8,22 @@
 package com.axmor.eclipse.typescript.debug.model;
 
 import java.io.File;
+import java.util.Map;
 
 import org.chromium.sdk.CallFrame;
 import org.chromium.sdk.Script;
 import org.chromium.sdk.internal.ScriptBase;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.IRegisterGroup;
 import org.eclipse.debug.core.model.IStackFrame;
 import org.eclipse.debug.core.model.IThread;
 import org.eclipse.debug.core.model.IVariable;
+
+import com.axmor.eclipse.typescript.debug.sourcemap.SourceMap;
+import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapItem;
 
 /**
  * @author Konstantin Zaitcev
@@ -24,16 +31,48 @@ import org.eclipse.debug.core.model.IVariable;
  */
 public class TypeScriptStackFrame extends TypeScriptDebugElement implements IStackFrame {
 
+    private String sourceName;
+    private int lineNumber;
     private CallFrame cframe;
     private IThread thread;
+    private Map<String, SourceMap> jsMappings;
 
     /**
      * @param cframe
+     * @param jsMappings 
      */
-    public TypeScriptStackFrame(IThread thread, CallFrame cframe) {
+    public TypeScriptStackFrame(IThread thread, CallFrame cframe, Map<String, SourceMap> jsMappings) {
         super(thread.getDebugTarget());
         this.thread = thread;
         this.cframe = cframe;
+        this.jsMappings = jsMappings;
+        initSourceNameAndLine();
+    }
+
+    /**
+     * @return
+     */
+    private void initSourceNameAndLine() {
+        Script script = cframe.getScript();
+        String name = ((ScriptBase<?>) script).getName();
+        this.sourceName = name;
+        this.lineNumber = cframe.getStatementStartPosition().getLine();
+        
+        File file = new File(name);
+        if (file.exists()) {
+            if (jsMappings.containsKey(file.getPath())) {
+                SourceMapItem item = jsMappings.get(file.getPath()).getItemByJSLine(lineNumber);
+                if (item != null) {
+                    this.sourceName = item.getTsFile();
+                    this.lineNumber = item.getTsLine();
+                }
+            } else {
+                IFile ifile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(Path.fromOSString(file.getPath()));
+                if (ifile != null && file.exists()) {
+                    this.sourceName = ifile.getFullPath().toString();
+                }
+            }
+        }
     }
 
     @Override
@@ -128,7 +167,7 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
 
     @Override
     public int getLineNumber() throws DebugException {
-        return cframe.getStatementStartPosition().getLine();
+        return lineNumber;
     }
 
     @Override
@@ -164,24 +203,7 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
     }
 
     public String getSourceName() {
-        Script script = cframe.getScript();
-        if (script instanceof ScriptBase) {
-            String name = ((ScriptBase<?>) script).getName();
-            String prefix = "d:\\Programs\\eclipse-4.3.1\\runtime-ts\\warship_sample\\";
-            if (name.startsWith(prefix)) {
-                System.out.println(name);
-                if (script.getSource().contains("//# sourceMappingURL=")) {
-                    String source = script.getSource();
-                    int idx = source.indexOf("//# sourceMappingURL=") + "//# sourceMappingURL=".length();
-                    String mapFile = source.substring(idx, source.indexOf(".map", idx) + ".map".length());
-                    System.out.println(mapFile);
-                    new File(new File(name).getParentFile(), mapFile);
-                }
-                return name.substring(prefix.length()).replaceAll("\\\\", "/").replaceAll(".js", ".ts");
-            }
-            return name;
-        }
-        return script.getName();
+        return sourceName;
     }
 
     @Override
