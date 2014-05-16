@@ -87,7 +87,7 @@ public class SourceMapParser {
                         tsLinePrev += seg.get(2);
                         tsColumnPrev += seg.get(3);
                         item.setJsColumn(jsColumnPrev);
-                        item.setTsLine(tsLinePrev);
+                        item.setTsLine(tsLinePrev + 1);
                         item.setTsColumn(tsColumnPrev);
                         item.setTsFile(json.getJSONArray("sources").getString(tsFileIdxPrev));
                         smap.getMaps().add(item);
