@@ -35,6 +35,7 @@ public class TypeScriptLineBreakpoint extends LineBreakpoint {
                 IMarker marker = resource.createMarker("com.axmor.eclipse.typescript.debug.typeScriptBreakpoint");
                 setMarker(marker);
                 setEnabled(true);
+                marker.setAttribute(IMarker.SOURCE_ID, resource.getName());
                 marker.setAttribute(IMarker.LINE_NUMBER, lineNumber);
                 marker.setAttribute(IBreakpoint.ID, getModelIdentifier());
                 marker.setAttribute(IMarker.MESSAGE, "Line Breakpoint: " + resource.getName() + " [line: " + lineNumber

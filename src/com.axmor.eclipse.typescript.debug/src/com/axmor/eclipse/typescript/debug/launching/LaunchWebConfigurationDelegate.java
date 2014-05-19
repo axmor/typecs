@@ -11,171 +11,104 @@ import static com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConsta
 import static com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants.TS_LAUNCH_WEB_PORT;
 import static com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants.TS_LAUNCH_WEB_WIP;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
+import org.chromium.debug.core.model.JavascriptVmEmbedder.ConnectionToRemote;
+import org.chromium.debug.core.model.JavascriptVmEmbedder;
+import org.chromium.debug.core.model.JavascriptVmEmbedderFactory;
+import org.chromium.debug.core.model.NamedConnectionLoggerFactory;
+import org.chromium.debug.ui.DialogBasedTabSelector;
 import org.chromium.sdk.ConnectionLogger;
-import org.chromium.sdk.ConnectionLogger.StreamListener;
-import org.chromium.sdk.DebugEventListener;
-import org.chromium.sdk.JavascriptVm;
-import org.chromium.sdk.TabDebugEventListener;
+import org.chromium.sdk.util.Destructable;
+import org.chromium.sdk.util.DestructingGuard;
 import org.chromium.sdk.wip.WipBackend;
-import org.chromium.sdk.wip.WipBrowser;
-import org.chromium.sdk.wip.WipBrowser.WipTabConnector;
-import org.chromium.sdk.wip.WipBrowserFactory;
-import org.chromium.sdk.wip.WipBrowserFactory.LoggerFactory;
-import org.chromium.sdk.wip.WipBrowserTab;
 import org.chromium.sdk.wip.eclipse.BackendRegistry;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.debug.core.DebugException;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.dialogs.ListDialog;
+
+import com.axmor.eclipse.typescript.debug.model.TypeScriptDebugTarget;
 
 /**
  * Launcher for debug TypeScript application from Web browser remote connection.
  * 
  * @author Konstantin Zaitcev
  */
-public class LaunchWebConfigurationDelegate implements ILaunchConfigurationDelegate {
+public class LaunchWebConfigurationDelegate implements
+		ILaunchConfigurationDelegate {
 
-    @Override
-    public void launch(ILaunchConfiguration configuration, String mode, ILaunch launch, IProgressMonitor monitor)
-            throws CoreException {
-        String host = configuration.getAttribute(TS_LAUNCH_WEB_HOST, "localhost");
-        int port = configuration.getAttribute(TS_LAUNCH_WEB_PORT, 9222);
-        int backendId = configuration.getAttribute(TS_LAUNCH_WEB_WIP, 0);
-        WipBrowser browser = WipBrowserFactory.INSTANCE.createBrowser(new InetSocketAddress(host, port),
-                new LoggerFactory() {
+	@Override
+	public void launch(ILaunchConfiguration configuration, String mode,
+			final ILaunch launch, IProgressMonitor monitor)
+			throws CoreException {
+		String host = configuration.getAttribute(TS_LAUNCH_WEB_HOST,
+				"localhost");
+		int port = configuration.getAttribute(TS_LAUNCH_WEB_PORT, 9222);
+		int backendId = configuration.getAttribute(TS_LAUNCH_WEB_WIP, 0);
+		WipBackend backend = BackendRegistry.INSTANCE.getBackends().get(
+				backendId);
 
-                    @Override
-                    public ConnectionLogger newBrowserConnectionLogger() {
-                        return new WebConnectionLogger();
-                    }
+		ConnectionToRemote remoteServer = JavascriptVmEmbedderFactory
+				.connectToWipBrowser(host, port, backend,
+						NO_CONNECTION_LOGGER_FACTORY,
+						NO_CONNECTION_LOGGER_FACTORY,
+						DialogBasedTabSelector.WIP_INSTANCE);
 
-                    @Override
-                    public ConnectionLogger newTabConnectionLogger() {
-                        return new WebConnectionLogger();
-                    }
+		try {
 
-                });
-        WipBackend backend = BackendRegistry.INSTANCE.getBackends().get(backendId);
-        WipBrowserTab tab;
-        final AtomicReference<WipTabConnector> tabConnector = new AtomicReference<>();
-        try {
-            final List<? extends WipTabConnector> tabs = browser.getTabs(backend);
-            PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable() {
-                @Override
-                public void run() {
-                    ListDialog dlg = new ListDialog(new Shell());
-                    dlg.setInput(tabs);
-                    dlg.setContentProvider(new IStructuredContentProvider() {
-                        @Override
-                        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-                        }
-                        
-                        @Override
-                        public void dispose() {
-                        }
-                        
-                        @SuppressWarnings("unchecked")
-                        @Override
-                        public Object[] getElements(Object inputElement) {
-                            List<? extends WipTabConnector> items = (List<? extends WipTabConnector>) inputElement;
-                            return (WipTabConnector[]) tabs.toArray(new WipTabConnector[tabs.size()]);
-                        }
-                    });
-                    dlg.setLabelProvider(new LabelProvider() {
-                        @Override
-                        public String getText(Object element) {
-                            if (element instanceof WipTabConnector) {
-                                WipTabConnector tab = (WipTabConnector) element;
-                                return tab.getTitle() + " - " + tab.getUrl();
-                            }
-                            return "";
-                        }
-                    });
-                    dlg.setMessage("Select the browser tab to attach:");
-                    dlg.setTitle("Tab Selection");
-                    if (dlg.open() == Window.OK && dlg.getResult() != null) {
-                        tabConnector.set((WipTabConnector) (dlg.getResult()[0]));
-                    }
-                }
-            });
 
-            if (tabConnector.get() != null) {
-                tab = tabConnector.get().attach(new TabDebugEventListener() {
+			DestructingGuard destructingGuard = new DestructingGuard();
+			try {
+				Destructable lauchDestructor = new Destructable() {
+					public void destruct() {
+						if (!launch.hasChildren()) {
+							DebugPlugin.getDefault().getLaunchManager()
+									.removeLaunch(launch);
+						}
+					}
+				};
 
-                    @Override
-                    public void navigated(String arg0) {
-                        System.out.println("asdasd" + arg0);
-                    }
+				destructingGuard.addValue(lauchDestructor);
 
-                    @Override
-                    public DebugEventListener getDebugEventListener() {
-                        System.out.println("get listener");
-                        return null;
-                    }
+				JavascriptVmEmbedder.VmConnector connector = remoteServer.selectVm();
+				if (connector == null) {
+					return;
+				}
+				final IDebugTarget target = new TypeScriptDebugTarget(launch, connector);
 
-                    @Override
-                    public void closed() {
-                        System.out.println("closed");
-                    }
-                });
-                JavascriptVm javascriptVm = tab.getJavascriptVm();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // FIXME : KOS need implement
-        // IDebugTarget target = new TypeScriptDebugTarget(launch, p, port);
-        // launch.addDebugTarget(target);
-    }
+				Destructable targetDestructor = new Destructable() {
+					public void destruct() {
+						try {
+							target.terminate();
+						} catch (DebugException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				};
+				destructingGuard.addValue(targetDestructor);
 
-    private class WebConnectionLogger implements ConnectionLogger {
+				launch.addDebugTarget(target);
 
-        @Override
-        public StreamListener getIncomingStreamListener() {
-            return new WebStreamListener();
-        }
+				monitor.done();
 
-        @Override
-        public StreamListener getOutgoingStreamListener() {
-            return new WebStreamListener();
-        }
+				// All OK
+				destructingGuard.discharge();
+			} finally {
+				destructingGuard.doFinally();
+			}
 
-        @Override
-        public void setConnectionCloser(ConnectionCloser connectionCloser) {
-        }
+		} finally {
+			remoteServer.disposeConnection();
+		}
+	}
 
-        @Override
-        public void start() {
-        }
-
-        @Override
-        public void handleEos() {
-        }
-    }
-
-    private class WebStreamListener implements StreamListener {
-
-        @Override
-        public void addContent(CharSequence text) {
-            System.out.println(text);
-        }
-
-        @Override
-        public void addSeparator() {
-            System.out.println("-------------------");
-        }
-    }
+	private static final NamedConnectionLoggerFactory NO_CONNECTION_LOGGER_FACTORY = new NamedConnectionLoggerFactory() {
+		public ConnectionLogger createLogger(String title) {
+			return null;
+		}
+	};
 }
