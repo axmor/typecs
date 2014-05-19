@@ -88,7 +88,7 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
 
     @Override
     public boolean canTerminate() {
-        return !isTerminated();
+        return getDebugTarget().canTerminate();
     }
 
     @Override

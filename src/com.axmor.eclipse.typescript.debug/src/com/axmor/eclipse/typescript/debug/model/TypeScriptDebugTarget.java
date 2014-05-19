@@ -15,6 +15,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.chromium.debug.core.model.JavascriptVmEmbedder;
+import org.chromium.debug.core.model.JavascriptVmEmbedder.Listener;
+import org.chromium.debug.core.model.JavascriptVmEmbedder.VmConnector;
 import org.chromium.sdk.Breakpoint;
 import org.chromium.sdk.Breakpoint.Target;
 import org.chromium.sdk.Breakpoint.Target.ScriptName;
@@ -52,239 +55,329 @@ import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapParser;
 /**
  * @author Konstantin Zaitcev
  */
-public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget implements DebugEventListener {
+public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
+		implements DebugEventListener {
 
-    private JavascriptVm vm;
-    private TypeScriptDebugThread thread;
-    private boolean suspended;
-    private DebugContext ctx;
-    private Map<String, SourceMap> tsMappings;
-    private Map<String, SourceMap> jsMappings;
+	private JavascriptVm vm;
+	private TypeScriptDebugThread thread;
+	private boolean suspended;
+	private DebugContext ctx;
+	private Map<String, SourceMap> tsMappings;
+	private Map<String, SourceMap> jsMappings;
 
-    public TypeScriptDebugTarget(ILaunch launch, IProcess process, int port) throws CoreException {
-        super(process, launch);
-        this.tsMappings = new HashMap<String, SourceMap>();
-        this.jsMappings = new HashMap<String, SourceMap>();
-        StandaloneVm standaloneVm = BrowserFactory.getInstance().createStandalone(
-                new InetSocketAddress("localhost", port), null);
-        this.vm = standaloneVm;
-        this.thread = new TypeScriptDebugThread(this);
-        this.setThreads(new IThread[] { this.thread });
+	public TypeScriptDebugTarget(ILaunch launch, IProcess process, int port)
+			throws CoreException {
+		super(process, launch);
+		this.tsMappings = new HashMap<String, SourceMap>();
+		this.jsMappings = new HashMap<String, SourceMap>();
+		StandaloneVm standaloneVm = BrowserFactory.getInstance()
+				.createStandalone(new InetSocketAddress("localhost", port),
+						null);
+		this.vm = standaloneVm;
+		this.thread = new TypeScriptDebugThread(this);
+		this.setThreads(new IThread[] { this.thread });
 
-        try {
-            standaloneVm.attach(this);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        started();
-        DebugPlugin.getDefault().getBreakpointManager().addBreakpointListener(this);
+		try {
+			((StandaloneVm) vm).attach(this);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		started();
+		DebugPlugin.getDefault().getBreakpointManager()
+				.addBreakpointListener(this);
+	}
+
+	public TypeScriptDebugTarget(ILaunch launch, VmConnector connector)
+			throws CoreException {
+		super(null, launch);
+		this.tsMappings = new HashMap<String, SourceMap>();
+		this.jsMappings = new HashMap<String, SourceMap>();
+
+		Listener embedderListener = new Listener() {
+
+			@Override
+			public void reset() {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void closed() {
+				// TODO Auto-generated method stub
+
+			}
+
+		};
+		final JavascriptVmEmbedder embedder = connector.attach(
+				embedderListener, this);
+		// From this moment V8 may call our listeners. We block them by
+		// listenerBlock for a while.
+
+		this.vm = embedder.getJavascriptVm();
+		this.thread = new TypeScriptDebugThread(this);
+		this.setThreads(new IThread[] { this.thread });
+	}
+
+	@Override
+	public boolean isSuspended() {
+		return suspended;
+	}
+
+	@Override
+	public void resume() throws DebugException {
+		if (isSuspended() && ctx != null) {
+			ctx.continueVm(StepAction.CONTINUE, 0, null, null);
+		}
+	}
+
+	@Override
+	public void suspend() throws DebugException {
+		vm.suspend(null);
+	}
+
+	@Override
+	public void terminate() throws DebugException {
+		super.terminate();
+	}
+
+
+    @Override
+    public boolean canTerminate() {
+    	if (vm instanceof StandaloneVm) {
+			return super.canTerminate();
+		} else {
+			return false;
+		}
     }
 
     @Override
-    public boolean isSuspended() {
-        return suspended;
+    public boolean isTerminated() {
+    	if (vm instanceof StandaloneVm) {
+			return super.isTerminated();
+		} else {
+			return !vm.isAttached();
+		}
     }
 
     @Override
-    public void resume() throws DebugException {
-        if (isSuspended() && ctx != null) {
-            ctx.continueVm(StepAction.CONTINUE, 0, null, null);
-        }
+    public boolean canDisconnect() {
+    	if (vm instanceof StandaloneVm) {
+			return false;
+		} else {
+			return vm.isAttached();
+		}
     }
 
     @Override
-    public void suspend() throws DebugException {
-        vm.suspend(null);
+    public void disconnect() throws DebugException {
+    	vm.detach();
+    	disconnected();
     }
 
     @Override
-    public void terminate() throws DebugException {
-        vm.detach();
-        super.terminate();
+    public boolean isDisconnected() {
+        return !vm.isAttached();
     }
-
+    
     @Override
-    public void breakpointAdded(IBreakpoint breakpoint) {
-        if (supportsBreakpoint(breakpoint)) {
-            TypeScriptLineBreakpoint lineBreakpoint = (TypeScriptLineBreakpoint) breakpoint;
-            IResource resource = breakpoint.getMarker().getResource();
-            String path = resource.getFullPath().toString();
-            SourceMap sourceMap = tsMappings.get(path);
+	public void breakpointAdded(IBreakpoint breakpoint) {
+		if (supportsBreakpoint(breakpoint)) {
+			TypeScriptLineBreakpoint lineBreakpoint = (TypeScriptLineBreakpoint) breakpoint;
+			IResource resource = breakpoint.getMarker().getResource();
+			String path = resource.getFullPath().toString();
+			SourceMap sourceMap = tsMappings.get(path);
 
-            try {
-                ScriptName target = new ScriptName(sourceMap.getFile());
-                SourceMapItem item = sourceMap.getItemByTSLine(lineBreakpoint.getLineNumber());
-                if (item != null) {
-                    vm.setBreakpoint(target, item.getJsLine(), Breakpoint.EMPTY_VALUE, true, null, null, null);
-                }
-            } catch (CoreException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+			try {
+				ScriptName target = new ScriptName(sourceMap.getFile());
+				SourceMapItem item = sourceMap.getItemByTSLine(lineBreakpoint
+						.getLineNumber());
+				if (item != null) {
+					vm.setBreakpoint(target, item.getJsLine(),
+							Breakpoint.EMPTY_VALUE, true, null, null, null);
+				}
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
-    @Override
-    public void breakpointRemoved(IBreakpoint breakpoint, IMarkerDelta delta) {
-    }
+	@Override
+	public void breakpointRemoved(IBreakpoint breakpoint, IMarkerDelta delta) {
+	}
 
-    @Override
-    public void breakpointChanged(IBreakpoint breakpoint, IMarkerDelta delta) {
-    }
+	@Override
+	public void breakpointChanged(IBreakpoint breakpoint, IMarkerDelta delta) {
+	}
 
-    @Override
-    public boolean supportsBreakpoint(IBreakpoint breakpoint) {
-        if (TS_DEBUG_MODEL.equals(breakpoint.getModelIdentifier())) {
-            IResource resource = breakpoint.getMarker().getResource();
-            String path = resource.getFullPath().toString();
-            if (!tsMappings.containsKey(path)) {
-                String mapFilePath = TypeScriptResources.getSourceMapFilePath(resource.getFullPath().toString());
-                IFile mapFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(mapFilePath));
-                SourceMap mapping = new SourceMapParser().parse(mapFile.getLocation().toFile());
-                if (!jsMappings.containsKey(mapping.getFile())) {
-                    tsMappings.put(path, mapping);
-                    jsMappings.put(mapping.getFile(), mapping);
-                } else {
-                    tsMappings.put(path, jsMappings.get(mapping.getFile()));
-                }
-            }
-            return tsMappings.containsKey(path);
-        }
-        return false;
-    }
+	@Override
+	public boolean supportsBreakpoint(IBreakpoint breakpoint) {
+		if (TS_DEBUG_MODEL.equals(breakpoint.getModelIdentifier())) {
+			IResource resource = breakpoint.getMarker().getResource();
+			String path = resource.getFullPath().toString();
+			if (!tsMappings.containsKey(path)) {
+				String mapFilePath = TypeScriptResources
+						.getSourceMapFilePath(resource.getFullPath().toString());
+				if (mapFilePath == null) {
+					return false;
+				}
+				IFile mapFile = ResourcesPlugin.getWorkspace().getRoot()
+						.getFile(new Path(mapFilePath));
+				SourceMap mapping = new SourceMapParser().parse(mapFile
+						.getLocation().toFile());
+				if (!jsMappings.containsKey(mapping.getFile())) {
+					tsMappings.put(path, mapping);
+					jsMappings.put(mapping.getFile(), mapping);
+				} else {
+					tsMappings.put(path, jsMappings.get(mapping.getFile()));
+				}
+			}
+			return tsMappings.containsKey(path);
+		}
+		return false;
+	}
 
-    /**
+	/**
      * 
      */
-    public void step() {
-        if (isSuspended() && ctx != null) {
-            ctx.continueVm(StepAction.OVER, 0, null, null);
-        }
-    }
+	public void step() {
+		if (isSuspended() && ctx != null) {
+			ctx.continueVm(StepAction.OVER, 0, null, null);
+		}
+	}
 
-    /**
-     * @return
-     */
-    public IStackFrame[] getStackFrames() {
-        if (isSuspended() && ctx != null) {
-            ArrayList<IStackFrame> frames = new ArrayList<>();
-            for (CallFrame cframe : ctx.getCallFrames()) {
-                frames.add(new TypeScriptStackFrame(thread, cframe, jsMappings));
-            }
-            return (IStackFrame[]) frames.toArray(new IStackFrame[frames.size()]);
-        }
-        return new IStackFrame[0];
-    }
+	/**
+	 * @return
+	 */
+	public IStackFrame[] getStackFrames() {
+		if (isSuspended() && ctx != null) {
+			ArrayList<IStackFrame> frames = new ArrayList<>();
+			for (CallFrame cframe : ctx.getCallFrames()) {
+				frames.add(new TypeScriptStackFrame(thread, cframe, jsMappings));
+			}
+			return (IStackFrame[]) frames
+					.toArray(new IStackFrame[frames.size()]);
+		}
+		return new IStackFrame[0];
+	}
 
-    // / Debug Event listener methods
+	// / Debug Event listener methods
 
-    @Override
-    public void disconnected() {
-        suspended = false;
-        DebugPlugin.getDefault().getBreakpointManager().removeBreakpointListener(this);
-        fireTerminateEvent();
-    }
+	@Override
+	public void disconnected() {
+		suspended = false;
+		DebugPlugin.getDefault().getBreakpointManager()
+				.removeBreakpointListener(this);
+		fireTerminateEvent();
+	}
 
-    @Override
-    public VmStatusListener getVmStatusListener() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	@Override
+	public VmStatusListener getVmStatusListener() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    @Override
-    public void resumed() {
-        resumedEvent(DebugEvent.STEP_OVER);
-        thread.setBreakpoints(null);
-    }
+	@Override
+	public void resumed() {
+		resumedEvent(DebugEvent.STEP_OVER);
+		thread.setBreakpoints(null);
+	}
 
-    @Override
-    public void scriptCollected(Script script) {
-        System.out.println("scriptCollected: " + script.getName());
-    }
+	@Override
+	public void scriptCollected(Script script) {
+		System.out.println("scriptCollected: " + script.getName());
+	}
 
-    @Override
-    public void scriptContentChanged(Script script) {
-        System.out.println("scriptContentChanged: " + script.getName());
-    }
+	@Override
+	public void scriptContentChanged(Script script) {
+		System.out.println("scriptContentChanged: " + script.getName());
+	}
 
-    @Override
-    public void scriptLoaded(Script script) {
-        System.out.println("scriptLoaded: " + script.getName());
-    }
+	@Override
+	public void scriptLoaded(Script script) {
+		System.out.println("scriptLoaded: " + script.getName());
+	}
 
-    @Override
-    public void suspended(DebugContext ctx) {
-        this.ctx = ctx;
-        Collection<? extends Breakpoint> hits = ctx.getBreakpointsHit();
-        if (hits.size() > 0) {
-            for (Breakpoint hit : hits) {
-                String name = hit.getTarget().accept(new ScriptNameVisitor());
-                if (jsMappings.containsKey(name)) {
-                    SourceMapItem item = jsMappings.get(name).getItemByJSLine(hit.getLineNumber());
-                    if (item != null) {
-                        IBreakpoint[] breakpoints = DebugPlugin.getDefault().getBreakpointManager()
-                                .getBreakpoints(TypeScriptDebugConstants.TS_DEBUG_MODEL);
-                        for (IBreakpoint breakpoint : breakpoints) {
-                            try {
-                                if (breakpoint.isEnabled()
-                                        && ((ILineBreakpoint) breakpoint).getLineNumber() == item.getTsLine()) {
-                                    thread.setBreakpoints(new IBreakpoint[] { breakpoint });
-                                }
-                            } catch (CoreException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
-            suspendedEvent(DebugEvent.BREAKPOINT);
-        } else {
-            suspendedEvent(DebugEvent.STEP_END);
-        }
-        suspended = true;
-    }
+	@Override
+	public void suspended(DebugContext ctx) {
+		this.ctx = ctx;
+		Collection<? extends Breakpoint> hits = ctx.getBreakpointsHit();
+		if (hits.size() > 0) {
+			for (Breakpoint hit : hits) {
+				String name = hit.getTarget().accept(new ScriptNameVisitor());
+				if (jsMappings.containsKey(name)) {
+					SourceMapItem item = jsMappings.get(name).getItemByJSLine(
+							hit.getLineNumber());
+					if (item != null) {
+						IBreakpoint[] breakpoints = DebugPlugin
+								.getDefault()
+								.getBreakpointManager()
+								.getBreakpoints(
+										TypeScriptDebugConstants.TS_DEBUG_MODEL);
+						for (IBreakpoint breakpoint : breakpoints) {
+							try {
+								if (breakpoint.isEnabled()
+										&& ((ILineBreakpoint) breakpoint)
+												.getLineNumber() == item
+												.getTsLine()) {
+									thread.setBreakpoints(new IBreakpoint[] { breakpoint });
+								}
+							} catch (CoreException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}
+			suspendedEvent(DebugEvent.BREAKPOINT);
+		} else {
+			suspendedEvent(DebugEvent.STEP_END);
+		}
+		suspended = true;
+	}
 
-    // / Event notification methods
+	// / Event notification methods
 
-    private void started() {
-        fireCreationEvent();
-        IBreakpoint[] breakpoints = DebugPlugin.getDefault().getBreakpointManager()
-                .getBreakpoints(TypeScriptDebugConstants.TS_DEBUG_MODEL);
-        for (IBreakpoint breakpoint : breakpoints) {
-            breakpointAdded(breakpoint);
-        }
-        try {
-            resume();
-        } catch (DebugException e) {
-            // ignore exception
-        }
-    }
+	private void started() {
+		fireCreationEvent();
+		IBreakpoint[] breakpoints = DebugPlugin.getDefault()
+				.getBreakpointManager()
+				.getBreakpoints(TypeScriptDebugConstants.TS_DEBUG_MODEL);
+		for (IBreakpoint breakpoint : breakpoints) {
+			breakpointAdded(breakpoint);
+		}
+		try {
+			resume();
+		} catch (DebugException e) {
+			// ignore exception
+		}
+	}
 
-    private void resumedEvent(int detail) {
-        this.ctx = null;
-        suspended = false;
-        fireResumeEvent(detail);
-    }
+	private void resumedEvent(int detail) {
+		this.ctx = null;
+		suspended = false;
+		fireResumeEvent(detail);
+	}
 
-    private void suspendedEvent(int detail) {
-        suspended = true;
-        fireSuspendEvent(detail);
-    }
+	private void suspendedEvent(int detail) {
+		suspended = true;
+		fireSuspendEvent(detail);
+	}
 
-    private class ScriptNameVisitor implements Visitor<String> {
+	private class ScriptNameVisitor implements Visitor<String> {
 
-        @Override
-        public String visitScriptName(String scriptName) {
-            return scriptName;
-        }
+		@Override
+		public String visitScriptName(String scriptName) {
+			return scriptName;
+		}
 
-        @Override
-        public String visitScriptId(Object scriptId) {
-            return null;
-        }
+		@Override
+		public String visitScriptId(Object scriptId) {
+			return null;
+		}
 
-        @Override
-        public String visitUnknown(Target target) {
-            return null;
-        }
-    }
+		@Override
+		public String visitUnknown(Target target) {
+			return null;
+		}
+	}
 }

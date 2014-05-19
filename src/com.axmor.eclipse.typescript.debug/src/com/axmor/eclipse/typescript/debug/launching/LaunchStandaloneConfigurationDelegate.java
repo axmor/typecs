@@ -26,7 +26,6 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
-import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 import org.eclipse.debug.core.model.IProcess;
 
@@ -89,7 +88,7 @@ public class LaunchStandaloneConfigurationDelegate implements ILaunchConfigurati
         Process process = DebugPlugin.exec((String[]) cmd.toArray(new String[cmd.size()]), workingDir);
         IProcess p = DebugPlugin.newProcess(launch, process, "NodeJS Runtime");
         if (mode.equals(ILaunchManager.DEBUG_MODE)) {
-            IDebugTarget target = new TypeScriptDebugTarget(launch, p, port);
+            TypeScriptDebugTarget target = new TypeScriptDebugTarget(launch, p, port);
             launch.addDebugTarget(target);
         }
     }

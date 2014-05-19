@@ -52,6 +52,21 @@ public abstract class AbstractTypeScriptDebugTarget extends TypeScriptDebugEleme
     }
 
     @Override
+    public boolean canTerminate() {
+        return process.canTerminate();
+    }
+
+    @Override
+    public boolean isTerminated() {
+        return process.isTerminated();
+    }
+
+    @Override
+    public void terminate() throws DebugException {
+        process.terminate();
+    }
+
+    @Override
     public String getName() throws DebugException {
         return "TypeScript Application";
     }
@@ -83,21 +98,6 @@ public abstract class AbstractTypeScriptDebugTarget extends TypeScriptDebugEleme
     @Override
     public boolean hasThreads() throws DebugException {
         return true;
-    }
-
-    @Override
-    public boolean canTerminate() {
-        return getProcess().canTerminate();
-    }
-
-    @Override
-    public boolean isTerminated() {
-        return getProcess().isTerminated();
-    }
-
-    @Override
-    public void terminate() throws DebugException {
-        process.terminate();
     }
 
     @Override
