@@ -116,6 +116,9 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 		this.vm = embedder.getJavascriptVm();
 		this.thread = new TypeScriptDebugThread(this);
 		this.setThreads(new IThread[] { this.thread });
+		started();
+		DebugPlugin.getDefault().getBreakpointManager()
+				.addBreakpointListener(this);
 	}
 
 	@Override
