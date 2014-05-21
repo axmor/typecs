@@ -8,6 +8,8 @@
 package com.axmor.eclipse.typescript.debug.model;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.chromium.sdk.CallFrame;
@@ -24,6 +26,7 @@ import org.eclipse.debug.core.model.IVariable;
 
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMap;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapItem;
+import com.google.common.io.Files;
 
 /**
  * @author Konstantin Zaitcev
@@ -72,6 +75,24 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
                     this.sourceName = ifile.getFullPath().toString();
                 }
             }
+        } else {
+        	for (SourceMap mapping : jsMappings.values()) {
+        		try {
+					if (Arrays.equals(
+							TypeScriptDebugTarget.digest(script.getSource().getBytes()),
+							TypeScriptDebugTarget.digest(Files.toByteArray(new File(mapping.getFile())))
+							)) {
+		                SourceMapItem item = mapping.getItemByJSLine(lineNumber);
+		                if (item != null) {
+		                    this.sourceName = item.getTsFile();
+		                    this.lineNumber = item.getTsLine();
+		                }
+		                return;
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+        	}
         }
     }
 
