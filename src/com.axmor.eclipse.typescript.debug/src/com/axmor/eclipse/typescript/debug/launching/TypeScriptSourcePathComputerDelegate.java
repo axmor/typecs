@@ -7,14 +7,22 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.debug.launching;
 
+import static com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants.TS_LAUNCH_STANDALONE_PROJECT;
+
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.sourcelookup.ISourceContainer;
 import org.eclipse.debug.core.sourcelookup.ISourcePathComputerDelegate;
 import org.eclipse.debug.core.sourcelookup.containers.ProjectSourceContainer;
 import org.eclipse.debug.core.sourcelookup.containers.WorkspaceSourceContainer;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 /**
  * @author Konstantin Zaitcev
@@ -26,7 +34,13 @@ public class TypeScriptSourcePathComputerDelegate implements ISourcePathComputer
             throws CoreException {
         ISourceContainer sourceContainer = null;
         // FIXME: KOS need rewrite
-        sourceContainer = new ProjectSourceContainer(ResourcesPlugin.getWorkspace().getRoot().getProject("warship_sample"), false);
+        String projectName = configuration.getAttribute(TS_LAUNCH_STANDALONE_PROJECT, "");
+        if (!projectName.isEmpty()) {
+			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
+		    sourceContainer = new ProjectSourceContainer(project, false);
+        }
+        
+    
         if (sourceContainer == null) {
             sourceContainer = new WorkspaceSourceContainer();
         }

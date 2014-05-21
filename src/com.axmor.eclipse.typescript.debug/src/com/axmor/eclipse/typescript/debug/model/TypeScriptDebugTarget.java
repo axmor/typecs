@@ -9,8 +9,13 @@ package com.axmor.eclipse.typescript.debug.model;
 
 import static com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants.TS_DEBUG_MODEL;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +33,7 @@ import org.chromium.sdk.DebugContext;
 import org.chromium.sdk.DebugContext.StepAction;
 import org.chromium.sdk.DebugEventListener;
 import org.chromium.sdk.JavascriptVm;
+import org.chromium.sdk.JavascriptVm.ScriptsCallback;
 import org.chromium.sdk.Script;
 import org.chromium.sdk.StandaloneVm;
 import org.eclipse.core.resources.IFile;
@@ -51,6 +57,7 @@ import com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMap;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapItem;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapParser;
+import com.google.common.io.Files;
 
 /**
  * @author Konstantin Zaitcev
@@ -110,8 +117,6 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 		};
 		final JavascriptVmEmbedder embedder = connector.attach(
 				embedderListener, this);
-		// From this moment V8 may call our listeners. We block them by
-		// listenerBlock for a while.
 
 		this.vm = embedder.getJavascriptVm();
 		this.thread = new TypeScriptDebugThread(this);
@@ -182,6 +187,21 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
         return !vm.isAttached();
     }
     
+    private static MessageDigest digester;
+
+    static {
+        try {
+            digester = MessageDigest.getInstance("MD5");
+        }
+        catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public static synchronized byte[] digest(byte[] input) {
+    	return digester.digest(input);
+    }
+    
     @Override
 	public void breakpointAdded(IBreakpoint breakpoint) {
 		if (supportsBreakpoint(breakpoint)) {
@@ -191,14 +211,34 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 			SourceMap sourceMap = tsMappings.get(path);
 
 			try {
-				ScriptName target = new ScriptName(sourceMap.getFile());
-				SourceMapItem item = sourceMap.getItemByTSLine(lineBreakpoint
+				final SourceMapItem item = sourceMap.getItemByTSLine(lineBreakpoint
 						.getLineNumber());
+				final byte[] md5 = digest(Files.toByteArray(new File(sourceMap.getFile())));
 				if (item != null) {
-					vm.setBreakpoint(target, item.getJsLine(),
-							Breakpoint.EMPTY_VALUE, true, null, null, null);
+					vm.getScripts(new ScriptsCallback() {
+
+						@Override
+						public void success(Collection<Script> scripts) {
+							for (Script script : scripts) {
+								if (Arrays.equals(digest(script.getSource().getBytes()), md5)) {
+									ScriptName target = new ScriptName(script.getName());
+									vm.setBreakpoint(target, item.getJsLine(),
+											Breakpoint.EMPTY_VALUE, true, null, null, null);
+								}
+							}
+						}
+
+						@Override
+						public void failure(String errorMessage) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+					});
 				}
 			} catch (CoreException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
