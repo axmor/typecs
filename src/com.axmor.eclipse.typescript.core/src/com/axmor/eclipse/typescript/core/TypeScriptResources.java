@@ -81,8 +81,12 @@ public final class TypeScriptResources {
             if (settings.isSourceMap()) {
                 IPath mapFile = new Path(Strings.isNullOrEmpty(settings.getMapRoot()) ? settings.getTarget() : settings
                         .getMapRoot());
-                mapFile = file.getProject().getFolder(mapFile).getFullPath();
-                if (!settings.isTargetFile()) {
+                if (mapFile == null || mapFile.toString().isEmpty()) {
+                	mapFile = file.getFullPath();
+                } else {
+                	mapFile = file.getProject().getFolder(mapFile).getFullPath();
+                }
+                if (settings.isTargetFile()) {
                     IPath relative = new Path(path).makeRelativeTo(file.getProject().getFolder(settings.getTarget()).getFullPath());
                     mapFile = mapFile.append(relative);
                 }
