@@ -19,6 +19,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.chromium.debug.core.model.JavascriptVmEmbedder;
 import org.chromium.debug.core.model.JavascriptVmEmbedder.Listener;
@@ -71,6 +73,8 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	private DebugContext ctx;
 	private Map<String, SourceMap> tsMappings;
 	private Map<String, SourceMap> jsMappings;
+	private final AtomicBoolean needResumeAtomic;
+	private final CountDownLatch resumeSignal;
 
 	public TypeScriptDebugTarget(ILaunch launch, IProcess process, int port)
 			throws CoreException {
@@ -89,7 +93,10 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		this.needResumeAtomic = new AtomicBoolean(true);
+		this.resumeSignal = new CountDownLatch(1);
 		started();
+		resumeSignal.countDown();
 		DebugPlugin.getDefault().getBreakpointManager()
 				.addBreakpointListener(this);
 	}
@@ -121,7 +128,10 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 		this.vm = embedder.getJavascriptVm();
 		this.thread = new TypeScriptDebugThread(this);
 		this.setThreads(new IThread[] { this.thread });
+		this.needResumeAtomic = new AtomicBoolean(false);
+		this.resumeSignal = new CountDownLatch(0);
 		started();
+		resume();
 		DebugPlugin.getDefault().getBreakpointManager()
 				.addBreakpointListener(this);
 	}
@@ -213,28 +223,35 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 			try {
 				final SourceMapItem item = sourceMap.getItemByTSLine(lineBreakpoint
 						.getLineNumber());
-				final byte[] md5 = digest(Files.toByteArray(new File(sourceMap.getFile())));
 				if (item != null) {
-					vm.getScripts(new ScriptsCallback() {
-
-						@Override
-						public void success(Collection<Script> scripts) {
-							for (Script script : scripts) {
-								if (Arrays.equals(digest(script.getSource().getBytes()), md5)) {
-									ScriptName target = new ScriptName(script.getName());
-									vm.setBreakpoint(target, item.getJsLine(),
-											Breakpoint.EMPTY_VALUE, true, null, null, null);
+					if (vm instanceof StandaloneVm) {
+						ScriptName target = new ScriptName(sourceMap.getFile());
+						vm.setBreakpoint(target, item.getJsLine(),
+								Breakpoint.EMPTY_VALUE, true, null, null, null);
+						
+					} else {
+						final byte[] md5 = digest(Files.toByteArray(new File(sourceMap.getFile())));
+						vm.getScripts(new ScriptsCallback() {
+	
+							@Override
+							public void success(Collection<Script> scripts) {
+								for (Script script : scripts) {
+									if (Arrays.equals(digest(script.getSource().getBytes()), md5)) {
+										ScriptName target = new ScriptName(script.getName());
+										vm.setBreakpoint(target, item.getJsLine(),
+												Breakpoint.EMPTY_VALUE, true, null, null, null);
+									}
 								}
 							}
-						}
-
-						@Override
-						public void failure(String errorMessage) {
-							// TODO Auto-generated method stub
+	
+							@Override
+							public void failure(String errorMessage) {
+								// TODO Auto-generated method stub
+								
+							}
 							
-						}
-						
-					});
+						});
+					}
 				}
 			} catch (CoreException e) {
 				e.printStackTrace();
@@ -343,6 +360,7 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	@Override
 	public void suspended(DebugContext ctx) {
 		this.ctx = ctx;
+		
 		Collection<? extends Breakpoint> hits = ctx.getBreakpointsHit();
 		if (hits.size() > 0) {
 			for (Breakpoint hit : hits) {
@@ -376,6 +394,19 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 			suspendedEvent(DebugEvent.STEP_END);
 		}
 		suspended = true;
+
+		boolean needResume = needResumeAtomic.getAndSet(false);
+		if (needResume) {
+			try {
+				resumeSignal.await();
+				resume();
+				return;
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (DebugException e) {
+				// Ignore
+			}
+		}
 	}
 
 	// / Event notification methods
@@ -387,11 +418,6 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 				.getBreakpoints(TypeScriptDebugConstants.TS_DEBUG_MODEL);
 		for (IBreakpoint breakpoint : breakpoints) {
 			breakpointAdded(breakpoint);
-		}
-		try {
-			resume();
-		} catch (DebugException e) {
-			// ignore exception
 		}
 	}
 
