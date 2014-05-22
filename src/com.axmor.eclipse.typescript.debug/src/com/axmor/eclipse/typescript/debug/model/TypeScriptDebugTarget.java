@@ -38,6 +38,7 @@ import org.chromium.sdk.JavascriptVm;
 import org.chromium.sdk.JavascriptVm.ScriptsCallback;
 import org.chromium.sdk.Script;
 import org.chromium.sdk.StandaloneVm;
+import org.chromium.sdk.SyncCallback;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarkerDelta;
 import org.eclipse.core.resources.IResource;
@@ -297,12 +298,20 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	}
 
 	/**
+	 * @param callback 
+     * 
+     */
+	public void step(SyncCallback callback) {
+		if (isSuspended() && ctx != null) {
+			ctx.continueVm(StepAction.OVER, 0, null, callback);
+		}
+	}
+	
+	/**
      * 
      */
 	public void step() {
-		if (isSuspended() && ctx != null) {
-			ctx.continueVm(StepAction.OVER, 0, null, null);
-		}
+		step(null);
 	}
 
 	/**

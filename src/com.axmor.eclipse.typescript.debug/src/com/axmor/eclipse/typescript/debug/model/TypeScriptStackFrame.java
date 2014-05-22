@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.chromium.sdk.CallFrame;
 import org.chromium.sdk.Script;
+import org.chromium.sdk.SyncCallback;
 import org.chromium.sdk.internal.ScriptBase;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -106,7 +107,7 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
         return getThread().canStepOver();
     }
 
-    @Override
+	@Override
     public boolean canStepReturn() {
         return getThread().canStepReturn();
     }
@@ -123,7 +124,28 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
 
     @Override
     public void stepOver() throws DebugException {
-        getThread().stepOver();
+    	IThread thread = getThread();
+    	if (thread instanceof TypeScriptDebugThread) {
+			final IStackFrame tsf = thread.getTopStackFrame();
+			final TypeScriptDebugThread tsThread = (TypeScriptDebugThread) thread;
+			final SyncCallback[] callback = new SyncCallback[1];
+			callback[0] = new SyncCallback(){
+				@Override
+				public void callbackDone(RuntimeException e) {
+					try {
+						if (tsf.equals(tsThread.getTopStackFrame()) && tsThread.canStepOver()) {
+							tsThread.stepOver(callback[0]);
+						}
+					} catch (DebugException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+	        };
+			tsThread.stepOver(callback[0]);
+    	} else {
+    		thread.stepOver();
+    	}
     }
 
     @Override

@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.debug.model;
 
+import org.chromium.sdk.SyncCallback;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.debug.core.model.IDebugTarget;
@@ -78,7 +79,11 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
 
     @Override
     public void stepOver() throws DebugException {
-        ((TypeScriptDebugTarget) getDebugTarget()).step();
+    	stepOver(null);
+    }
+
+    public void stepOver(SyncCallback callback) throws DebugException {
+        ((TypeScriptDebugTarget) getDebugTarget()).step(callback);
     }
 
     @Override
