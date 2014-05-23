@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TypEcs - TypeScript IDE for Eclipse
+Bundle-SymbolicName: com.axmor.eclipse.typescript;singleton:=true
+Bundle-Version: 1.5.1.qualifier
+Bundle-Vendor: Axmor Software Inc.
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
