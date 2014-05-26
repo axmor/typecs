@@ -86,13 +86,15 @@ public final class TypeScriptResources {
                 } else {
                 	mapFile = file.getProject().getFolder(mapFile).getFullPath();
                 }
-                IPath relative = null;
-                if (settings.isTargetFile()) {
-                    relative = new Path(path).makeRelativeTo(file.getProject().getFile(settings.getTarget()).getFullPath());
-                } else {
-                    relative = new Path(path).makeRelativeTo(file.getProject().getFolder(settings.getTarget()).getFullPath());
+                if (!Strings.isNullOrEmpty(settings.getTarget())) {
+	                IPath relative = null;
+	                if (settings.isTargetFile()) {
+	                    relative = new Path(path).makeRelativeTo(file.getProject().getFile(settings.getTarget()).getFullPath());
+	                } else {
+	                    relative = new Path(path).makeRelativeTo(file.getProject().getFolder(settings.getTarget()).getFullPath());
+	                }
+	                mapFile = mapFile.append(relative);
                 }
-                mapFile = mapFile.append(relative);
                 return mapFile.removeFileExtension().addFileExtension("js.map").toString();
             }
         }
