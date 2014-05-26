@@ -119,7 +119,28 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
 
     @Override
     public void stepInto() throws DebugException {
-        getThread().stepInto();
+    	IThread thread = getThread();
+    	if (thread instanceof TypeScriptDebugThread) {
+			final IStackFrame tsf = thread.getTopStackFrame();
+			final TypeScriptDebugThread tsThread = (TypeScriptDebugThread) thread;
+			final SyncCallback[] callback = new SyncCallback[1];
+			callback[0] = new SyncCallback(){
+				@Override
+				public void callbackDone(RuntimeException e) {
+					try {
+						if (tsf.equals(tsThread.getTopStackFrame()) && tsThread.canStepOver()) {
+							tsThread.stepInto(callback[0]);
+						}
+					} catch (DebugException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+	        };
+			tsThread.stepInto(callback[0]);
+    	} else {
+    		thread.stepInto();
+    	}
     }
 
     @Override
@@ -150,7 +171,28 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements ISta
 
     @Override
     public void stepReturn() throws DebugException {
-        getThread().stepReturn();
+    	IThread thread = getThread();
+    	if (thread instanceof TypeScriptDebugThread) {
+			final IStackFrame tsf = thread.getTopStackFrame();
+			final TypeScriptDebugThread tsThread = (TypeScriptDebugThread) thread;
+			final SyncCallback[] callback = new SyncCallback[1];
+			callback[0] = new SyncCallback(){
+				@Override
+				public void callbackDone(RuntimeException e) {
+					try {
+						if (tsf.equals(tsThread.getTopStackFrame()) && tsThread.canStepOver()) {
+							tsThread.stepReturn(callback[0]);
+						}
+					} catch (DebugException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
+	        };
+			tsThread.stepReturn(callback[0]);
+    	} else {
+    		thread.stepReturn();
+    	}
     }
 
     @Override
