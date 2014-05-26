@@ -89,11 +89,13 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 		this.thread = new TypeScriptDebugThread(this);
 		this.setThreads(new IThread[] { this.thread });
 
-		try {
-			((StandaloneVm) vm).attach(this);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+			try {
+				Thread.sleep(1000);
+				((StandaloneVm) vm).attach(this);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			
 		this.needResumeAtomic = new AtomicBoolean(true);
 		this.resumeSignal = new CountDownLatch(1);
 		started();
@@ -301,17 +303,30 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	 * @param callback 
      * 
      */
-	public void step(SyncCallback callback) {
+	public void stepOver(SyncCallback callback) {
 		if (isSuspended() && ctx != null) {
 			ctx.continueVm(StepAction.OVER, 0, null, callback);
 		}
 	}
-	
+
 	/**
+	 * @param callback 
      * 
      */
-	public void step() {
-		step(null);
+	public void stepIn(SyncCallback callback) {
+		if (isSuspended() && ctx != null) {
+			ctx.continueVm(StepAction.IN, 0, null, callback);
+		}
+	}
+
+	/**
+	 * @param callback 
+     * 
+     */
+	public void stepOut(SyncCallback callback) {
+		if (isSuspended() && ctx != null) {
+			ctx.continueVm(StepAction.OUT, 0, null, callback);
+		}
 	}
 
 	/**
