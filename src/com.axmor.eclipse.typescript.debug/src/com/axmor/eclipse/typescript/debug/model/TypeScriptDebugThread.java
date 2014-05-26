@@ -54,7 +54,7 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
 
     @Override
     public boolean canStepInto() {
-        return false;
+        return isSuspended();
     }
 
     @Override
@@ -64,7 +64,7 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
 
     @Override
     public boolean canStepReturn() {
-        return false;
+        return isSuspended();
     }
 
     @Override
@@ -74,7 +74,11 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
 
     @Override
     public void stepInto() throws DebugException {
-        // empty block
+    	stepInto(null);
+    }
+
+    public void stepInto(SyncCallback callback) throws DebugException {
+        ((TypeScriptDebugTarget) getDebugTarget()).stepIn(callback);
     }
 
     @Override
@@ -83,12 +87,16 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
     }
 
     public void stepOver(SyncCallback callback) throws DebugException {
-        ((TypeScriptDebugTarget) getDebugTarget()).step(callback);
+        ((TypeScriptDebugTarget) getDebugTarget()).stepOver(callback);
     }
 
     @Override
     public void stepReturn() throws DebugException {
-        // empty blocks
+    	stepReturn(null);
+    }
+
+    public void stepReturn(SyncCallback callback) throws DebugException {
+        ((TypeScriptDebugTarget) getDebugTarget()).stepOut(callback);
     }
 
     @Override
