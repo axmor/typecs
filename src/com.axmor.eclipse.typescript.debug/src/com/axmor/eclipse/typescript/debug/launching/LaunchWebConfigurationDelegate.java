@@ -73,6 +73,8 @@ public class LaunchWebConfigurationDelegate implements
 
 				destructingGuard.addValue(lauchDestructor);
 
+				DebugPlugin.getDefault().getLaunchManager().addLaunch(launch);
+				
 				JavascriptVmEmbedder.VmConnector connector = remoteServer.selectVm();
 				if (connector == null) {
 					return;

@@ -38,6 +38,9 @@ public abstract class TypeScriptDebugElement extends PlatformObject implements I
         if (adapter == IDebugElement.class) {
             return this;
         }
+        if (adapter == ILaunch.class) {
+        	return getLaunch();
+        }
         return super.getAdapter(adapter);
     }
 

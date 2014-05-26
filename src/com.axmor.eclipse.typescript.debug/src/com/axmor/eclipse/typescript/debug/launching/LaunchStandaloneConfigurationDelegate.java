@@ -88,6 +88,7 @@ public class LaunchStandaloneConfigurationDelegate implements ILaunchConfigurati
         Process process = DebugPlugin.exec((String[]) cmd.toArray(new String[cmd.size()]), workingDir);
         IProcess p = DebugPlugin.newProcess(launch, process, "NodeJS Runtime");
         if (mode.equals(ILaunchManager.DEBUG_MODE)) {
+            DebugPlugin.getDefault().getLaunchManager().addLaunch(launch);
             TypeScriptDebugTarget target = new TypeScriptDebugTarget(launch, p, port);
             launch.addDebugTarget(target);
         }
