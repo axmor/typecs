@@ -104,7 +104,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
 
         // target version
         SWTFactory.createLabel(group2, Messages.ProjectPrefPage_targetVersion, 1);
-        targetVersion = SWTFactory.createCombo(group2, SWT.READ_ONLY, 1, new String[] { "ES3", "ES5" });
+        targetVersion = SWTFactory.createCombo(group2, SWT.READ_ONLY, 1, new String[] { "ES5", "ES3" });
 
         declaration = SWTFactory.createCheckButton(group2, Messages.ProjectPrefPage_declaration, null, true, 2);
         removeComments = SWTFactory.createCheckButton(group2, Messages.ProjectPrefPage_removeComments, null, true, 2);
