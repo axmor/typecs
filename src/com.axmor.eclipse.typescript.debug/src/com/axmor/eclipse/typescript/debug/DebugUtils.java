@@ -38,11 +38,29 @@ public final class DebugUtils {
             return -1;
         }
     }
-    
+
+    /**
+     * Throws core exception with given error message.
+     * 
+     * @param message
+     *            error message
+     * @throws CoreException
+     *             exception
+     */
     public static void error(String message) throws CoreException {
         error(message, null);
     }
 
+    /**
+     * Throws core exception with given error message.
+     * 
+     * @param message
+     *            error message
+     * @param ex
+     *            original exception
+     * @throws CoreException
+     *             exception
+     */
     public static void error(String message, Exception ex) throws CoreException {
         throw new CoreException(new Status(ERROR, TS_DEBUG_MODEL, 0, message, ex));
     }

@@ -97,7 +97,7 @@ public class TypeScriptBridge implements Runnable {
         this.baseDirectory = baseDirectory;
         this.version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
 
-        if (Strings.isNullOrEmpty(this.version)) {
+        if (Strings.isNullOrEmpty(this.version) || "1.0.0".equals(this.version)) {
             this.version = TypeScriptAPI.DEFAULT_TS_VERSION;
         }
     }
@@ -312,7 +312,7 @@ public class TypeScriptBridge implements Runnable {
         try {
             String version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
 
-            if (Strings.isNullOrEmpty(version)) {
+            if (Strings.isNullOrEmpty(version) || "1.0.0".equals(version)) {
                 version = TypeScriptAPI.DEFAULT_TS_VERSION;
             }
             File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());

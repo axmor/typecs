@@ -13,6 +13,7 @@ import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.debug.core.model.IStackFrame;
 import org.eclipse.debug.core.model.IThread;
+import org.eclipse.debug.ui.sourcelookup.ISourceDisplay;
 
 /**
  * @author Konstantin Zaitcev
@@ -23,6 +24,15 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
     private boolean stepping;
     private IBreakpoint[] breakpoints;
 
+    @SuppressWarnings("rawtypes")
+    @Override
+    public Object getAdapter(Class adapter) {
+        if (adapter == ISourceDisplay.class) {
+            return getDebugTarget().getAdapter(adapter);
+        }
+        return super.getAdapter(adapter);
+    }
+    
     public TypeScriptDebugThread(IDebugTarget debugTarget) {
         super(debugTarget);
     }
@@ -115,7 +125,7 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
     }
 
     @Override
-    public IStackFrame[] getStackFrames() throws DebugException {
+    public IStackFrame[] getStackFrames() {
         return ((TypeScriptDebugTarget) getDebugTarget()).getStackFrames();
     }
 
@@ -130,7 +140,7 @@ public class TypeScriptDebugThread extends TypeScriptDebugElement implements ITh
     }
 
     @Override
-    public IStackFrame getTopStackFrame() throws DebugException {
+    public IStackFrame getTopStackFrame() {
         IStackFrame[] frames = getStackFrames();
         if (frames != null && frames.length > 0) {
             return frames[0];
