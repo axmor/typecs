@@ -54,6 +54,9 @@ import org.eclipse.debug.core.model.ILineBreakpoint;
 import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.debug.core.model.IStackFrame;
 import org.eclipse.debug.core.model.IThread;
+import org.eclipse.debug.internal.ui.elements.adapters.StackFrameSourceDisplayAdapter;
+import org.eclipse.debug.ui.sourcelookup.ISourceDisplay;
+import org.eclipse.ui.IWorkbenchPage;
 
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants;
@@ -65,6 +68,7 @@ import com.google.common.io.Files;
 /**
  * @author Konstantin Zaitcev
  */
+@SuppressWarnings("restriction")
 public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 		implements DebugEventListener {
 
@@ -76,6 +80,26 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	private Map<String, SourceMap> jsMappings;
 	private final AtomicBoolean needResumeAtomic;
 	private final CountDownLatch resumeSignal;
+	private IStackFrame[] frames = new IStackFrame[0];
+
+	private static final ISourceDisplay sourceDisplay = new ISourceDisplay() {
+	    private final StackFrameSourceDisplayAdapter sDisplay = new StackFrameSourceDisplayAdapter();
+        @Override
+        public void displaySource(Object element, IWorkbenchPage page, boolean forceSourceLookup) {
+            if (element instanceof TypeScriptDebugTarget) {
+                IStackFrame[] frames = ((TypeScriptDebugTarget) element).getStackFrames();
+                if (frames.length > 0) {
+                    sDisplay.displaySource(frames[0], page, forceSourceLookup);
+                }
+            } else if (element instanceof TypeScriptDebugThread) {
+                IStackFrame frame = ((TypeScriptDebugThread) element).getTopStackFrame();
+                if (frame != null) {
+                    sDisplay.displaySource(frame, page, forceSourceLookup);
+                }
+            }
+            
+        }
+    };
 
 	public TypeScriptDebugTarget(ILaunch launch, IProcess process, int port)
 			throws CoreException {
@@ -104,6 +128,15 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 				.addBreakpointListener(this);
 	}
 
+	@SuppressWarnings("rawtypes")
+    @Override
+	public Object getAdapter(Class adapter) {
+	    if (adapter == ISourceDisplay.class) {
+	        return sourceDisplay;
+	    }
+	    return super.getAdapter(adapter);
+	}
+	
 	public TypeScriptDebugTarget(ILaunch launch, VmConnector connector)
 			throws CoreException {
 		super(null, launch);
@@ -333,15 +366,7 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	 * @return
 	 */
 	public IStackFrame[] getStackFrames() {
-		if (isSuspended() && ctx != null) {
-			ArrayList<IStackFrame> frames = new ArrayList<>();
-			for (CallFrame cframe : ctx.getCallFrames()) {
-				frames.add(new TypeScriptStackFrame(thread, cframe, jsMappings));
-			}
-			return (IStackFrame[]) frames
-					.toArray(new IStackFrame[frames.size()]);
-		}
-		return new IStackFrame[0];
+	    return frames;
 	}
 
 	// / Debug Event listener methods
@@ -384,6 +409,12 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	@Override
 	public void suspended(DebugContext ctx) {
 		this.ctx = ctx;
+
+		ArrayList<IStackFrame> frames = new ArrayList<>();
+        for (CallFrame cframe : ctx.getCallFrames()) {
+            frames.add(new TypeScriptStackFrame(thread, cframe, jsMappings));
+        }
+        this.frames = (IStackFrame[]) frames.toArray(new IStackFrame[frames.size()]);
 		
 		Collection<? extends Breakpoint> hits = ctx.getBreakpointsHit();
 		if (hits.size() > 0) {

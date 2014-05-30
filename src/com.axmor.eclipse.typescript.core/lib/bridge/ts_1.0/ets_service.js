@@ -17,7 +17,6 @@ exports.setFileContent = function(file, params) {
   tsh.setFileContent(file, params);
   ts.currentFileSyntaxTree = null;
   if (ts.compiler.compiler != null) {
-    log.error('!!! compiler')
     ts.compiler.compiler.updateFile(file, tsh.getScriptSnapshot(file), /*version:*/ 1, /*isOpen:*/ true, /* textChangeRange: */ null);
   }
 }

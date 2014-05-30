@@ -2,7 +2,7 @@
 <feature
       id="com.axmor.eclipse.typescript.feature"
       label="%featureName"
-      version="1.5.1.qualifier"
+      version="2.0.0.qualifier"
       provider-name="%providerName"
       plugin="com.axmor.eclipse.typescript">
 
