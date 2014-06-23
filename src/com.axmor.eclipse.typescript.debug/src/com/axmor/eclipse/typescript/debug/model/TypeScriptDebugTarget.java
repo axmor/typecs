@@ -504,4 +504,8 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 			return null;
 		}
 	}
+
+	public JavascriptVm getJavascriptVm() {
+		return vm;
+	}
 }
