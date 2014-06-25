@@ -30,318 +30,381 @@ import org.eclipse.debug.core.model.IVariable;
 import org.eclipse.debug.ui.actions.IWatchExpressionFactoryAdapter;
 
 /**
- * An IVariable implementation over a JsVariable instance. This is class is a base implementation,
- * and it contains several concrete implementations as nested classes.
+ * An IVariable implementation over a JsVariable instance. This is class is a
+ * base implementation, and it contains several concrete implementations as
+ * nested classes.
  */
-public abstract class Variable extends TypeScriptDebugElement implements IVariable {
+public abstract class Variable extends TypeScriptDebugElement implements
+		IVariable {
 
 	/**
-   * Wraps {@link JsVariable}. It extracts its {@link JsValue} if possible or provides error
-   * message as a {@link Value}.
-   */
-  public static Variable forRealValue(JsEvaluateContext evaluateContext, IDebugTarget debugTarget, JsVariable jsVariable,
-      boolean isInternalProperty, Real.HostObject hostObject) {
-    ValueBase value;
-    if (jsVariable.isReadable()) {
-      JsValue jsValue = jsVariable.getValue();
-      if (jsValue == null) {
-        JsObjectProperty objectProperty = jsVariable.asObjectProperty();
-        if (objectProperty == null) {
-          value = new ValueBase.ErrorMessageValue(evaluateContext,
-              debugTarget, "Variable value is unavailable");
-        } else {
-          // This is blocking. Consider making this call async and the entire method async
-          // to parallel if for several properties.
-          value = calculateAccessorPropertyBlocking(objectProperty, evaluateContext, debugTarget);
-          if (value == null) {
-            value = new ValueBase.ErrorMessageValue(evaluateContext, debugTarget, "Unreadable object property");
-          }
-        }
-      } else {
-        SelfAsHostObject selfAsHostObject = new SelfAsHostObject(jsVariable);
-        value = Value.create(evaluateContext, debugTarget, jsValue, selfAsHostObject);
-      }
-    } else {
-      value = new ValueBase.ErrorMessageValue(evaluateContext, debugTarget, "Unreadable variable");
-    }
+	 * Wraps {@link JsVariable}. It extracts its {@link JsValue} if possible or
+	 * provides error message as a {@link Value}.
+	 */
+	public static Variable forRealValue(JsEvaluateContext evaluateContext,
+			IDebugTarget debugTarget, JsVariable jsVariable,
+			boolean isInternalProperty, Real.HostObject hostObject) {
+		ValueBase value;
+		if (jsVariable.isReadable()) {
+			JsValue jsValue = jsVariable.getValue();
+			if (jsValue == null) {
+				JsObjectProperty objectProperty = jsVariable.asObjectProperty();
+				if (objectProperty == null) {
+					value = new ValueBase.ErrorMessageValue(evaluateContext,
+							debugTarget, "Variable value is unavailable");
+				} else {
+					// This is blocking. Consider making this call async and the
+					// entire method async
+					// to parallel if for several properties.
+					value = calculateAccessorPropertyBlocking(objectProperty,
+							evaluateContext, debugTarget);
+					if (value == null) {
+						value = new ValueBase.ErrorMessageValue(
+								evaluateContext, debugTarget,
+								"Unreadable object property");
+					}
+				}
+			} else {
+				SelfAsHostObject selfAsHostObject = new SelfAsHostObject(
+						jsVariable);
+				value = Value.create(evaluateContext, debugTarget, jsValue,
+						selfAsHostObject);
+			}
+		} else {
+			value = new ValueBase.ErrorMessageValue(evaluateContext,
+					debugTarget, "Unreadable variable");
+		}
 
-    return new Real(evaluateContext, debugTarget, jsVariable, value, isInternalProperty, hostObject);
-  }
+		return new Real(evaluateContext, debugTarget, jsVariable, value,
+				isInternalProperty, hostObject);
+	}
 
-  private static ValueBase calculateAccessorPropertyBlocking(final JsObjectProperty property,
-      final JsEvaluateContext evaluateContext, final IDebugTarget debugTarget) {
-    if (property.getGetterAsFunction() == null) {
-      return new ValueBase.ErrorMessageValue(evaluateContext, debugTarget, "Property has undefined getter");
-    }
-    class Callback implements JsEvaluateContext.EvaluateCallback {
-      ValueBase result = null;
-      @Override public void success(JsVariable variable) {
-        result = Value.create(evaluateContext, debugTarget, variable.getValue(),
-            new SelfAsHostObject(property));
-      }
-      @Override public void failure(String errorMessage) {
-        result = new ValueBase.ErrorMessageValue(evaluateContext,
-            debugTarget, "Failed to evaluate property value: " + errorMessage);
-      }
-    }
-    Callback callback = new Callback();
-    CallbackSemaphore callbackSemaphore = new CallbackSemaphore();
-    RelayOk relayOk = property.evaluateGet(callback, callbackSemaphore);
-    callbackSemaphore.acquireDefault(relayOk);
-    return callback.result;
-  }
+	private static ValueBase calculateAccessorPropertyBlocking(
+			final JsObjectProperty property,
+			final JsEvaluateContext evaluateContext,
+			final IDebugTarget debugTarget) {
+		if (property.getGetterAsFunction() == null) {
+			return new ValueBase.ErrorMessageValue(evaluateContext,
+					debugTarget, "Property has undefined getter");
+		}
+		class Callback implements JsEvaluateContext.EvaluateCallback {
+			ValueBase result = null;
 
-  public static Variable forException(JsEvaluateContext evaluateContext, IDebugTarget debugTarget,
-      ExceptionData exceptionData) {
-    Value value = Value.create(evaluateContext, debugTarget, exceptionData.getExceptionValue(), null);
-    return new Variable.Virtual(evaluateContext, debugTarget, "<exception>", JAVASCRIPT_REFERENCE_TYPE_NAME,
-        value);
-  }
+			@Override
+			public void success(JsVariable variable) {
+				result = Value.create(evaluateContext, debugTarget,
+						variable.getValue(), new SelfAsHostObject(property));
+			}
 
-  public static Variable forScope(JsEvaluateContext evaluateContext, IDebugTarget debugTarget, JsScope scope,
-      ValueBase.ValueAsHostObject selfAsHostObject) {
-    ValueBase scopeValue = new ValueBase.ScopeValue(evaluateContext, debugTarget, scope, selfAsHostObject);
-    String scopeVariableName = "<" + scope.getType() + ">";
-    return forScope(evaluateContext, debugTarget, scopeVariableName, scopeValue);
-  }
+			@Override
+			public void failure(String errorMessage) {
+				result = new ValueBase.ErrorMessageValue(evaluateContext,
+						debugTarget, "Failed to evaluate property value: "
+								+ errorMessage);
+			}
+		}
+		Callback callback = new Callback();
+		CallbackSemaphore callbackSemaphore = new CallbackSemaphore();
+		RelayOk relayOk = property.evaluateGet(callback, callbackSemaphore);
+		callbackSemaphore.acquireDefault(relayOk);
+		return callback.result;
+	}
 
-  public static Variable forWithScope(JsEvaluateContext evaluateContext, IDebugTarget debugTarget,
-      WithScope withScope) {
-    Value value = Value.create(evaluateContext, debugTarget, withScope.getWithArgument(), null);
-    return forScope(evaluateContext, debugTarget, "<with>", value);
-  }
+	public static Variable forException(JsEvaluateContext evaluateContext,
+			IDebugTarget debugTarget, ExceptionData exceptionData) {
+		Value value = Value.create(evaluateContext, debugTarget,
+				exceptionData.getExceptionValue(), null);
+		return new Variable.Virtual(evaluateContext, debugTarget,
+				"<exception>", JAVASCRIPT_REFERENCE_TYPE_NAME, value);
+	}
 
-  private static Variable forScope(JsEvaluateContext evaluateContext, IDebugTarget debugTarget, String scopeName,
-      ValueBase scopeValue) {
-    return new Variable.Virtual(evaluateContext, debugTarget, scopeName, "<scope>", scopeValue);
-  }
+	public static Variable forScope(JsEvaluateContext evaluateContext,
+			IDebugTarget debugTarget, JsScope scope,
+			ValueBase.ValueAsHostObject selfAsHostObject) {
+		ValueBase scopeValue = new ValueBase.ScopeValue(evaluateContext,
+				debugTarget, scope, selfAsHostObject);
+		String scopeVariableName = "<" + scope.getType() + ">";
+		return forScope(evaluateContext, debugTarget, scopeVariableName,
+				scopeValue);
+	}
 
-  public static Variable forFunctionScopes(JsEvaluateContext evaluateContext, IDebugTarget debugTarget,
-      final JsFunction jsFunction, final FunctionScopeExtension functionScopeExtension) {
-    ValueBase value = new ValueBase.ValueWithLazyVariables(evaluateContext, debugTarget) {
-      @Override public String getReferenceTypeName() throws DebugException {
-        return "<function scope>";
-      }
+	public static Variable forWithScope(JsEvaluateContext evaluateContext,
+			IDebugTarget debugTarget, WithScope withScope) {
+		Value value = Value.create(evaluateContext, debugTarget,
+				withScope.getWithArgument(), null);
+		return forScope(evaluateContext, debugTarget, "<with>", value);
+	}
 
-      @Override public boolean isAllocated() throws DebugException {
-        return true;
-      }
+	private static Variable forScope(JsEvaluateContext evaluateContext,
+			IDebugTarget debugTarget, String scopeName, ValueBase scopeValue) {
+		return new Variable.Virtual(evaluateContext, debugTarget, scopeName,
+				"<scope>", scopeValue);
+	}
 
-      @Override public boolean hasVariables() throws DebugException {
-        return !functionScopeExtension.getScopes(jsFunction).isEmpty();
-      }
+	public static Variable forFunctionScopes(JsEvaluateContext evaluateContext,
+			IDebugTarget debugTarget, final JsFunction jsFunction,
+			final FunctionScopeExtension functionScopeExtension) {
+		ValueBase value = new ValueBase.ValueWithLazyVariables(evaluateContext,
+				debugTarget) {
+			@Override
+			public String getReferenceTypeName() throws DebugException {
+				return "<function scope>";
+			}
 
-      @Override protected IVariable[] calculateVariables() {
-        List<? extends JsScope> list = functionScopeExtension.getScopes(jsFunction);
-        // Put scopes in the opposite order: innermost first.
-        // Closure tends to be parameterized by the innermost variable at most.
-        List<? extends JsScope> reverseList = reverseList(list);
-        return TypeScriptStackFrame.wrapScopes(getEvaluateContext(), getDebugTarget(), reverseList, null);
-      }
+			@Override
+			public boolean isAllocated() throws DebugException {
+				return true;
+			}
 
-      @Override public Value asRealValue() {
-        return null;
-      }
+			@Override
+			public boolean hasVariables() throws DebugException {
+				return !functionScopeExtension.getScopes(jsFunction).isEmpty();
+			}
 
-      @Override public String getValueString() {
-        return "";
-      }
+			@Override
+			protected IVariable[] calculateVariables() {
+				List<? extends JsScope> list = functionScopeExtension
+						.getScopes(jsFunction);
+				// Put scopes in the opposite order: innermost first.
+				// Closure tends to be parameterized by the innermost variable
+				// at most.
+				List<? extends JsScope> reverseList = reverseList(list);
+				return TypeScriptStackFrame.wrapScopes(getEvaluateContext(),
+						getDebugTarget(), reverseList, null);
+			}
 
-      private <T> List<T> reverseList(final List<T> input) {
-        return new AbstractList<T>() {
-          @Override
-          public T get(int index) {
-            return input.get(input.size() - index - 1);
-          }
-          @Override
-          public int size() {
-            return input.size();
-          }
-        };
-      }
-    };
+			@Override
+			public Value asRealValue() {
+				return null;
+			}
 
-    return forScope(evaluateContext, debugTarget, "<function scope>", value);
-  }
+			@Override
+			public String getValueString() {
+				return "";
+			}
 
-  /**
-   * Represents a real variable -- wraps {@link JsVariable}.
-   */
-  public static class Real extends Variable {
-    private final JsVariable jsVariable;
-    private final HostObject hostObject;
+			private <T> List<T> reverseList(final List<T> input) {
+				return new AbstractList<T>() {
+					@Override
+					public T get(int index) {
+						return input.get(input.size() - index - 1);
+					}
 
-    /**
-     * Specifies whether this variable is internal property (__proto__ etc).
-     * TODO(peter.rybin): use it in UI.
-     */
-    @SuppressWarnings("unused")
-	private final boolean isInternalProperty;
+					@Override
+					public int size() {
+						return input.size();
+					}
+				};
+			}
+		};
 
-    Real(JsEvaluateContext evaluateContext, IDebugTarget debugTarget, JsVariable jsVariable,
-        ValueBase value, boolean isInternalProperty, HostObject hostObject) {
-      super(evaluateContext, debugTarget, value);
-      this.jsVariable = jsVariable;
-      this.isInternalProperty = isInternalProperty;
-      this.hostObject = hostObject;
-    }
+		return forScope(evaluateContext, debugTarget, "<function scope>", value);
+	}
 
-    @Override public String getName() {
-      return jsVariable.getName();
-    }
-    @Override public String getReferenceTypeName() {
-      return JAVASCRIPT_REFERENCE_TYPE_NAME;
-    }
-    @Override protected String createWatchExpression() {
-      return jsVariable.getFullyQualifiedName();
-    }
-    @Override public Real asRealVariable() {
-      return this;
-    }
-    public JsVariable getJsVariable() {
-      return jsVariable;
-    }
-    public HostObject getHostObject() {
-      return hostObject;
-    }
+	/**
+	 * Represents a real variable -- wraps {@link JsVariable}.
+	 */
+	public static class Real extends Variable {
+		private final JsVariable jsVariable;
+		private final HostObject hostObject;
 
-    /**
-     * If variable is a property of some object, it need an access to this object. This is used
-     * to build an expression for getting property descriptor.
-     */
-    public interface HostObject {
-      /**
-       * @return a JavaScript descriptor that return a value of that object -- the same that
-       *     {@link JsVariable#getFullyQualifiedName()} returns
-       */
-      String getExpression();
-    }
-  }
+		/**
+		 * Specifies whether this variable is internal property (__proto__ etc).
+		 * TODO(peter.rybin): use it in UI.
+		 */
+		@SuppressWarnings("unused")
+		private final boolean isInternalProperty;
 
-  /**
-   * Represents some auxiliary variable. Its name and reference type are provided by a caller.
-   */
-  private static class Virtual extends Variable {
-    private final String name;
-    private final String referenceTypeName;
+		Real(JsEvaluateContext evaluateContext, IDebugTarget debugTarget,
+				JsVariable jsVariable, ValueBase value,
+				boolean isInternalProperty, HostObject hostObject) {
+			super(evaluateContext, debugTarget, value);
+			this.jsVariable = jsVariable;
+			this.isInternalProperty = isInternalProperty;
+			this.hostObject = hostObject;
+		}
 
-    Virtual(JsEvaluateContext evaluateContext, IDebugTarget debugTarget, String name, String referenceTypeName,
-        ValueBase value) {
-      super(evaluateContext, debugTarget, value);
-      this.name = name;
-      this.referenceTypeName = referenceTypeName;
-    }
+		@Override
+		public String getName() {
+			return jsVariable.getName();
+		}
 
-    @Override public String getName() {
-      return name;
-    }
-    @Override public String getReferenceTypeName() {
-      return referenceTypeName;
-    }
-    @Override public Real asRealVariable() {
-      return null;
-    }
-    @Override protected String createWatchExpression() {
-      return null;
-    }
-  }
+		@Override
+		public String getReferenceTypeName() {
+			return JAVASCRIPT_REFERENCE_TYPE_NAME;
+		}
 
-  /**
-   * Implements ValueAsHostObject based on JsVariable. This goes to the
-   * corresponding Value instance.
-   */
-  private static class SelfAsHostObject implements ValueBase.ValueAsHostObject {
-    private final JsVariable jsVariable;
+		@Override
+		protected String createWatchExpression() {
+			return jsVariable.getFullyQualifiedName();
+		}
 
-    SelfAsHostObject(JsVariable jsVariable) {
-      this.jsVariable = jsVariable;
-    }
+		@Override
+		public Real asRealVariable() {
+			return this;
+		}
 
-    @Override
-    public String getExpression() {
-      return jsVariable.getFullyQualifiedName();
-    }
-  }
+		public JsVariable getJsVariable() {
+			return jsVariable;
+		}
 
-  private final ValueBase value;
+		public HostObject getHostObject() {
+			return hostObject;
+		}
 
-  private JsEvaluateContext evaluateContext;
+		/**
+		 * If variable is a property of some object, it need an access to this
+		 * object. This is used to build an expression for getting property
+		 * descriptor.
+		 */
+		public interface HostObject {
+			/**
+			 * @return a JavaScript descriptor that return a value of that
+			 *         object -- the same that
+			 *         {@link JsVariable#getFullyQualifiedName()} returns
+			 */
+			String getExpression();
+		}
+	}
 
+	/**
+	 * Represents some auxiliary variable. Its name and reference type are
+	 * provided by a caller.
+	 */
+	private static class Virtual extends Variable {
+		private final String name;
+		private final String referenceTypeName;
 
-  protected Variable(JsEvaluateContext evaluateContext, IDebugTarget debugTarget, ValueBase value) {
- 	super(debugTarget);
-	this.evaluateContext = evaluateContext;
-    this.value = value;
-  }
+		Virtual(JsEvaluateContext evaluateContext, IDebugTarget debugTarget,
+				String name, String referenceTypeName, ValueBase value) {
+			super(evaluateContext, debugTarget, value);
+			this.name = name;
+			this.referenceTypeName = referenceTypeName;
+		}
 
-  public JsEvaluateContext getEvaluateContext() {
-	return evaluateContext;
-  }
+		@Override
+		public String getName() {
+			return name;
+		}
 
-  @Override public abstract String getName();
+		@Override
+		public String getReferenceTypeName() {
+			return referenceTypeName;
+		}
 
-  @Override public abstract String getReferenceTypeName();
+		@Override
+		public Real asRealVariable() {
+			return null;
+		}
 
-  @Override public ValueBase getValue() {
-    return value;
-  }
+		@Override
+		protected String createWatchExpression() {
+			return null;
+		}
+	}
 
-  @Override public boolean hasValueChanged() throws DebugException {
-    return false;
-  }
+	/**
+	 * Implements ValueAsHostObject based on JsVariable. This goes to the
+	 * corresponding Value instance.
+	 */
+	private static class SelfAsHostObject implements
+			ValueBase.ValueAsHostObject {
+		private final JsVariable jsVariable;
 
-  public void setValue(String expression) throws DebugException {
-  }
+		SelfAsHostObject(JsVariable jsVariable) {
+			this.jsVariable = jsVariable;
+		}
 
-  public void setValue(IValue value) throws DebugException {
-  }
+		@Override
+		public String getExpression() {
+			return jsVariable.getFullyQualifiedName();
+		}
+	}
 
-  public boolean supportsValueModification() {
-    return false; // TODO(apavlov): fix once V8 supports it
-  }
+	private final ValueBase value;
 
-  public boolean verifyValue(IValue value) throws DebugException {
-    return verifyValue(value.getValueString());
-  }
+	private JsEvaluateContext evaluateContext;
 
-  public boolean verifyValue(String expression) {
-    return true;
-  }
+	protected Variable(JsEvaluateContext evaluateContext,
+			IDebugTarget debugTarget, ValueBase value) {
+		super(debugTarget);
+		this.evaluateContext = evaluateContext;
+		this.value = value;
+	}
 
-  public boolean verifyValue(JsValue value) {
-    return verifyValue(value.getValueString());
-  }
+	public JsEvaluateContext getEvaluateContext() {
+		return evaluateContext;
+	}
 
-  /**
-   * @return expression or null
-   */
-  protected abstract String createWatchExpression();
+	@Override
+	public abstract String getName();
 
-  public abstract Real asRealVariable();
+	@Override
+	public abstract String getReferenceTypeName();
 
-  @Override
-  public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
-    if (IWatchExpressionFactoryAdapter.class == adapter) {
-      return EXPRESSION_FACTORY_ADAPTER;
-    }
-    return super.getAdapter(adapter);
-  }
+	@Override
+	public ValueBase getValue() {
+		return value;
+	}
 
-  private final static IWatchExpressionFactoryAdapter EXPRESSION_FACTORY_ADAPTER =
-      new IWatchExpressionFactoryAdapter() {
-    public String createWatchExpression(IVariable variable) throws CoreException {
-      Variable castVariable = (Variable) variable;
-      String expressionText = castVariable.createWatchExpression();
-      if (expressionText == null) {
-        throw new CoreException(new Status(IStatus.ERROR, ChromiumDebugPlugin.PLUGIN_ID,
-            Messages.Variable_CANNOT_BUILD_EXPRESSION));
-      }
-      return expressionText;
-    }
-  };
+	@Override
+	public boolean hasValueChanged() throws DebugException {
+		return false;
+	}
 
-  /**
-   * A type of JavaScript reference. All JavaScript references have no type.
-   */
-  private static final String JAVASCRIPT_REFERENCE_TYPE_NAME = "";
+	public void setValue(String expression) throws DebugException {
+	}
+
+	public void setValue(IValue value) throws DebugException {
+	}
+
+	public boolean supportsValueModification() {
+		return false; // TODO(apavlov): fix once V8 supports it
+	}
+
+	public boolean verifyValue(IValue value) throws DebugException {
+		return verifyValue(value.getValueString());
+	}
+
+	public boolean verifyValue(String expression) {
+		return true;
+	}
+
+	public boolean verifyValue(JsValue value) {
+		return verifyValue(value.getValueString());
+	}
+
+	/**
+	 * @return expression or null
+	 */
+	protected abstract String createWatchExpression();
+
+	public abstract Real asRealVariable();
+
+	@Override
+	public Object getAdapter(@SuppressWarnings("rawtypes") Class adapter) {
+		if (IWatchExpressionFactoryAdapter.class == adapter) {
+			return EXPRESSION_FACTORY_ADAPTER;
+		}
+		return super.getAdapter(adapter);
+	}
+
+	private final static IWatchExpressionFactoryAdapter EXPRESSION_FACTORY_ADAPTER = new IWatchExpressionFactoryAdapter() {
+		public String createWatchExpression(IVariable variable)
+				throws CoreException {
+			Variable castVariable = (Variable) variable;
+			String expressionText = castVariable.createWatchExpression();
+			if (expressionText == null) {
+				throw new CoreException(new Status(IStatus.ERROR,
+						ChromiumDebugPlugin.PLUGIN_ID,
+						Messages.Variable_CANNOT_BUILD_EXPRESSION));
+			}
+			return expressionText;
+		}
+	};
+
+	/**
+	 * A type of JavaScript reference. All JavaScript references have no type.
+	 */
+	private static final String JAVASCRIPT_REFERENCE_TYPE_NAME = "";
 }
