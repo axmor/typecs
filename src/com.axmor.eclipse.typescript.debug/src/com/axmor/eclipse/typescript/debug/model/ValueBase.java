@@ -103,7 +103,7 @@ public abstract class ValueBase extends TypeScriptDebugElement implements IValue
     }
 
     // Consider making it more lazy for IIndexedValue implementation's benefit.
-    protected abstract IVariable[] calculateVariables();
+		protected abstract IVariable[] calculateVariables();
   }
 
   /**
