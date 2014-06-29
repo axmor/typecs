@@ -7,6 +7,7 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.debug;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
@@ -32,6 +33,9 @@ public class Activator extends Plugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
+        JavaScriptVmSynchronizer synchronizer = new JavaScriptVmSynchronizer();
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(synchronizer);
+		ResourcesPlugin.getWorkspace().getRoot().accept(synchronizer);
     }
 
     @Override

@@ -63,6 +63,7 @@ import com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMap;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapItem;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapParser;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
 /**
@@ -81,6 +82,7 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	private final AtomicBoolean needResumeAtomic;
 	private final CountDownLatch resumeSignal;
 	private IStackFrame[] frames = new IStackFrame[0];
+	private Map<String, String> nameMapping = Maps.newConcurrentMap();
 
 	private static final ISourceDisplay sourceDisplay = new ISourceDisplay() {
 	    private final StackFrameSourceDisplayAdapter sDisplay = new StackFrameSourceDisplayAdapter();
@@ -507,5 +509,13 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 
 	public JavascriptVm getJavascriptVm() {
 		return vm;
+	}
+
+	public synchronized void setScriptNewName(String oldName, String newName) {
+		nameMapping.put(newName, oldName);
+	}
+
+	public Map<String, String> getNameMapping() {
+		return nameMapping;
 	}
 }
