@@ -143,23 +143,29 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements
 		this.sourceName = name;
 		this.lineNumber = cframe.getStatementStartPosition().getLine();
 
-		File file = new File(name);
-		if (file.exists()) {
-			if (jsMappings.containsKey(file.getPath())) {
-				SourceMapItem item = jsMappings.get(file.getPath())
-						.getItemByJSLine(lineNumber);
-				if (item != null) {
-					this.sourceName = item.getTsFile();
-					this.lineNumber = item.getTsLine();
+		File file;
+		
+		do {
+			file = new File(name);
+			if (file.exists()) {
+				if (jsMappings.containsKey(file.getPath())) {
+					SourceMapItem item = jsMappings.get(file.getPath())
+							.getItemByJSLine(lineNumber);
+					if (item != null) {
+						this.sourceName = item.getTsFile();
+						this.lineNumber = item.getTsLine();
+					}
+				} else {
+					IFile ifile = ResourcesPlugin.getWorkspace().getRoot()
+							.getFileForLocation(Path.fromOSString(file.getPath()));
+					if (ifile != null && file.exists()) {
+						this.sourceName = ifile.getFullPath().toString();
+					}
 				}
-			} else {
-				IFile ifile = ResourcesPlugin.getWorkspace().getRoot()
-						.getFileForLocation(Path.fromOSString(file.getPath()));
-				if (ifile != null && file.exists()) {
-					this.sourceName = ifile.getFullPath().toString();
-				}
+				break;
 			}
-		} else {
+		} while ((name = ((TypeScriptDebugTarget) this.getDebugTarget()).getNameMapping().get(file.getAbsolutePath())) != null);
+		if (!file.exists()) {
 			for (SourceMap mapping : jsMappings.values()) {
 				try {
 					if (Arrays.equals(TypeScriptDebugTarget.digest(script
