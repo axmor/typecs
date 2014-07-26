@@ -42,6 +42,9 @@ public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
 
     @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+    	if (newInput instanceof JSONArray) {
+    		this.model = (JSONArray) newInput;
+    	}
     }
 
     @Override

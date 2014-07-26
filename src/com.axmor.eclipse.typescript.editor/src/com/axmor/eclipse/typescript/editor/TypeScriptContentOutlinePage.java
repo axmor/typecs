@@ -143,6 +143,10 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
      * @param documentModel the changed model
      */
     public void refresh(final JSONArray documentModel) {
+    	if (getControl() == null || getControl().isDisposed()) {
+        	setPageInput(documentModel);
+        	return;
+    	}
         getControl().getDisplay().asyncExec(new Runnable() {
             public void run() {
                 Control ctrl = getControl();
