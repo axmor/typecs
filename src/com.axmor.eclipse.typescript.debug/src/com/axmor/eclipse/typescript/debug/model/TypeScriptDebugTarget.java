@@ -250,6 +250,10 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
     	return digester.digest(input);
     }
     
+    public static synchronized String stringDigest(byte[] input) {
+    	return javax.xml.bind.DatatypeConverter.printHexBinary(digest(input));
+    }
+
     @Override
 	public void breakpointAdded(IBreakpoint breakpoint) {
 		if (supportsBreakpoint(breakpoint)) {
