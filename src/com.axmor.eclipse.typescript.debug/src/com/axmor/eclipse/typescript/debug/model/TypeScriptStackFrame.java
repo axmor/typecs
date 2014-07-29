@@ -10,7 +10,6 @@ package com.axmor.eclipse.typescript.debug.model;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -167,22 +166,25 @@ public class TypeScriptStackFrame extends TypeScriptDebugElement implements
 		} while ((name = ((TypeScriptDebugTarget) this.getDebugTarget()).getNameMapping().get(file.getAbsolutePath())) != null);
 		if (!file.exists()) {
 			for (SourceMap mapping : jsMappings.values()) {
-				try {
-					if (Arrays.equals(TypeScriptDebugTarget.digest(script
-							.getSource().getBytes()), TypeScriptDebugTarget
-							.digest(Files.toByteArray(new File(mapping
-									.getFile()))))) {
-						SourceMapItem item = mapping
-								.getItemByJSLine(lineNumber);
-						if (item != null) {
-							this.sourceName = item.getTsFile();
-							this.lineNumber = item.getTsLine();
+				String md5 = TypeScriptDebugTarget.stringDigest(script
+						.getSource().getBytes());
+				do {
+					try {
+						if (md5.equals(TypeScriptDebugTarget
+								.stringDigest(Files.toByteArray(new File(mapping
+										.getFile()))))) {
+							SourceMapItem item = mapping
+									.getItemByJSLine(lineNumber);
+							if (item != null) {
+								this.sourceName = item.getTsFile();
+								this.lineNumber = item.getTsLine();
+							}
+							break;
 						}
-						return;
+					} catch (IOException e) {
+						e.printStackTrace();
 					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				} while ((md5 = ((TypeScriptDebugTarget) this.getDebugTarget()).getNameMapping().get(md5)) != null);
 			}
 		}
 		Object se = this.getLaunch().getSourceLocator().getSourceElement(this);
