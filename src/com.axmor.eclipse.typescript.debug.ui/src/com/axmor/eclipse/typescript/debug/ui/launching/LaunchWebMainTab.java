@@ -27,7 +27,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
@@ -53,6 +55,16 @@ public class LaunchWebMainTab extends AbstractLaunchConfigurationTab {
         createConnectionEditor(comp);
         createVerticalSpacer(comp, 1);
         createBackendEditor(comp);
+        new Label(comp, SWT.NONE);
+        Label infoLabel = new Label(comp, SWT.BORDER | SWT.WRAP);
+        infoLabel.setFont(parent.getFont());
+        infoLabel.setText("Please note, You need run Chrome browser with '--remote-debugging-port'\n"
+        		+ "command-line parameter before start debug session\n\nFor example:\nchrome --remote-debugging-port=9222");
+        GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+        gd.grabExcessHorizontalSpace = true;
+        infoLabel.setLayoutData(gd);
+
+        infoLabel.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_INFO_BACKGROUND));
         setControl(comp);
     }
 
@@ -63,7 +75,7 @@ public class LaunchWebMainTab extends AbstractLaunchConfigurationTab {
      *            parent control
      */
     private void createConnectionEditor(Composite parent) {
-        Group group = SWTFactory.createGroup(parent, "Connection", 10, 1, GridData.FILL_HORIZONTAL);
+    	Group group = SWTFactory.createGroup(parent, "Connection", 10, 1, GridData.FILL_HORIZONTAL);
         SWTFactory.createLabel(group, "Host: ", 1);
         hostTxt = SWTFactory.createSingleText(group, 7);
         hostTxt.addModifyListener(new ModifyListener() {
