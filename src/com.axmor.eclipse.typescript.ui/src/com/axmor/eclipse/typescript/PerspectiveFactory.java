@@ -34,5 +34,8 @@ public class PerspectiveFactory implements IPerspectiveFactory {
         bottomFolder.addPlaceholder(IConsoleConstants.ID_CONSOLE_VIEW);
 
         rightFolder.addView("org.eclipse.ui.views.ContentOutline");
+
+        layout.addActionSet("org.eclipse.debug.ui.launchActionSet");
     }
+    
 }
