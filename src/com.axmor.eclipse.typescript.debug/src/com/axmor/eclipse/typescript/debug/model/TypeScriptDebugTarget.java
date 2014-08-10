@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -55,14 +56,22 @@ import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.debug.core.model.IStackFrame;
 import org.eclipse.debug.core.model.IThread;
 import org.eclipse.debug.internal.ui.elements.adapters.StackFrameSourceDisplayAdapter;
+import org.eclipse.debug.internal.ui.views.launch.LaunchView;
+import org.eclipse.debug.ui.IDebugUIConstants;
 import org.eclipse.debug.ui.sourcelookup.ISourceDisplay;
+import org.eclipse.jface.viewers.TreePath;
+import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.axmor.eclipse.typescript.debug.launching.TypeScriptDebugConstants;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMap;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapItem;
 import com.axmor.eclipse.typescript.debug.sourcemap.SourceMapParser;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 
@@ -115,12 +124,12 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 		this.thread = new TypeScriptDebugThread(this);
 		this.setThreads(new IThread[] { this.thread });
 
-			try {
-				Thread.sleep(1000);
-				((StandaloneVm) vm).attach(this);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
+		try {
+			Thread.sleep(1000);
+			((StandaloneVm) vm).attach(this);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 			
 		this.needResumeAtomic = new AtomicBoolean(true);
 		this.resumeSignal = new CountDownLatch(1);
@@ -467,9 +476,53 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 			} catch (DebugException e) {
 				// Ignore
 			}
+		} else {
+			selectLine();
 		}
 	}
 
+	// Workaround for Debug StepOver incorrect work bug:
+	// In debug mode, after press step over (F6) selection 
+	// jump to "Main Thread" element and it is required
+	// manually reselect stack trace position to see line and variables
+	protected void selectLine() {
+		try {
+			Thread.sleep(1000);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+
+		for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+			IWorkbenchPage page = window.getActivePage();
+			final LaunchView debugView = (LaunchView) page.findView(IDebugUIConstants.ID_DEBUG_VIEW);
+			
+	        if (debugView != null) {
+				final Viewer viewer = debugView.getViewer();
+				debugView.asyncExec(new Runnable() {
+	
+					@Override
+					public void run() {
+			        	List<Object> list = Lists.newArrayList();
+			        	list.add(getLaunch());
+			        	list.add(getDebugTarget());
+			        	try {
+			            	list.add(getDebugTarget().getThreads()[0]);
+							list.add(getDebugTarget().getThreads()[0].getTopStackFrame());
+						} catch (DebugException e) {
+							// Ignore
+						}
+	
+						Object[] elements = list.toArray();
+						TreePath[] treePath = new TreePath[]{new TreePath(elements)};
+						final TreeSelection selection = new TreeSelection(treePath);
+						viewer.setSelection(selection);
+					}
+					
+				});
+	            return;
+	        }
+		}
+	}
 	// / Event notification methods
 
 	private void started() {
