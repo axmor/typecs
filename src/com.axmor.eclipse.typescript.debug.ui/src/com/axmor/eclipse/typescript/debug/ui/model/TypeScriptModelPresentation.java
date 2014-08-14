@@ -17,6 +17,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
 
+import com.axmor.eclipse.typescript.debug.model.Value;
+
 /**
  * @author Konstantin Zaitcev
  */
@@ -79,6 +81,10 @@ public class TypeScriptModelPresentation implements IDebugModelPresentation {
 
     @Override
     public void computeDetail(IValue value, IValueDetailListener listener) {
-        System.out.println("computeDetail");
+    	if (value instanceof Value) {
+    		((Value) value).computeDetailAsync(listener);
+    	} else {
+    		System.out.println("computeDetail");
+    	}
     }
 }
