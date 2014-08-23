@@ -80,6 +80,10 @@ if (args.serv) {
             log.debug('bridge.getReferencesAtPosition: ' + o.file + ', param: ' + o.params);
             socket.end(JSON.stringify({ 'model' : tss.getReferencesAtPosition(o.file, o.params) }));
             break;    
+          case 'getOccurrencesAtPosition':
+            log.debug('bridge.getOccurrencesAtPosition: ' + o.file + ', param: ' + o.params);
+            socket.end(JSON.stringify({ 'model' : tss.getOccurrencesAtPosition(o.file, o.params) }));
+            break;    
           case 'compile':                            
             log.debug('bridge.compile: ' + o.file + ', param: ' + o.params);
             socket.end(JSON.stringify(tsc.compile(o.file, o.params)));

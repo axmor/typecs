@@ -52,3 +52,7 @@ exports.getFormattingEditsForDocument = function(file, start, end, options) {
 exports.getReferencesAtPosition = function(file, params) {
   return ts.getReferencesAtPosition(file, params);        
 }
+
+exports.getOccurrencesAtPosition = function (file, position) {
+  return ts.getOccurrencesAtPosition(file, position); 
+}

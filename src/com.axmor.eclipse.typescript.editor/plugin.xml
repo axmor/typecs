@@ -7,7 +7,7 @@
             name="TypeScript Editor"
             extensions="ts"
             icon="icons/typescript_file.png"
-            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            contributorClass="com.axmor.eclipse.typescript.editor.TypeScriptEditorActionContributor"
             class="com.axmor.eclipse.typescript.editor.TypeScriptEditor"
             default="true"
             id="com.axmor.eclipse.typescript.editor.TypeScriptEditor">
@@ -138,6 +138,12 @@
            categoryId="com.axmor.eclipse.typescript.category.source" 
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.AddTypeScriptDefinitionHandler" 
            id="com.axmor.eclipse.typescript.edit.add_def" />
+           
+	  <command 
+      	name="Toogle Mark Occurrences"
+      	description="Toogle Mark Occurrences"
+      	categoryId="org.eclipse.jdt.ui.category.source"
+      	id="com.axmor.eclipse.typescript.toggleMarkOccurrences" />
    </extension>
 	
     <extension point="org.eclipse.ui.bindings">
@@ -181,6 +187,19 @@
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.edit.add_def"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+           
+      <key 
+  	    	sequence="M2+M3+O"
+  	    	contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+  	    	commandId="com.axmor.eclipse.typescript.toggleMarkOccurrences"
+  	    	schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />
+  	    	
+	  <key 
+      		platform="carbon" 
+      		sequence="M1+M3+O" 
+			contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+			commandId="com.axmor.eclipse.typescript.toggleMarkOccurrences"
+			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />  	    	            
     </extension>
 	      
     <extension point="org.eclipse.compare.contentViewers">
@@ -294,5 +313,28 @@
                 </visibleWhen>
                 </command>
         </menuContribution>
-    </extension>      
+    </extension>    
+    
+    <extension point="org.eclipse.ui.actionSets">
+ 		<actionSet label="TypeScript Editor Presentation" 
+ 			visible="false" 
+ 			id="com.axmor.eclipse.typescript.editor.actionSet.presentation">
+  			<action allowLabelUpdate="true" 
+  				style="toggle" 
+  				toolbarPath="org.eclipse.ui.edit.text.actionSet.presentation/Presentation" 
+  				id="com.axmor.eclipse.typescript.toggleMarkOccurrences" 
+  				definitionId="com.axmor.eclipse.typescript.toggleMarkOccurrences"
+  				disabledIcon="$nl$/icons/full/dtool16/mark_occurrences.png" 
+  				icon="$nl$/icons/full/etool16/mark_occurrences.png" 
+  				label="Toggle TypeScript Mark Occurrences" 
+  				retarget="true" 
+  				tooltip="Toggle TypeScript Mark Occurrences" />
+  		</actionSet>
+  	</extension>
+  	
+  	<extension point="org.eclipse.ui.actionSetPartAssociations">
+	  	<actionSetPartAssociation targetID="com.axmor.eclipse.typescript.editor.actionSet.presentation">
+	         <part id="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+		</actionSetPartAssociation>
+	</extension>
 </plugin>

@@ -240,9 +240,9 @@ public final class TypeScriptCompilerSettings {
         settings.setTarget(pref.get("target", ""));
         settings.setNoResolve(pref.getBoolean("noResolve", false));
         settings.setNoImplicitAny(pref.getBoolean("noImplicitAny", false));
-        settings.setSourceMap(pref.getBoolean("sourceMap", false));
+        settings.setSourceMap(pref.getBoolean("sourceMap", true));
         settings.setModule(pref.get("module", "default"));
-        settings.setTargetVersion(pref.get("targetVersion", "ES3"));
+        settings.setTargetVersion(pref.get("targetVersion", "ES5"));
         settings.setGenerateDeclaration(pref.getBoolean("declaration", false));
         settings.setRemoveComments(pref.getBoolean("removeComments", false));
         settings.setMapRoot(pref.get("mapRoot", ""));

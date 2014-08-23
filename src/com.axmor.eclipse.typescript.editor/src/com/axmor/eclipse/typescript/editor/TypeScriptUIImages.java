@@ -78,6 +78,8 @@ public class TypeScriptUIImages {
         declareRegistryImage(TypeScriptImageKeys.IMG_SEARCH_REF_OBJ, ICONS_PATH + "search_ref_obj.gif");
 
         declareRegistryImage(TypeScriptImageKeys.IMG_DTS_FILE, "$nl$/icons/typescript_def_file.png");
+
+        declareRegistryImage(TypeScriptImageKeys.IMG_TOGGLE_OCCURRENCE, "$nl$/icons/full/etool16/mark_occurrences.png");
 }
 
     /**
