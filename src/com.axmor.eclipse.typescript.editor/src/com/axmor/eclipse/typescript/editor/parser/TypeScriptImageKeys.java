@@ -67,6 +67,9 @@ public final class TypeScriptImageKeys {
     /** "Type Definition" file image **/
     public static final String IMG_DTS_FILE = PLUGIN_ID + "IMG_DTS_FILE";
 
+    /** Key for image. */
+    public static final String IMG_TOGGLE_OCCURRENCE = PLUGIN_ID + "IMG_TOGGLE_OCCURRENCE";
+
     /**
      * Protect from initialization.
      */

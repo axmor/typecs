@@ -2,9 +2,11 @@ package com.axmor.eclipse.typescript.editor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DefaultInformationControl;
@@ -12,9 +14,12 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.IInformationControl;
 import org.eclipse.jface.text.IInformationControlCreator;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
+import org.eclipse.jface.text.source.IAnnotationModel;
+import org.eclipse.jface.text.source.IAnnotationModelExtension;
 import org.eclipse.jface.text.source.ICharacterPairMatcher;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.IVerticalRuler;
@@ -22,15 +27,25 @@ import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
 import org.eclipse.jface.text.source.projection.ProjectionSupport;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
+import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.IPostSelectionProvider;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IPartService;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.editors.text.TextEditor;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
@@ -41,6 +56,9 @@ import us.monoid.json.JSONObject;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
+import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
+import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
+import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJobCanceler;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
 import com.google.common.base.Throwables;
 
@@ -51,360 +69,598 @@ import com.google.common.base.Throwables;
  */
 public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
-    /**
-     * The preference key for the matching character painter
-     */
-    public static final String EDITOR_MATCHING_BRACKETS = "matchingBrackets";
+	/**
+	 * The preference key for the matching character painter
+	 */
+	public static final String EDITOR_MATCHING_BRACKETS = "matchingBrackets";
 
-    /**
-     * The preference key for the color used by the matching character painter
-     */
-    public static final String EDITOR_MATCHING_BRACKETS_COLOR = "matchingBracketsColor";
+	/**
+	 * The preference key for the color used by the matching character painter
+	 */
+	public static final String EDITOR_MATCHING_BRACKETS_COLOR = "matchingBracketsColor";
 
-    /**
-     * An outline page for the editor's content
-     */
-    private TypeScriptContentOutlinePage contentOutlinePage;
+	/**
+	 * An outline page for the editor's content
+	 */
+	private TypeScriptContentOutlinePage contentOutlinePage;
 
-    /**
-     * Supports the configuration of projection capabilities
-     */
-    private ProjectionSupport projectionSupport;
+	/**
+	 * Supports the configuration of projection capabilities
+	 */
+	private ProjectionSupport projectionSupport;
 
-    /**
-     * API for bridge integration
-     */
-    private TypeScriptAPI api;
+	/**
+	 * API for bridge integration
+	 */
+	private TypeScriptAPI api;
 
-    /**
-     * A flag for selection setting
-     */
-    private boolean selectionSetFromOutline = false;
+	/**
+	 * A flag for selection setting
+	 */
+	private boolean selectionSetFromOutline = false;
 
-    /**
-     * A store for annotations to perform folding
-     */
-    private Annotation[] oldAnnotations;
+	/**
+	 * A store for annotations to perform folding
+	 */
+	private Annotation[] oldAnnotations;
 
-    /**
-     * The projection annotation model
-     */
-    private ProjectionAnnotationModel annotationModel;
+	/**
+	 * The projection annotation model
+	 */
+	private ProjectionAnnotationModel annotationModel;
 
-    /**
-     * @return the api
-     */
-    public TypeScriptAPI getApi() {
-        return api;
-    }
+	/**
+	 * @return the api
+	 */
+	public TypeScriptAPI getApi() {
+		return api;
+	}
 
-    /**
-     * @param api
-     *            the api to set
-     */
-    public void setApi(TypeScriptAPI api) {
-        this.api = api;
-    }
+	/**
+	 * @param api
+	 *            the api to set
+	 */
+	public void setApi(TypeScriptAPI api) {
+		this.api = api;
+	}
 
-    /**
-     * Selection changed listener for the outline view.
-     */
-    private ISelectionChangedListener selectionChangedListener = new ISelectionChangedListener() {
-        public void selectionChanged(SelectionChangedEvent event) {
-            selectionSetFromOutline = false;
-            doSelectionChanged(event);
-            selectionSetFromOutline = true;
-        }
-    };
+	/**
+	 * Selection changed listener for the outline view.
+	 */
+	private ISelectionChangedListener selectionChangedListener = new ISelectionChangedListener() {
+		public void selectionChanged(SelectionChangedEvent event) {
+			selectionSetFromOutline = false;
+			doSelectionChanged(event);
+			selectionSetFromOutline = true;
+		}
+	};
 
-    /**
-     * A constructor
-     */
-    public TypeScriptEditor() {
-        super();
-        setRulerContextMenuId("#TypeScriptEditorRulerContext"); //$NON-NLS-1$
-        setEditorContextMenuId("#TypeScriptEditorContext"); //$NON-NLS-1$
-        setSourceViewerConfiguration(new TypeScriptEditorConfiguration());
-    }
+	private class EditorSelectionChangedListener implements ISelectionChangedListener {
 
-    @Override
-    protected void doSetInput(IEditorInput input) throws CoreException {
-        super.doSetInput(input);
-        final IFile file = ((FileEditorInput) input).getFile();
-        api = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject());
-        setOutlinePageInput(file);
-        IDocument doc = getDocumentProvider().getDocument(input);
-        DelayedDocumentListener listener = new DelayedDocumentListener(file, doc);
-        listener.addDocumentProcessor(this);
-        doc.addDocumentListener(listener);
-        ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
-        ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
-    }
+		public void install(ISelectionProvider selectionProvider) {
+			if (selectionProvider == null) {
+				return;
+			}
 
-    @Override
-    public boolean isEditable() {
-        return getEditorInput().getName().endsWith(TypeScriptResources.TS_STD_LIB) ? false : super.isEditable();
-    }
+			if (selectionProvider instanceof IPostSelectionProvider) {
+				IPostSelectionProvider provider = (IPostSelectionProvider) selectionProvider;
+				provider.addPostSelectionChangedListener(this);
+			} else {
+				selectionProvider.addSelectionChangedListener(this);
+			}
+		}
 
-    /**
-     * Sets a model for outline page
-     * 
-     * @param file
-     *            file corresponding to required model
-     */
-    private void setOutlinePageInput(IFile file) {
-        if (contentOutlinePage != null) {
-            contentOutlinePage.setPageInput(api.getScriptModel(file));
-        }
-    }
+		public void uninstall(ISelectionProvider selectionProvider) {
+			if (selectionProvider == null) {
+				return;
+			}
 
-    @Override
-    public Object getAdapter(@SuppressWarnings("rawtypes") Class key) {
-        if (key.equals(IContentOutlinePage.class)) {
-            return getOutlinePage();
-        } else {
-            return super.getAdapter(key);
-        }
-    }
+			if (selectionProvider instanceof IPostSelectionProvider) {
+				IPostSelectionProvider provider = (IPostSelectionProvider) selectionProvider;
+				provider.removePostSelectionChangedListener(this);
+			} else {
+				selectionProvider.removeSelectionChangedListener(this);
+			}
+		}
 
-    /**
-     * Gets a document partitioning
-     * 
-     * @return the configured partitioning
-     */
-    public String getConfiguredDocumentPartitioning() {
-        return ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).getConfiguredDocumentPartitioning(this
-                .getSourceViewer());
-    }
+		@Override
+		public void selectionChanged(SelectionChangedEvent event) {
+			ISelection selection = event.getSelection();
+			if (selection instanceof ITextSelection) {
+				ITextSelection textSelection = (ITextSelection) selection;
+				updateOccurrenceAnnotations(textSelection);
+			}
+		}
+	}
 
-    /**
-     * Gets an outline page
-     * 
-     * @return an outline page
-     */
-    public TypeScriptContentOutlinePage getOutlinePage() {
-        if (contentOutlinePage == null) {
-            contentOutlinePage = new TypeScriptContentOutlinePage();
-            contentOutlinePage.addPostSelectionChangedListener(selectionChangedListener);
-            setOutlinePageInput(((FileEditorInput) getEditorInput()).getFile());
-        }
-        return contentOutlinePage;
-    }
+	private EditorSelectionChangedListener editorSelectionChangedListener;
 
-    /**
-     * Returns current source viewer
-     * 
-     * @return source viewer
-     */
-    public ISourceViewer getViewer() {
-        return getSourceViewer();
-    }
+	private ShellAdapter activationListener = new ShellAdapter() {
+		@Override
+		public void shellActivated(ShellEvent e) {
+			if (fMarkOccurrenceAnnotations && isActivePart()) {
+				ISelection selection = getSelectionProvider().getSelection();
+				if (selection instanceof ITextSelection) {
+					fForcedMarkOccurrencesSelection = (ITextSelection) selection;
+					updateOccurrenceAnnotations(fForcedMarkOccurrencesSelection);
+				}
+			}
+		}
 
-    /**
-     * Performs actions for outline navigation
-     * 
-     * @param event
-     *            a selection event
-     */
-    private void doSelectionChanged(SelectionChangedEvent event) {
-        IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+		@Override
+		public void shellDeactivated(ShellEvent e) {
+			if (fMarkOccurrenceAnnotations && isActivePart())
+				removeOccurrenceAnnotations();
+		}
+	};
 
-        JSONObject selectedTSElement = (JSONObject) selection.getFirstElement();
-        if (selectedTSElement != null) {
-            setSelection(selectedTSElement, true);
-        }
-    }
+	private boolean fMarkOccurrenceAnnotations;
 
-    /**
-     * Highlights and moves to a corresponding element in editor
-     * 
-     * @param reference
-     *            corresponding entity in editor
-     * @param moveCursor
-     *            if true, moves cursor to the reference
-     */
-    private void setSelection(JSONObject reference, boolean moveCursor) {
-        if (selectionSetFromOutline) {
-            // the work has all just been done via a selection setting in the outline
-            selectionSetFromOutline = false;
-            return;
-        }
-        if (reference == null) {
-            return;
-        }
+	public Annotation[] fOccurrenceAnnotations;
 
-        if (moveCursor) {
-            markInNavigationHistory();
-        }
+	private OccurrencesFinderJob fOccurrencesFinderJob;
 
-        ISourceViewer sourceViewer = getSourceViewer();
-        if (sourceViewer == null) {
-            return;
-        }
-        StyledText textWidget = sourceViewer.getTextWidget();
-        if (textWidget == null) {
-            return;
-        }
-        try {
-            int offset = Integer.parseInt(reference.getString("minChar"));
-            if (offset < 0) {
-                return;
-            }
-            int length = Integer.parseInt(reference.getString("limChar")) - offset;
-            if (length < 0) {
-                return;
-            }
+	private OccurrencesFinderJobCanceler fOccurrencesFinderJobCanceler;
 
-            textWidget.setRedraw(false);
+	private ITextSelection fForcedMarkOccurrencesSelection;
 
-            String documentPart = sourceViewer.getDocument().get(offset, length);
-            String name = reference.getString("name");
-            if (name != null) {
-                int nameoffset = documentPart.indexOf(reference.getString("name"));
-                if (nameoffset != -1) {
-                    offset += nameoffset;
-                    length = name.length();
-                }
-            }
-            if (length > 0) {
-                setHighlightRange(offset, length, moveCursor);
-            }
+	/**
+	 * A constructor
+	 */
+	public TypeScriptEditor() {
+		super();
+		setRulerContextMenuId("#TypeScriptEditorRulerContext"); //$NON-NLS-1$
+		setEditorContextMenuId("#TypeScriptEditorContext"); //$NON-NLS-1$
+		setSourceViewerConfiguration(new TypeScriptEditorConfiguration());
+	}
 
-            if (!moveCursor) {
-                return;
-            }
+	@Override
+	protected void doSetInput(IEditorInput input) throws CoreException {
+		super.doSetInput(input);
+		final IFile file = ((FileEditorInput) input).getFile();
+		api = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject());
+		setOutlinePageInput(file);
+		IDocument doc = getDocumentProvider().getDocument(input);
+		DelayedDocumentListener listener = new DelayedDocumentListener(file, doc);
+		listener.addDocumentProcessor(this);
+		doc.addDocumentListener(listener);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
+	}
 
-            if (offset > -1 && length > 0) {
-                sourceViewer.revealRange(offset, length);
-                // Selected region begins one index after offset
-                sourceViewer.setSelectedRange(offset, length);
-                markInNavigationHistory();
-            }
-        } catch (JSONException | BadLocationException e) {
-            throw Throwables.propagate(e);
-        } finally {
-            textWidget.setRedraw(true);
-        }
-    }
+	@Override
+	public boolean isEditable() {
+		return getEditorInput().getName().endsWith(TypeScriptResources.TS_STD_LIB) ? false : super.isEditable();
+	}
 
-    @Override
-    public void processDocument(IFile file, IDocument doc) {
-        api.updateFileContent(file, doc.get());
-        ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
-        ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
-        if (contentOutlinePage != null) {
-            JSONArray model = api.getScriptModel(file);
-            contentOutlinePage.refresh(model);
-            ArrayList<Position> positions = getPositions(model);
-            updateFoldingStructure(positions);
-        }
-    }
+	/**
+	 * Sets a model for outline page
+	 * 
+	 * @param file
+	 *            file corresponding to required model
+	 */
+	private void setOutlinePageInput(IFile file) {
+		if (contentOutlinePage != null) {
+			contentOutlinePage.setPageInput(api.getScriptModel(file));
+		}
+	}
 
-    /**
-     * Gets positions for folding update
-     * 
-     * @param model
-     *            a document model
-     * @return a list of positions
-     */
-    private ArrayList<Position> getPositions(JSONArray model) {
-        ArrayList<Position> positions = new ArrayList<>();
-        for (int i = 0; i < model.length(); i++) {
-            if (!model.isNull(i)) {
-                try {
-                    if (model.get(i) instanceof JSONObject) {
-                        JSONObject obj = (JSONObject) model.get(i);
-                        String kind = obj.getString("kind");
-                        if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
-                                && !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
-                            int offset = Integer.parseInt(obj.getString("minChar"));
-                            positions.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
-                        }
-                    }
-                } catch (JSONException e) {
-                    throw Throwables.propagate(e);
-                }
-            }
-        }
-        return positions;
-    }
+	@Override
+	public Object getAdapter(@SuppressWarnings("rawtypes") Class key) {
+		if (key.equals(IContentOutlinePage.class)) {
+			return getOutlinePage();
+		} else {
+			return super.getAdapter(key);
+		}
+	}
 
-    @Override
-    public void createPartControl(Composite parent) {
-        super.createPartControl(parent);
-        ProjectionViewer viewer = (ProjectionViewer) getSourceViewer();
+	/**
+	 * Gets a document partitioning
+	 * 
+	 * @return the configured partitioning
+	 */
+	public String getConfiguredDocumentPartitioning() {
+		return ((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).getConfiguredDocumentPartitioning(this
+				.getSourceViewer());
+	}
 
-        projectionSupport = new ProjectionSupport(viewer, getAnnotationAccess(), getSharedColors());
-        projectionSupport.install();
-        projectionSupport.setHoverControlCreator(new IInformationControlCreator() {
-            @Override
-            public IInformationControl createInformationControl(Shell parent) {
-                return new DefaultInformationControl(parent, true);
-            }
-        });
+	/**
+	 * Gets an outline page
+	 * 
+	 * @return an outline page
+	 */
+	public TypeScriptContentOutlinePage getOutlinePage() {
+		if (contentOutlinePage == null) {
+			contentOutlinePage = new TypeScriptContentOutlinePage();
+			contentOutlinePage.addPostSelectionChangedListener(selectionChangedListener);
+			setOutlinePageInput(((FileEditorInput) getEditorInput()).getFile());
+		}
+		return contentOutlinePage;
+	}
 
-        // turn projection mode on
-        viewer.doOperation(ProjectionViewer.TOGGLE);
+	/**
+	 * Returns current source viewer
+	 * 
+	 * @return source viewer
+	 */
+	public ISourceViewer getViewer() {
+		return getSourceViewer();
+	}
 
-        annotationModel = viewer.getProjectionAnnotationModel();
-        ArrayList<Position> positions = getPositions(api.getScriptModel(((FileEditorInput) getEditorInput()).getFile()));
-        updateFoldingStructure(positions);
-    }
+	/**
+	 * Performs actions for outline navigation
+	 * 
+	 * @param event
+	 *            a selection event
+	 */
+	private void doSelectionChanged(SelectionChangedEvent event) {
+		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
 
-    @Override
-    protected void initializeKeyBindingScopes() {
-        setKeyBindingScopes(new String[] { "com.axmor.eclipse.typescript.editor.TypeScriptEditorScope" }); //$NON-NLS-1$
-    }
+		JSONObject selectedTSElement = (JSONObject) selection.getFirstElement();
+		if (selectedTSElement != null) {
+			setSelection(selectedTSElement, true);
+			if (selection instanceof ITextSelection) {
+				ITextSelection textSelection = (ITextSelection) selection;
+				updateOccurrenceAnnotations(textSelection);
+			}
+		}
+	}
 
-    @Override
-    protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
-        ISourceViewer viewer = new TypeScriptProjectionViewer(parent, ruler, getOverviewRuler(),
-                isOverviewRulerVisible(), styles);
+	/**
+	 * Highlights and moves to a corresponding element in editor
+	 * 
+	 * @param reference
+	 *            corresponding entity in editor
+	 * @param moveCursor
+	 *            if true, moves cursor to the reference
+	 */
+	private void setSelection(JSONObject reference, boolean moveCursor) {
+		if (selectionSetFromOutline) {
+			// the work has all just been done via a selection setting in the
+			// outline
+			selectionSetFromOutline = false;
+			return;
+		}
+		if (reference == null) {
+			return;
+		}
 
-        // ensure decoration support has been created and configured.
-        getSourceViewerDecorationSupport(viewer);
+		if (moveCursor) {
+			markInNavigationHistory();
+		}
 
-        return viewer;
-    }
+		ISourceViewer sourceViewer = getSourceViewer();
+		if (sourceViewer == null) {
+			return;
+		}
+		StyledText textWidget = sourceViewer.getTextWidget();
+		if (textWidget == null) {
+			return;
+		}
+		try {
+			int offset = Integer.parseInt(reference.getString("minChar"));
+			if (offset < 0) {
+				return;
+			}
+			int length = Integer.parseInt(reference.getString("limChar")) - offset;
+			if (length < 0) {
+				return;
+			}
 
-    /**
-     * Updates folding structure
-     * 
-     * @param positions
-     *            a list of positions
-     */
-    public void updateFoldingStructure(ArrayList<Position> positions) {
-        Annotation[] annotations = new Annotation[positions.size()];
+			textWidget.setRedraw(false);
 
-        // this will hold the new annotations along
-        // with their corresponding positions
-        HashMap<ProjectionAnnotation, Position> newAnnotations = new HashMap<ProjectionAnnotation, Position>();
+			String documentPart = sourceViewer.getDocument().get(offset, length);
+			String name = reference.getString("name");
+			if (name != null) {
+				int nameoffset = documentPart.indexOf(reference.getString("name"));
+				if (nameoffset != -1) {
+					offset += nameoffset;
+					length = name.length();
+				}
+			}
+			if (length > 0) {
+				setHighlightRange(offset, length, moveCursor);
+			}
 
-        for (int i = 0; i < positions.size(); i++) {
-            ProjectionAnnotation annotation = new ProjectionAnnotation();
-            newAnnotations.put(annotation, positions.get(i));
-            annotations[i] = annotation;
-        }
+			if (!moveCursor) {
+				return;
+			}
 
-        annotationModel.modifyAnnotations(oldAnnotations, newAnnotations, null);
+			if (offset > -1 && length > 0) {
+				sourceViewer.revealRange(offset, length);
+				// Selected region begins one index after offset
+				sourceViewer.setSelectedRange(offset, length);
+				markInNavigationHistory();
+			}
+		} catch (JSONException | BadLocationException e) {
+			throw Throwables.propagate(e);
+		} finally {
+			textWidget.setRedraw(true);
+		}
+	}
 
-        oldAnnotations = annotations;
-    }
+	@Override
+	public void processDocument(IFile file, IDocument doc) {
+		api.updateFileContent(file, doc.get());
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
+		if (contentOutlinePage != null) {
+			JSONArray model = api.getScriptModel(file);
+			contentOutlinePage.refresh(model);
+			ArrayList<Position> positions = getPositions(model);
+			updateFoldingStructure(positions);
+		}
+	}
 
-    @Override
-    protected void configureSourceViewerDecorationSupport(SourceViewerDecorationSupport support) {
-        super.configureSourceViewerDecorationSupport(support);
+	/**
+	 * Gets positions for folding update
+	 * 
+	 * @param model
+	 *            a document model
+	 * @return a list of positions
+	 */
+	private ArrayList<Position> getPositions(JSONArray model) {
+		ArrayList<Position> positions = new ArrayList<>();
+		for (int i = 0; i < model.length(); i++) {
+			if (!model.isNull(i)) {
+				try {
+					if (model.get(i) instanceof JSONObject) {
+						JSONObject obj = (JSONObject) model.get(i);
+						String kind = obj.getString("kind");
+						if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
+								&& !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
+							int offset = Integer.parseInt(obj.getString("minChar"));
+							positions.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
+						}
+					}
+				} catch (JSONException e) {
+					throw Throwables.propagate(e);
+				}
+			}
+		}
+		return positions;
+	}
 
-        char[] matchChars = { '(', ')', '[', ']', '{', '}' }; // which brackets to match
-        ICharacterPairMatcher matcher = new DefaultCharacterPairMatcher(matchChars,
-                IDocumentExtension3.DEFAULT_PARTITIONING);
-        support.setCharacterPairMatcher(matcher);
-        support.setMatchingCharacterPainterPreferenceKeys(EDITOR_MATCHING_BRACKETS, EDITOR_MATCHING_BRACKETS_COLOR);
+	@Override
+	public void createPartControl(Composite parent) {
+		super.createPartControl(parent);
+		ProjectionViewer viewer = (ProjectionViewer) getSourceViewer();
 
-        // Enable bracket highlighting in the preference store
-        IPreferenceStore store = getPreferenceStore();
-        store.setDefault(EDITOR_MATCHING_BRACKETS, true);
-        store.setDefault(EDITOR_MATCHING_BRACKETS_COLOR, "128,128,128");
-    }
+		projectionSupport = new ProjectionSupport(viewer, getAnnotationAccess(), getSharedColors());
+		projectionSupport.install();
+		projectionSupport.setHoverControlCreator(new IInformationControlCreator() {
+			@Override
+			public IInformationControl createInformationControl(Shell parent) {
+				return new DefaultInformationControl(parent, true);
+			}
+		});
 
+		// turn projection mode on
+		viewer.doOperation(ProjectionViewer.TOGGLE);
+
+		annotationModel = viewer.getProjectionAnnotationModel();
+		ArrayList<Position> positions = getPositions(api.getScriptModel(((FileEditorInput) getEditorInput()).getFile()));
+		updateFoldingStructure(positions);
+		if (fMarkOccurrenceAnnotations) {
+			installOccurrencesFinder();
+		}
+		getEditorSite().getShell().addShellListener(activationListener);
+
+		editorSelectionChangedListener = new EditorSelectionChangedListener();
+		editorSelectionChangedListener.install(getSelectionProvider());
+	}
+
+	@Override
+	protected void initializeKeyBindingScopes() {
+		setKeyBindingScopes(new String[] { "com.axmor.eclipse.typescript.editor.TypeScriptEditorScope" }); //$NON-NLS-1$
+	}
+
+	@Override
+	protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
+		ISourceViewer viewer = new TypeScriptProjectionViewer(parent, ruler, getOverviewRuler(),
+				isOverviewRulerVisible(), styles);
+
+		// ensure decoration support has been created and configured.
+		getSourceViewerDecorationSupport(viewer);
+
+		return viewer;
+	}
+
+	/**
+	 * Updates folding structure
+	 * 
+	 * @param positions
+	 *            a list of positions
+	 */
+	public void updateFoldingStructure(ArrayList<Position> positions) {
+		Annotation[] annotations = new Annotation[positions.size()];
+
+		// this will hold the new annotations along
+		// with their corresponding positions
+		HashMap<ProjectionAnnotation, Position> newAnnotations = new HashMap<ProjectionAnnotation, Position>();
+
+		for (int i = 0; i < positions.size(); i++) {
+			ProjectionAnnotation annotation = new ProjectionAnnotation();
+			newAnnotations.put(annotation, positions.get(i));
+			annotations[i] = annotation;
+		}
+
+		annotationModel.modifyAnnotations(oldAnnotations, newAnnotations, null);
+
+		oldAnnotations = annotations;
+	}
+
+	@Override
+	protected void configureSourceViewerDecorationSupport(SourceViewerDecorationSupport support) {
+		super.configureSourceViewerDecorationSupport(support);
+
+		char[] matchChars = { '(', ')', '[', ']', '{', '}' }; // which brackets
+																// to match
+		ICharacterPairMatcher matcher = new DefaultCharacterPairMatcher(matchChars,
+				IDocumentExtension3.DEFAULT_PARTITIONING);
+		support.setCharacterPairMatcher(matcher);
+		support.setMatchingCharacterPainterPreferenceKeys(EDITOR_MATCHING_BRACKETS, EDITOR_MATCHING_BRACKETS_COLOR);
+
+		// Enable bracket highlighting in the preference store
+		IPreferenceStore store = getPreferenceStore();
+		store.setDefault(EDITOR_MATCHING_BRACKETS, true);
+		store.setDefault(EDITOR_MATCHING_BRACKETS_COLOR, "128,128,128");
+	}
+
+	public boolean isMarkingOccurrences() {
+		return fMarkOccurrenceAnnotations;
+	}
+
+	@Override
+	protected void handlePreferenceStoreChanged(PropertyChangeEvent event) {
+		String property = event.getProperty();
+
+		if (ToggleMarkOccurrencesAction.TOGGLE_MARK_OCCURRENCE.equals(property)) {
+			boolean newBooleanValue = Boolean.valueOf(event.getNewValue().toString()).booleanValue();
+			if (newBooleanValue != fMarkOccurrenceAnnotations) {
+				fMarkOccurrenceAnnotations = newBooleanValue;
+				if (fMarkOccurrenceAnnotations) {
+					installOccurrencesFinder();
+				} else {
+					uninstallOccurrencesFinder();
+				}
+			}
+			return;
+		}
+		super.handlePreferenceStoreChanged(event);
+	}
+
+	@Override
+	protected void initializeEditor() {
+		super.initializeEditor();
+		fMarkOccurrenceAnnotations = getPreferenceStore()
+				.getBoolean(ToggleMarkOccurrencesAction.TOGGLE_MARK_OCCURRENCE);
+	}
+
+	@Override
+	public void dispose() {
+		if (editorSelectionChangedListener != null) {
+			editorSelectionChangedListener.uninstall(getSelectionProvider());
+			editorSelectionChangedListener = null;
+		}
+
+		uninstallOccurrencesFinder();
+
+		if (activationListener != null) {
+			Shell shell = getEditorSite().getShell();
+			if (shell != null && !shell.isDisposed()) {
+				shell.removeShellListener(activationListener);
+			}
+			activationListener = null;
+		}
+		super.dispose();
+	}
+
+	private void uninstallOccurrencesFinder() {
+		fMarkOccurrenceAnnotations = false;
+
+		if (fOccurrencesFinderJob != null) {
+			fOccurrencesFinderJob.cancel();
+			fOccurrencesFinderJob = null;
+		}
+
+		if (fOccurrencesFinderJobCanceler != null) {
+			fOccurrencesFinderJobCanceler.uninstall();
+			fOccurrencesFinderJobCanceler = null;
+		}
+
+		removeOccurrenceAnnotations();
+	}
+
+	private void installOccurrencesFinder() {
+		fMarkOccurrenceAnnotations = true;
+
+		if (getSelectionProvider() != null) {
+			ISelection selection = getSelectionProvider().getSelection();
+			if (selection instanceof ITextSelection) {
+				fForcedMarkOccurrencesSelection = (ITextSelection) selection;
+				updateOccurrenceAnnotations(fForcedMarkOccurrencesSelection);
+			}
+		}
+		if (fOccurrencesFinderJobCanceler == null) {
+			fOccurrencesFinderJobCanceler = new OccurrencesFinderJobCanceler(this, fOccurrencesFinderJob);
+			fOccurrencesFinderJobCanceler.install();
+		}
+	}
+
+	private void updateOccurrenceAnnotations(ITextSelection selection) {
+		if (fOccurrencesFinderJob != null)
+			fOccurrencesFinderJob.cancel();
+
+		if (!fMarkOccurrenceAnnotations) {
+			return;
+		}
+
+		if (selection == null) {
+			return;
+		}
+
+		IFile file = ((FileEditorInput) getEditorInput()).getFile();
+		JSONArray occurrences = api.getOccurrencesAtPosition(file, selection.getOffset());
+
+		if (occurrences == null || occurrences.length() == 0) {
+			removeOccurrenceAnnotations();
+			return;
+		}
+
+		List<Position> positions = new ArrayList<>(occurrences.length());
+		try {
+			for (int i = 0; i < occurrences.length(); i++) {
+				JSONObject json = occurrences.getJSONObject(i);
+				int startPos = json.getInt("minChar");
+				int endPos = json.getInt("limChar");
+				positions.add(new Position(startPos, endPos - startPos));
+			}
+		} catch (JSONException e) {
+			Activator.error(e);
+		}
+
+		fOccurrencesFinderJob = new OccurrencesFinderJob(this, getViewer().getDocument(), positions, selection);
+		fOccurrencesFinderJob.run(new NullProgressMonitor());
+	}
+
+	public void removeOccurrenceAnnotations() {
+		IDocumentProvider documentProvider = getDocumentProvider();
+		if (documentProvider == null) {
+			return;
+		}
+
+		IAnnotationModel annotationModel = documentProvider.getAnnotationModel(getEditorInput());
+		if (annotationModel == null || fOccurrenceAnnotations == null) {
+			return;
+		}
+
+		updateAnnotationModelForRemoves(annotationModel);
+	}
+
+	public IPreferenceStore getEditorPreferenceStore() {
+		return getPreferenceStore();
+	}
+
+	private void updateAnnotationModelForRemoves(IAnnotationModel annotationModel) {
+		if (annotationModel instanceof IAnnotationModelExtension) {
+			((IAnnotationModelExtension) annotationModel).replaceAnnotations(fOccurrenceAnnotations, null);
+		} else {
+			for (int i = 0, length = fOccurrenceAnnotations.length; i < length; i++) {
+				annotationModel.removeAnnotation(fOccurrenceAnnotations[i]);
+			}
+		}
+		fOccurrenceAnnotations = null;
+	}
+
+	private boolean isActivePart() {
+		IWorkbenchPart part = getActivePart();
+		return part != null && part.equals(this);
+	}
+
+	private IWorkbenchPart getActivePart() {
+		IWorkbenchWindow window = getSite().getWorkbenchWindow();
+		IPartService service = window.getPartService();
+		return service.getActivePart();
+	}
 }

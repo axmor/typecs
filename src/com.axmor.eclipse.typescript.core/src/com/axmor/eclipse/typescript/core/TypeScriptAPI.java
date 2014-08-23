@@ -113,4 +113,11 @@ public interface TypeScriptAPI extends IDisposable {
      *            resource that was added
      */
     void addFile(IFile file);
+    
+    /**
+     * @param file file to search
+     * @param position absolute offset in the file
+     * @return array of references in this file
+     */
+    JSONArray getOccurrencesAtPosition(IFile file, int position);
 }

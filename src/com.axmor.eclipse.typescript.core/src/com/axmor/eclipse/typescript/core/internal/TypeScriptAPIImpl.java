@@ -228,6 +228,20 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
         checkBridge();
         bridge.invokeBridgeMethod("addFile", file, (String) null);
     }
+
+    @Override
+    public JSONArray getOccurrencesAtPosition(IFile file, int position) {
+        checkBridge();
+        JSONObject object = bridge.invokeBridgeMethod("getOccurrencesAtPosition", file, String.valueOf(position));
+        try {
+            if (!object.isNull("model")) {
+                return object.getJSONArray("model");
+            }
+            return null;
+        } catch (JSONException e) {
+            throw Throwables.propagate(e);
+        }
+    }
     
     @Override
     public void dispose() {
@@ -254,4 +268,5 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             initBridge();
         }
     }
+
 }
