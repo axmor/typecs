@@ -53,7 +53,8 @@ exports.getScriptSnapshot = function(fileName) {
   log.debug('tss.getScriptSnapshot: ' + fileName);
 //  return TypeScript.SimpleText.fromString(fs.readFileSync(fileName));
   if (files[fileName] == null) {
-    files[fileName] = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString());
+  // we added white space to end of content to avoid code completion error 
+    files[fileName] = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ');
   }
   return files[fileName]; 
 };
@@ -104,7 +105,8 @@ exports.setBaseSourceDirectory = function(src) {
 
 exports.setFileContent = function(file, content) {
   log.debug('tss.setFileContent: ' + file);
-  files[file] = TypeScript.ScriptSnapshot.fromString(content ? content : '');
+  // we added white space to end of content to avoid code completion error 
+  files[file] = TypeScript.ScriptSnapshot.fromString(content ? (content + ' ') : ' ');
 }
 
 function readDir(base, dir, files) {
