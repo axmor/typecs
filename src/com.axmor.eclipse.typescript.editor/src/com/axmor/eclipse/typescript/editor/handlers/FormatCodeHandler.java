@@ -53,6 +53,7 @@ public class FormatCodeHandler extends AbstractHandler {
         if (selection.getLength() == 0) {
             end = document.getLength();
         }
+        editor.getApi().updateFileContent(file, document.get());
         JSONArray formatDetails = editor.getApi().getFormattingCode(file, start, end);
 
         MultiTextEdit textEdit = new MultiTextEdit();
