@@ -62,6 +62,8 @@ public class FormatCodeHandler extends AbstractHandler {
                 JSONObject object = formatDetails.getJSONObject(i);
                 int minChar = Integer.parseInt(object.getString("minChar"));
                 int limChar = Integer.parseInt(object.getString("limChar"));
+                if (minChar == end)//Ignore space that added by ets_host.js
+                    continue;
                 if ((object == null) || (minChar < start) || (minChar > end)) {
                     break;
                 }
