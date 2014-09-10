@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+  <extension point="org.eclipse.debug.core.launchConfigurationTypes">
+    <launchConfigurationType
+      sourceLocatorId="com.axmor.eclipse.typescript.debug.sourceLookupDirector"
+      sourcePathComputerId="com.axmor.eclipse.typescript.debug.sourcePathComputer"
+      id="com.axmor.eclipse.typescript.debug.launch_standalone_config"
+      modes="run, debug"
+      delegate="com.axmor.eclipse.typescript.debug.launching.LaunchStandaloneConfigurationDelegate"
+      name="TypeScript Standalone"
+      public="true"/>
+
+    <launchConfigurationType
+      sourceLocatorId="com.axmor.eclipse.typescript.debug.sourceLookupDirector"
+      sourcePathComputerId="com.axmor.eclipse.typescript.debug.sourcePathComputer"
+      id="com.axmor.eclipse.typescript.debug.launch_web_config"
+      modes="debug"
+      delegate="com.axmor.eclipse.typescript.debug.launching.LaunchWebConfigurationDelegate"
+      name="TypeScript Web Remote"
+      public="true"/>
+  </extension>
+
+  <extension point="org.eclipse.debug.core.sourceLocators">
+    <sourceLocator
+      id="com.axmor.eclipse.typescript.debug.sourceLookupDirector"
+      name="TypeScript Source Lookup Director"
+      class="com.axmor.eclipse.typescript.debug.launching.TypeScriptSourceLookupDirector"/>
+  </extension>
+  
+  <extension point="org.eclipse.debug.core.sourcePathComputers">
+    <sourcePathComputer
+      id="com.axmor.eclipse.typescript.debug.sourcePathComputer"
+      class="com.axmor.eclipse.typescript.debug.launching.TypeScriptSourcePathComputerDelegate"/>
+  </extension>
+
+  <extension point="org.eclipse.debug.core.breakpoints">
+    <breakpoint 
+      id="com.axmor.eclipse.typescript.debug.breakpoint"
+      class="com.axmor.eclipse.typescript.debug.model.TypeScriptLineBreakpoint"
+      markerType="com.axmor.eclipse.typescript.debug.typeScriptBreakpoint"/>
+  </extension>
+    
+  <extension point="org.eclipse.core.resources.markers" id="typeScriptBreakpoint">
+    <super type="org.eclipse.debug.core.lineBreakpointMarker"/>
+    <persistent value="true"/>
+  </extension>
+</plugin>
