@@ -12,7 +12,10 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.DocumentRewriteSession;
+import org.eclipse.jface.text.DocumentRewriteSessionType;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentExtension4;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
@@ -45,6 +48,7 @@ public class FormatCodeHandler extends AbstractHandler {
             return null;
         }
         IDocument document = editor.getDocumentProvider().getDocument(HandlerUtil.getActiveEditorInput(event));
+        IDocumentExtension4 ex4 = (IDocumentExtension4) document; 
         ITextSelection selection = (ITextSelection) editor.getSelectionProvider().getSelection();
         int start = selection.getOffset();
         int end = start + selection.getLength();
@@ -82,7 +86,9 @@ public class FormatCodeHandler extends AbstractHandler {
                     }
                 }
             }
+            DocumentRewriteSession session = ex4.startRewriteSession(DocumentRewriteSessionType.SEQUENTIAL);
             textEdit.apply(document, TextEdit.CREATE_UNDO);
+            ex4.stopRewriteSession(session);
         } catch (JSONException | MalformedTreeException | BadLocationException e) {
             throw Throwables.propagate(e);
         }
