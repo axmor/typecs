@@ -107,6 +107,13 @@ public interface TypeScriptAPI extends IDisposable {
     JSONArray getReferencesAtPosition(IFile file, int position);
 
     /**
+     * @param file
+     *            file to search
+     * @return array of semantic diagnostics
+     */
+    JSONArray getSemanticDiagnostics(IFile file);
+
+    /**
      * Notify TS api that a new file was added to project.
      * 
      * @param file

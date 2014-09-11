@@ -88,6 +88,10 @@ if (args.serv) {
             log.debug('bridge.compile: ' + o.file + ', param: ' + o.params);
             socket.end(JSON.stringify(tsc.compile(o.file, o.params)));
             break;    
+          case 'getSemanticDiagnostics':
+              log.debug('bridge.getSemanticDiagnostics: ' + o.file);
+              socket.end(JSON.stringify({ 'model' : tss.getSemanticDiagnostics(o.file) }));
+              break;
           default:
             socket.end(JSON.stringify({ 'version' : args.version }));
             break;

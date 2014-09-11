@@ -3,8 +3,11 @@ package com.axmor.eclipse.typescript.editor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -78,6 +81,9 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 * The preference key for the color used by the matching character painter
 	 */
 	public static final String EDITOR_MATCHING_BRACKETS_COLOR = "matchingBracketsColor";
+
+	/** Constant for marker type. */
+    private static final String MARKER_TYPE = "com.axmor.eclipse.typescript.editor.tsDiagnostic";
 
 	/**
 	 * An outline page for the editor's content
@@ -389,6 +395,31 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 			contentOutlinePage.refresh(model);
 			ArrayList<Position> positions = getPositions(model);
 			updateFoldingStructure(positions);
+
+			try {
+				JSONArray diagnostics = api.getSemanticDiagnostics(file);
+				if (diagnostics != null) {
+					file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
+					for (int i = 0; i < diagnostics.length(); i++) {
+						JSONObject diagnostic = diagnostics.getJSONObject(i);
+						IMarker marker = file.createMarker(MARKER_TYPE);
+						String message = diagnostic.getString("diagnosticCode");
+						if (diagnostic.has("arguments")) {
+							JSONArray arguments = diagnostic.getJSONArray("arguments");
+							for (int j = 0; j < arguments.length(); j++) {
+								message = message.replaceAll("\\{" + j + "\\}", Matcher.quoteReplacement(arguments.getString(j)));
+							}
+						}
+						marker.setAttribute(IMarker.MESSAGE, message);
+						marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+						
+						marker.setAttribute(IMarker.CHAR_START, diagnostic.getInt("start"));
+						marker.setAttribute(IMarker.CHAR_END, diagnostic.getInt("start") + diagnostic.getInt("length"));
+					}
+				}
+			} catch (JSONException | CoreException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

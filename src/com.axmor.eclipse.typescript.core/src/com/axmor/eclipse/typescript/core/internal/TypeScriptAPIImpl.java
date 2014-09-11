@@ -242,7 +242,21 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             throw Throwables.propagate(e);
         }
     }
-    
+
+    @Override
+    public JSONArray getSemanticDiagnostics(IFile file) {
+        checkBridge();
+        JSONObject object = bridge.invokeBridgeMethod("getSemanticDiagnostics", file, (String) null);
+        try {
+            if (!object.isNull("model")) {
+                return object.getJSONArray("model");
+            }
+            return null;
+        } catch (JSONException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
     @Override
     public void dispose() {
         bridge.stop();

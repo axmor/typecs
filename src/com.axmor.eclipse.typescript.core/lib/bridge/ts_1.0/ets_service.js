@@ -56,3 +56,7 @@ exports.getReferencesAtPosition = function(file, params) {
 exports.getOccurrencesAtPosition = function (file, position) {
   return ts.getOccurrencesAtPosition(file, position); 
 }
+
+exports.getSemanticDiagnostics = function (file) {
+  return ts.getSemanticDiagnostics(file);
+}

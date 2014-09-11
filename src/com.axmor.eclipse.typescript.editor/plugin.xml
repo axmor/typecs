@@ -337,4 +337,9 @@
 	         <part id="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
 		</actionSetPartAssociation>
 	</extension>
+	
+    <extension point="org.eclipse.core.resources.markers" id="tsDiagnostic" name="TypeScript Diagnostic">
+        <super type="org.eclipse.core.resources.problemmarker"/>
+        <persistent value="true"/>
+    </extension>
 </plugin>

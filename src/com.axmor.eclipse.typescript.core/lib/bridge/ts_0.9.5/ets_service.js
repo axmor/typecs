@@ -52,3 +52,7 @@ exports.getFormattingEditsForDocument = function(file, start, end, options) {
 exports.getReferencesAtPosition = function(file, params) {
   return ts.getReferencesAtPosition(file, params);        
 }
+
+exports.getSemanticDiagnostics = function (file) {
+  return ts.getSemanticDiagnostics(file); 
+}
