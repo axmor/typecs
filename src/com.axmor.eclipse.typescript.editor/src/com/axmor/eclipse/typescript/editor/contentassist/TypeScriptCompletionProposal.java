@@ -141,7 +141,16 @@ public class TypeScriptCompletionProposal implements ICompletionProposal, ICompl
     public boolean validate(IDocument document, int offset, DocumentEvent event) {
         try {
             String subString = document.get(replacementOffset, offset - replacementOffset);
-            return content.startsWith(subString); 
+            if (subString.length() <= content.length()) {
+                String start = content.substring(0, subString.length());
+                boolean valid = start.equalsIgnoreCase(subString);
+                if (valid) {
+                    int delta = (event.fText == null ? 0 : event.fText.length()) - event.fLength;
+                    int newLength = Math.max(replacementLength + delta, 0);
+                    replacementLength = newLength;
+                }
+                return valid;
+            }
         } catch (BadLocationException e) {
             // ignore exception
         }
