@@ -7,7 +7,10 @@ var TypeScript = null;
 
 exports.init = function(ts) {
   TypeScript = ts;
-  files['std-lib/lib.d.ts'] = TypeScript.ScriptSnapshot.fromString(fs.readFileSync('./ts_' + args.version + '/lib.d.ts').toString());
+  files['std-lib/lib.d.ts'] = {
+    version: 1,
+    snapshot: TypeScript.ScriptSnapshot.fromString(fs.readFileSync('./ts_' + args.version + '/lib.d.ts').toString())
+  };
 }
 
 // logger
@@ -36,8 +39,10 @@ exports.getScriptFileNames = function() {
 }
 
 exports.getScriptVersion = function(fileName) {
-  //log.debug('tss.getScriptVersion: ' + fileName);
-  return 1;
+  //log.debug('tss.getScriptVersion: ' + fileName + (files[fileName] && files[fileName].version ? files[fileName].version : "N/A"));
+  if (files[fileName])
+	  return files[fileName].version;
+  return 0;
 }
 
 exports.getScriptIsOpen = function(fileName) {
@@ -50,13 +55,16 @@ exports.getScriptByteOrderMark = function(fileName) {
 }
 
 exports.getScriptSnapshot = function(fileName) {
-  log.debug('tss.getScriptSnapshot: ' + fileName);
+  log.debug('tss.getScriptSnapshot: ' + fileName + " " + (files[fileName] && files[fileName].version));
 //  return TypeScript.SimpleText.fromString(fs.readFileSync(fileName));
-  if (files[fileName] == null) {
-  // we added white space to end of content to avoid code completion error 
-    files[fileName] = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ');
+  if (files[fileName] == null) { 
+    files[fileName] = emptyEntry();
   }
-  return files[fileName]; 
+  // we added white space to end of content to avoid code completion error
+  if (files[fileName].snapshot == null) {
+    files[fileName].snapshot = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ')
+  }
+  return files[fileName].snapshot; 
 };
 
 exports.getDiagnosticsObject = function() {
@@ -72,7 +80,10 @@ exports.addDefaultLibrary = function() {
 
 exports.addFile = function(fileName) {
   log.debug('tss.addFile:' + fileName);
-  files[fileName] = null;
+  if (files[fileName]) {
+    files[fileName].version++;
+    files[fileName].snapshot = null;
+  }
 };
 
 exports.resolveRelativePath = function(path, directory) {
@@ -104,9 +115,24 @@ exports.setBaseSourceDirectory = function(src) {
 }
 
 exports.setFileContent = function(file, content) {
-  log.debug('tss.setFileContent: ' + file);
-  // we added white space to end of content to avoid code completion error 
-  files[file] = TypeScript.ScriptSnapshot.fromString(content ? (content + ' ') : ' ');
+  log.debug('tss.setFileContent: ' + file +":" + content);
+  // we added white space to end of content to avoid code completion error
+  var c = content ? (content + ' ') : ' ';
+  var snapshot = TypeScript.ScriptSnapshot.fromString(c);
+  var old = null;
+  if (files[file]) {
+    var f = files[file];
+    old = f.snapshot.getText(0, f.snapshot.getLength())
+    if (old != c) {
+      f.version ++;
+    }
+  } else { 
+    files[fileName] = emptyEntry();
+  }
+  files[file].snapshot = TypeScript.ScriptSnapshot.fromString(c);
+  files[file].snapshot.getTextChangeRangeSinceVersion = function(scriptVersion) {
+    return null;
+  }
 }
 
 function readDir(base, dir, files) {
@@ -118,7 +144,19 @@ function readDir(base, dir, files) {
     if (stat.isDirectory()) {
       readDir(base, (dir.length > 0 ? (dir + '/') : '') + item, files);
     } else if (stat.isFile() && item.indexOf('.ts') == item.length - 3) {
-      files[(dir.length > 0 ? (dir + '/') : '') + item] = null;
+      var name = (dir.length > 0 ? (dir + '/') : '') + item;
+      if (files[name]) {
+        files[name].snapshot = null;
+      } else {
+        files[name] = emptyEntry();
+      }
     }
+  };
+}
+
+function emptyEntry() {
+  return {
+    version: 1,
+    snapshot: null
   };
 }
