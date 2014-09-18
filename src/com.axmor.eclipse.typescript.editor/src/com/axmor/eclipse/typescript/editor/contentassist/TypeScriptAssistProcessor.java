@@ -51,6 +51,7 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
 
     @Override
     public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
+        api.updateFileContent(file, viewer.getDocument().get());
         JSONObject completionList = api.getCompletion(file, offset);
         try {
             TypeScriptUIImages imagesFactory = new TypeScriptUIImages();
