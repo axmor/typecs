@@ -64,8 +64,10 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
             for (int i = 0; i < completionsLength; i++) {
 
                 String original = completions.getJSONObject(i).getString("name");
-
-                if (original.startsWith(replacement)) {
+                if (original.length() < replacement.length())
+                    continue;
+                String prefix = original.substring(0, replacement.length());
+                if (prefix.equalsIgnoreCase(replacement)) {
                     String entryName = original;
                     JSONObject details = api.getCompletionDetails(file, offset, entryName);
                     String displayString = entryName;
