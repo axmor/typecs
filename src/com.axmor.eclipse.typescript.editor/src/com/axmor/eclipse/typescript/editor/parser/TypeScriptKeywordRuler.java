@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.rules.ICharacterScanner;
+import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWordDetector;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WordRule;
@@ -80,7 +82,7 @@ public class TypeScriptKeywordRuler extends WordRule {
         "yield" /* YieldKeyword */
 	}
 	));
-
+	
 	/**
 	 * A constructor which determine a word detector for keywords
 	 */
@@ -88,7 +90,7 @@ public class TypeScriptKeywordRuler extends WordRule {
 		super(new IWordDetector() {
 			@Override
 			public boolean isWordStart(char c) {
-				return Character.isJavaIdentifierStart(c);
+				return Character.isJavaIdentifierStart(c);			
 			}
 
 			@Override
@@ -100,5 +102,17 @@ public class TypeScriptKeywordRuler extends WordRule {
 		for (String keyword : KEYWORDS) {
 			addWord(keyword, token);
 		}
+	}
+	
+	@Override
+	public IToken evaluate(ICharacterScanner scanner) {
+		scanner.unread();
+		int previous = scanner.read();
+		if (Character.isJavaIdentifierPart((char) previous)) {
+			return super.fDefaultToken;
+		}
+		else {
+			return super.evaluate(scanner);
+		}		
 	}
 }
