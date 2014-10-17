@@ -84,6 +84,9 @@ exports.addFile = function(fileName) {
     files[fileName].version++;
     files[fileName].snapshot = null;
   }
+  else {
+	  files[fileName] = emptyEntry();
+  }
 };
 
 exports.resolveRelativePath = function(path, directory) {
