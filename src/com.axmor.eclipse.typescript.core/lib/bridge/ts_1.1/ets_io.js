@@ -6,7 +6,6 @@ var args = require('../args.js');
 var TypeScript = require('./tsc.js');
 
 var io = getIO(args.src);
-var batch = new TypeScript.BatchCompiler(io);
 
 exports.compile = function(file, settings) {
   io.init();                                         
@@ -64,7 +63,8 @@ function getCompilationSettings(settings) {
     useCaseSensitiveFileResolution: function() { return s.useCaseSensitiveFileResolution; },
     gatherDiagnostics: function() { return s.gatherDiagnostics; },
     updateTC: function() { return s.updateTC; },
-    codepage: function() { return null; /*s.codepage;*/ } 
+    codepage: function() { return null; /*s.codepage;*/ },
+    createFileLog: function() {return false;} 
   };
 };
 
