@@ -11,13 +11,14 @@ var Services = ts.Services;
 tsh.init(TypeScript);
 tsh.setBaseSourceDirectory(args.src);
 
-var ts = new Services.LanguageService(tsh);
+var ts = Services.createLanguageService(tsh, Services.createDocumentRegistry());
+log.debug(ts);
 
 exports.setFileContent = function(file, params) {
   tsh.setFileContent(file, params);
   ts.currentFileSyntaxTree = null;
-  if (ts.compilerState.compiler != null) {
-    ts.compilerState.compiler.updateSourceUnit(file, tsh.getScriptSnapshot(file), /*version:*/ 1, /*isOpen:*/ true, null);
+  if (ts.compiler.compiler != null) {
+    ts.compiler.compiler.updateFile(file, tsh.getScriptSnapshot(file), /*version:*/ 1, /*isOpen:*/ true, /* textChangeRange: */ null);
   }
 }
 
@@ -26,7 +27,7 @@ exports.addFile = function(file) {
 }
 
 exports.getScriptLexicalStructure = function(file) {
-  return ts.getScriptLexicalStructure(file);
+  return ts.getNavigationBarItems(file);
 }
 
 exports.getCompletionsAtPosition = function(file, params, member) {
@@ -53,6 +54,10 @@ exports.getReferencesAtPosition = function(file, params) {
   return ts.getReferencesAtPosition(file, params);        
 }
 
+exports.getOccurrencesAtPosition = function (file, position) {
+  return ts.getOccurrencesAtPosition(file, position); 
+}
+
 exports.getSemanticDiagnostics = function (file) {
-  return ts.getSemanticDiagnostics(file); 
+  return ts.getSemanticDiagnostics(file);
 }

@@ -1,0 +1,7 @@
+{ version: '1.1',
+  src: 'd:\\work\\typecs\\src\\com.axmor.eclipse.typescript.core.test\\resources\\assets-1.0\\module1.ts',
+  serv: false,
+  logLevel: 'error' }
+tss.setBaseSourceDirectory: d:\work\typecs\src\com.axmor.eclipse.typescript.core.test\resources\assets-1.0\module1.ts
+tss.getScriptFileNames
+tss.getCompilationSettings
