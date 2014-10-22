@@ -16,10 +16,6 @@ log.debug(ts);
 
 exports.setFileContent = function(file, params) {
   tsh.setFileContent(file, params);
-  ts.currentFileSyntaxTree = null;
-  if (ts.compiler.compiler != null) {
-    ts.compiler.compiler.updateFile(file, tsh.getScriptSnapshot(file), /*version:*/ 1, /*isOpen:*/ true, /* textChangeRange: */ null);
-  }
 }
 
 exports.addFile = function(file) {
