@@ -44,8 +44,9 @@ exports.getScriptFileNames = function() {
 
 exports.getScriptVersion = function(fileName) {
   log.debug('host.getScriptVersion: ' + fileName + " - " + (files[fileName] && files[fileName].version ? files[fileName].version : "N/A"));
-  if (files[fileName])
+  if (files[fileName] && files[fileName].version ) {
     return files[fileName].version;
+  }
   return 0;
 }//(fileName: string): string;
 
@@ -83,7 +84,7 @@ exports.getCancellationToken = function() {
 
 /// inner our methods 
 exports.setBaseSourceDirectory = function(src) {
-  log.debug('tss.setBaseSourceDirectory: ' + src);
+  log.debug('host.setBaseSourceDirectory: ' + src);
   baseDir = src;
   if (fs.statSync(src).isDirectory()) {
     readDir(src, '', files);
@@ -115,6 +116,41 @@ function emptyEntry() {
   };
 }
 
+exports.setFileContent = function(file, content) {
+  log.debug('host.setFileContent: ' + file +":" + content);
+  // we added white space to end of content to avoid code completion error
+  var c = content ? (content + ' ') : ' ';
+  var snapshot = TypeScript.ScriptSnapshot.fromString(c);
+  var old = null;
+  if (files[file]) {
+    var f = files[file];
+    old = f.snapshot.getText(0, f.snapshot.getLength())
+    if (old != c) {
+      f.version ++;
+    }
+  } else { 
+    files[fileName] = emptyEntry();
+  }
+  files[file].snapshot = TypeScript.ScriptSnapshot.fromString(c);
+  files[file].snapshot.getChangeRange = function(oldSnapshot) {
+     return null;
+  }
+}
+
+exports.addFile = function(fileName) {
+  log.debug('host.addFile:' + fileName);
+  if (files[fileName]) {
+    files[fileName].version++;
+    files[fileName].snapshot = null;
+  } else {
+  files[fileName] = emptyEntry();
+  }
+};
+
+exports.log = function(msg) {
+  log.debug("[TS]:" + msg);
+};
+
 /*
 exports.init = function(ts) {
   TypeScript = ts;
@@ -140,13 +176,6 @@ exports.addDefaultLibrary = function() {
   //this.addScript("lib.d.ts", Harness.Compiler.libText);
 };
 
-exports.addFile = function(fileName) {
-  log.debug('tss.addFile:' + fileName);
-  if (files[fileName]) {
-    files[fileName].version++;
-    files[fileName].snapshot = null;
-  }
-};
 
 exports.resolveRelativePath = function(path, directory) {
   log.debug('tss.resolveRelativePath: ' + path + '; ' + directory);
