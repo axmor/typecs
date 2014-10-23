@@ -13,6 +13,8 @@ import java.io.FileNotFoundException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 
+import com.google.common.base.Strings;
+
 /**
  * @author Konstantin Zaitcev
  */
@@ -43,6 +45,22 @@ public final class TypeScriptUtils {
             }
         }
         throw new FileNotFoundException();
+    }
+
+    /**
+     * @return version of TypeScript compiler
+     */
+    public static String getTypeScriptVersion() {
+        String version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
+        
+        if (Strings.isNullOrEmpty(version)) {
+            version = TypeScriptAPI.DEFAULT_TS_VERSION;
+        }
+        // backward compatibility
+        if ("1.0.0".equals(version)) {
+        	version = "1.0";
+        }
+        return version;
     }
 
     /**

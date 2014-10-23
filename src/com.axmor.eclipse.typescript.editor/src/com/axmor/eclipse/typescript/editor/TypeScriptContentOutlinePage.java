@@ -21,6 +21,8 @@ import org.eclipse.ui.part.IShowInSource;
 import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
+
 import us.monoid.json.JSONArray;
 
 /**
@@ -65,7 +67,11 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
 
         TreeViewer viewer = getTreeViewer();
 
-        viewer.setContentProvider(new TypeScriptOutlineContentProvider(model));
+		if ("1.0".equals(TypeScriptUtils.getTypeScriptVersion())) {
+			viewer.setContentProvider(new TypeScriptOutlineContentProvider_10(model));
+		} else {
+			viewer.setContentProvider(new TypeScriptOutlineContentProvider(model));
+		}
         viewer.setLabelProvider(new TypeScriptOutlineLabelProvider());
         if (model != null) {
             setViewerInput(model);

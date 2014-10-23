@@ -19,7 +19,7 @@ var tss = require('./ts_' + args.version + '/ets_service.js');
 //tss.getScriptLexicalStructure('module1.ts');
 //tss.getScriptLexicalStructure('test_ts2.ts');
 //tss.addFile('module1.ts');
-log.debug(tss.getCompletionsAtPosition('module2.ts', 100));
+//log.debug(tss.getCompletionsAtPosition('module2.ts', 100));
 
 /*********************************************************************
 Service functions

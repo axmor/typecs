@@ -59,6 +59,7 @@ import us.monoid.json.JSONObject;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJobCanceler;
@@ -432,24 +433,57 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 */
 	private ArrayList<Position> getPositions(JSONArray model) {
 		ArrayList<Position> positions = new ArrayList<>();
-		for (int i = 0; i < model.length(); i++) {
-			if (!model.isNull(i)) {
+		if ("1.0".equals(TypeScriptUtils.getTypeScriptVersion())) {
+			for (int i = 0; i < model.length(); i++) {
+				if (!model.isNull(i)) {
+					try {
+						if (model.get(i) instanceof JSONObject) {
+							JSONObject obj = (JSONObject) model.get(i);
+							String kind = obj.getString("kind");
+							if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
+									&& !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
+								int offset = Integer.parseInt(obj.getString("minChar"));
+								positions.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
+							}
+						}
+					} catch (JSONException e) {
+						throw Throwables.propagate(e);
+					}
+				}
+			}
+		} else {
+			addChildPositions(positions, model);
+		}
+		return positions;
+	}
+
+	private void addChildPositions(List<Position> positions, JSONArray childItems) {
+		for (int i = 0; i < childItems.length(); i++) {
+			if (!childItems.isNull(i)) {
 				try {
-					if (model.get(i) instanceof JSONObject) {
-						JSONObject obj = (JSONObject) model.get(i);
-						String kind = obj.getString("kind");
+					if (childItems.get(i) instanceof JSONObject) {
+						JSONObject item = (JSONObject) childItems.get(i);
+						String kind = item.getString("kind");
 						if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
 								&& !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
-							int offset = Integer.parseInt(obj.getString("minChar"));
-							positions.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
+							if (item.has("spans")) {
+								JSONArray spans = (JSONArray) item.get("spans");
+								if (spans != null && spans.length() > 0) {
+									JSONObject span = (JSONObject) spans.get(0);
+									positions.add(new Position(span.getInt("start"), span.getInt("length")));
+								}
+							}
+						}
+						if (item.has("childItems") && !item.isNull("childItems") && item.get("childItems") instanceof JSONArray) {
+							addChildPositions(positions, (JSONArray) item.get("childItems"));
 						}
 					}
 				} catch (JSONException e) {
 					throw Throwables.propagate(e);
 				}
+
 			}
 		}
-		return positions;
 	}
 
 	@Override
