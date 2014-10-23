@@ -14,13 +14,13 @@ import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
 import com.google.common.base.Throwables;
 
 /**
- * For TypeScript compiler v1.1 and above
+ * For TypeScript Compiler v0.9 and v1.0
  * A content provider mediates between the viewer's model and the viewer itself.
  * 
  * @author Asya Vorobyova
  *
  */
-public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
+public class TypeScriptOutlineContentProvider_10 implements ITreeContentProvider {
     
     /**
      * ts file model
@@ -32,7 +32,7 @@ public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
      * 
      * @param model file model
      */
-    public TypeScriptOutlineContentProvider(JSONArray model) {
+    public TypeScriptOutlineContentProvider_10(JSONArray model) {
         super();
         this.model = model;
     }
@@ -55,29 +55,29 @@ public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
 
     @Override
     public Object[] getChildren(Object parentElement) {
-//        if (parentElement instanceof JSONObject) {
-//            JSONObject obj = (JSONObject) parentElement;
-//            try {
-//                String kind = obj.getString("kind");
-//                //we generate children only for interfaces, classes and methods
-//                if (kind.equals(TypeScriptModelKinds.Kinds.CONSTRUCTOR.toString())
-//                        || kind.equals(TypeScriptModelKinds.Kinds.FUNCTION.toString())
-//                        || kind.equals(TypeScriptModelKinds.Kinds.METHOD.toString())
-//                        || kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
-//                        || kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
-//                    return TypeScriptContentOutlinePage.NO_CHILDREN;
-//                }
-//                String name = obj.getString("name");
-//                if (obj.getString("containerKind").equals(TypeScriptModelKinds.Kinds.MODULE.toString())) {
-//                    name = obj.getString("containerName") + "." + name;
-//                }
-//                return getChildren(kind, name);
-//            } catch (JSONException e) {
-//                Activator.error(e);
-//            }
-//        } else if (parentElement instanceof JSONArray) {
-//            return getChildren("", "");
-//        }
+        if (parentElement instanceof JSONObject) {
+            JSONObject obj = (JSONObject) parentElement;
+            try {
+                String kind = obj.getString("kind");
+                //we generate children only for interfaces, classes and methods
+                if (kind.equals(TypeScriptModelKinds.Kinds.CONSTRUCTOR.toString())
+                        || kind.equals(TypeScriptModelKinds.Kinds.FUNCTION.toString())
+                        || kind.equals(TypeScriptModelKinds.Kinds.METHOD.toString())
+                        || kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
+                        || kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
+                    return TypeScriptContentOutlinePage.NO_CHILDREN;
+                }
+                String name = obj.getString("name");
+                if (obj.getString("containerKind").equals(TypeScriptModelKinds.Kinds.MODULE.toString())) {
+                    name = obj.getString("containerName") + "." + name;
+                }
+                return getChildren(kind, name);
+            } catch (JSONException e) {
+                Activator.error(e);
+            }
+        } else if (parentElement instanceof JSONArray) {
+            return getChildren("", "");
+        }
         return TypeScriptContentOutlinePage.NO_CHILDREN;
     }
 
@@ -90,37 +90,37 @@ public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
      */
     private Object[] getChildren(String kind, String name) {
         List<Object> children = new ArrayList<Object>();
-//        for (int i = 0; i < model.length(); i++) {
-//            if (!model.isNull(i)) {
-//                try {
-//                    if (model.get(i) instanceof JSONObject) {
-//                        JSONObject obj = (JSONObject) model.get(i);
-//                        String parentKind = obj.getString("containerKind");
-//                        String parentName = obj.getString("containerName");
-//                        if (parentKind.equals(kind) && parentName.equals(name)) {
-//                            children.add(obj);
-//                        }
-//                    }
-//                } catch (JSONException e) {
-//                    throw Throwables.propagate(e);
-//                }
-//            }
-//        }
+        for (int i = 0; i < model.length(); i++) {
+            if (!model.isNull(i)) {
+                try {
+                    if (model.get(i) instanceof JSONObject) {
+                        JSONObject obj = (JSONObject) model.get(i);
+                        String parentKind = obj.getString("containerKind");
+                        String parentName = obj.getString("containerName");
+                        if (parentKind.equals(kind) && parentName.equals(name)) {
+                            children.add(obj);
+                        }
+                    }
+                } catch (JSONException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+        }
         return children.toArray();
     }
 
     @Override
     public Object getParent(Object element) {
-//        if (element instanceof JSONObject) {
-//            JSONObject obj = (JSONObject) element;
-//            try {
-//                String parentKind = obj.getString("containerKind");
-//                String parentName = obj.getString("containerName");
-//                return getElement(parentKind, parentName);
-//            } catch (JSONException e) {
-//                throw Throwables.propagate(e);
-//            }
-//        }
+        if (element instanceof JSONObject) {
+            JSONObject obj = (JSONObject) element;
+            try {
+                String parentKind = obj.getString("containerKind");
+                String parentName = obj.getString("containerName");
+                return getElement(parentKind, parentName);
+            } catch (JSONException e) {
+                throw Throwables.propagate(e);
+            }
+        }
         return null;
     }
 
