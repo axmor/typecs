@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TypEcs UI Plugin
+Bundle-SymbolicName: com.axmor.eclipse.typescript.ui; singleton:=true
+Bundle-Version: 2.0.0.qualifier
+Bundle-Activator: com.axmor.eclipse.typescript.ui.Activator
+Bundle-Vendor: Axmor Software Inc.
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.ui.views,
+ com.axmor.eclipse.typescript.core,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.console
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy

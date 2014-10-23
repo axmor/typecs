@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+    <extension point="org.eclipse.ui.startup">
+       <startup class="com.axmor.eclipse.typescript.ui.Startup"/>
+    </extension>
+    
+    <extension point="org.eclipse.ui.perspectives">
+        <perspective
+            id="com.axmor.eclipse.typescript.perspective"
+            name="TypeScript"
+            class="com.axmor.eclipse.typescript.PerspectiveFactory"
+            icon="icons/typecs16.png">
+        </perspective>
+    </extension>
+</plugin>
