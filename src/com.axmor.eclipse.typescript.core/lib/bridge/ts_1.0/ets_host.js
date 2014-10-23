@@ -62,7 +62,10 @@ exports.getScriptSnapshot = function(fileName) {
   }
   // we added white space to end of content to avoid code completion error
   if (files[fileName].snapshot == null) {
-    files[fileName].snapshot = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ')
+    files[fileName].snapshot = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ');
+    files[fileName].snapshot.getTextChangeRangeSinceVersion = function(scriptVersion) {
+	    return null;
+ 	}
   }
   return files[fileName].snapshot; 
 };
