@@ -67,10 +67,10 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
 
         TreeViewer viewer = getTreeViewer();
 
-		if ("1.0".equals(TypeScriptUtils.getTypeScriptVersion())) {
-			viewer.setContentProvider(new TypeScriptOutlineContentProvider_10(model));
+		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+			viewer.setContentProvider(new TypeScriptOutlineContentProviderLegacy(model));
 		} else {
-			viewer.setContentProvider(new TypeScriptOutlineContentProvider(model));
+			viewer.setContentProvider(new TypeScriptOutlineContentProvider());
 		}
         viewer.setLabelProvider(new TypeScriptOutlineLabelProvider());
         if (model != null) {

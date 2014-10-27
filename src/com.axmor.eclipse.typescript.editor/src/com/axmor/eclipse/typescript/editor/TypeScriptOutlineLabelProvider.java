@@ -6,6 +6,9 @@ import org.eclipse.swt.graphics.Image;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
+import com.axmor.eclipse.typescript.core.TypeScriptAPI;
+import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.google.common.base.Throwables;
 
 /**
@@ -27,7 +30,11 @@ class TypeScriptOutlineLabelProvider extends LabelProvider {
     public String getText(Object element) {
         try {
             JSONObject obj = (JSONObject) element;
-            return obj.getString("name");
+            if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+            	return obj.getString("name");
+            } else {
+            	return obj.getString("text");
+            }
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }

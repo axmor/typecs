@@ -84,7 +84,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	public static final String EDITOR_MATCHING_BRACKETS_COLOR = "matchingBracketsColor";
 
 	/** Constant for marker type. */
-    private static final String MARKER_TYPE = "com.axmor.eclipse.typescript.editor.tsDiagnostic";
+	private static final String MARKER_TYPE = "com.axmor.eclipse.typescript.editor.tsDiagnostic";
 
 	/**
 	 * An outline page for the editor's content
@@ -345,38 +345,36 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 			return;
 		}
 		try {
-			int offset = Integer.parseInt(reference.getString("minChar"));
-			if (offset < 0) {
-				return;
-			}
-			int length = Integer.parseInt(reference.getString("limChar")) - offset;
-			if (length < 0) {
-				return;
-			}
 
+			Position pos = getPosition(reference);
+			if (pos.offset < 0 || pos.length < 0) {
+				return;
+			}
 			textWidget.setRedraw(false);
 
-			String documentPart = sourceViewer.getDocument().get(offset, length);
-			String name = reference.getString("name");
+			String documentPart = sourceViewer.getDocument().get(pos.offset, pos.length);
+
+			// Try to find name because position returns for whole block
+			String name = reference.getString(TypeScriptUtils.isTypeScriptLegacyVersion() ? "name" : "text");
 			if (name != null) {
-				int nameoffset = documentPart.indexOf(reference.getString("name"));
+				int nameoffset = documentPart.indexOf(name);
 				if (nameoffset != -1) {
-					offset += nameoffset;
-					length = name.length();
+					pos.offset += nameoffset;
+					pos.length = name.length();
 				}
 			}
-			if (length > 0) {
-				setHighlightRange(offset, length, moveCursor);
+			if (pos.length > 0) {
+				setHighlightRange(pos.offset, pos.length, moveCursor);
 			}
 
 			if (!moveCursor) {
 				return;
 			}
 
-			if (offset > -1 && length > 0) {
-				sourceViewer.revealRange(offset, length);
+			if (pos.offset > -1 && pos.length > 0) {
+				sourceViewer.revealRange(pos.offset, pos.length);
 				// Selected region begins one index after offset
-				sourceViewer.setSelectedRange(offset, length);
+				sourceViewer.setSelectedRange(pos.offset, pos.length);
 				markInNavigationHistory();
 			}
 		} catch (JSONException | BadLocationException e) {
@@ -408,12 +406,13 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 						if (diagnostic.has("arguments")) {
 							JSONArray arguments = diagnostic.getJSONArray("arguments");
 							for (int j = 0; j < arguments.length(); j++) {
-								message = message.replaceAll("\\{" + j + "\\}", Matcher.quoteReplacement(arguments.getString(j)));
+								message = message.replaceAll("\\{" + j + "\\}",
+										Matcher.quoteReplacement(arguments.getString(j)));
 							}
 						}
 						marker.setAttribute(IMarker.MESSAGE, message);
 						marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-						
+
 						marker.setAttribute(IMarker.CHAR_START, diagnostic.getInt("start"));
 						marker.setAttribute(IMarker.CHAR_END, diagnostic.getInt("start") + diagnostic.getInt("length"));
 					}
@@ -433,7 +432,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 */
 	private ArrayList<Position> getPositions(JSONArray model) {
 		ArrayList<Position> positions = new ArrayList<>();
-		if ("1.0".equals(TypeScriptUtils.getTypeScriptVersion())) {
+		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
 			for (int i = 0; i < model.length(); i++) {
 				if (!model.isNull(i)) {
 					try {
@@ -443,7 +442,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 							if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
 									&& !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
 								int offset = Integer.parseInt(obj.getString("minChar"));
-								positions.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
+								positions
+										.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
 							}
 						}
 					} catch (JSONException e) {
@@ -474,7 +474,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 								}
 							}
 						}
-						if (item.has("childItems") && !item.isNull("childItems") && item.get("childItems") instanceof JSONArray) {
+						if (item.has("childItems") && !item.isNull("childItems")
+								&& item.get("childItems") instanceof JSONArray) {
 							addChildPositions(positions, (JSONArray) item.get("childItems"));
 						}
 					}
@@ -676,10 +677,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		List<Position> positions = new ArrayList<>(occurrences.length());
 		try {
 			for (int i = 0; i < occurrences.length(); i++) {
-				JSONObject json = occurrences.getJSONObject(i);
-				int startPos = json.getInt("minChar");
-				int endPos = json.getInt("limChar");
-				positions.add(new Position(startPos, endPos - startPos));
+				positions.add(getPosition(occurrences.getJSONObject(i)));
 			}
 		} catch (JSONException e) {
 			Activator.error(e);
@@ -728,4 +726,25 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		IPartService service = window.getPartService();
 		return service.getActivePart();
 	}
+
+	private Position getPosition(JSONObject json) throws JSONException {
+		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+			int startPos = json.getInt("minChar");
+			int endPos = json.getInt("limChar");
+			return new Position(startPos, endPos - startPos);
+		} else {
+			if (json.has("spans")) {
+				JSONArray spans = json.getJSONArray("spans");
+				if (spans != null && spans.length() > 0) {
+					JSONObject span = spans.getJSONObject(0);
+					return new Position(span.getInt("start"), span.getInt("length"));
+				}
+			} else if (json.has("textSpan")) {
+				JSONObject span = json.getJSONObject("textSpan");
+				return new Position(span.getInt("start"), span.getInt("length"));
+			}
+			throw new JSONException("Object: " + json + " - does not contains position");
+		}
+	}
+
 }

@@ -30,10 +30,12 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 
 import us.monoid.json.JSONArray;
+import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 
@@ -199,37 +201,10 @@ public class TypeScriptIndexer {
         removeFromIndex(path);
         try {
             JSONArray model = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getScriptModel(file);
-            for (int i = 0; i < model.length(); i++) {
-                JSONObject obj = model.getJSONObject(i);
-                String name = obj.getString("name");
-                String kind = obj.getString("kind");
-                String modifier = obj.getString("kindModifiers");
-                int offset = obj.getInt("minChar");
-
-                if ("module".equals(obj.getString("containerKind"))) {
-                    name = obj.getString("containerName") + "." + name;
-                }
-                switch (kind) {
-                case "interface":
-                    addDocumentToIndex(name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
-                            file.getModificationStamp());
-                    break;
-                case "enum":
-                    addDocumentToIndex(name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
-                            file.getModificationStamp());
-                    break;
-                case "class":
-                    addDocumentToIndex(
-                            name,
-                            project,
-                            path,
-                            DocumentKind.CLASS.getIntValue(),
-                            "private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
-                                    .getIntValue(), offset, file.getModificationStamp());
-                    break;
-                default:
-                    break;
-                }
+            if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+            	indexModelLegacy(project, file, path, model);
+            } else {
+            	indexModel(project, file, path, model);
             }
             iwriter.commit();
         } catch (Exception e) {
@@ -237,6 +212,7 @@ public class TypeScriptIndexer {
         }
     }
 
+    
     /**
      * Adds document to lucene index.
      * 
@@ -367,6 +343,80 @@ public class TypeScriptIndexer {
             iwriter.commit();
         } catch (IOException e) {
             Activator.error(e);
+        }
+    }
+    
+    private void indexModelLegacy(String project, IFile file, String path, JSONArray model) throws JSONException, IOException {
+        for (int i = 0; i < model.length(); i++) {
+            JSONObject obj = model.getJSONObject(i);
+            String name = obj.getString("name");
+            String kind = obj.getString("kind");
+            String modifier = obj.getString("kindModifiers");
+            int offset = obj.getInt("minChar");
+
+            if ("module".equals(obj.getString("containerKind"))) {
+                name = obj.getString("containerName") + "." + name;
+            }
+            switch (kind) {
+            case "interface":
+                addDocumentToIndex(name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
+                        file.getModificationStamp());
+                break;
+            case "enum":
+                addDocumentToIndex(name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
+                        file.getModificationStamp());
+                break;
+            case "class":
+                addDocumentToIndex(
+                        name,
+                        project,
+                        path,
+                        DocumentKind.CLASS.getIntValue(),
+                        "private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
+                                .getIntValue(), offset, file.getModificationStamp());
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    private void indexModel(String project, IFile file, String path, JSONArray model) throws JSONException, IOException {
+        for (int i = 0; i < model.length(); i++) {
+            JSONObject obj = model.getJSONObject(i);
+            String name = obj.getString("text");
+            String kind = obj.getString("kind");
+            String modifier = obj.getString("kindModifiers");
+            int offset = obj.getJSONArray("spans").getJSONObject(0).getInt("start");
+
+//            if ("module".equals(obj.getString("containerKind"))) {
+//                name = obj.getString("containerName") + "." + name;
+//            }
+            switch (kind) {
+            case "interface":
+                addDocumentToIndex(name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
+                        file.getModificationStamp());
+                break;
+            case "enum":
+                addDocumentToIndex(name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
+                        file.getModificationStamp());
+                break;
+            case "class":
+                addDocumentToIndex(
+                        name,
+                        project,
+                        path,
+                        DocumentKind.CLASS.getIntValue(),
+                        "private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
+                                .getIntValue(), offset, file.getModificationStamp());
+                break;
+            default:
+                break;
+            }
+            
+            if (obj.has("childItems") && !obj.isNull("childItems")) {
+            	indexModel(project, file, path, obj.getJSONArray("childItems"));
+            }
         }
     }
 }
