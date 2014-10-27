@@ -20,7 +20,7 @@ import com.google.common.base.Throwables;
  * @author Asya Vorobyova
  *
  */
-public class TypeScriptOutlineContentProvider_10 implements ITreeContentProvider {
+public class TypeScriptOutlineContentProviderLegacy implements ITreeContentProvider {
     
     /**
      * ts file model
@@ -32,7 +32,7 @@ public class TypeScriptOutlineContentProvider_10 implements ITreeContentProvider
      * 
      * @param model file model
      */
-    public TypeScriptOutlineContentProvider_10(JSONArray model) {
+    public TypeScriptOutlineContentProviderLegacy(JSONArray model) {
         super();
         this.model = model;
     }

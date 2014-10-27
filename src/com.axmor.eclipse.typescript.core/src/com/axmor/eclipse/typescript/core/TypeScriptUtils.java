@@ -62,6 +62,7 @@ public final class TypeScriptUtils {
         }
         return version;
     }
+    
 
     /**
      * @param path
@@ -76,5 +77,9 @@ public final class TypeScriptUtils {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    public static boolean isTypeScriptLegacyVersion() {
+    	return "1.0".equals(getTypeScriptVersion());
     }
 }

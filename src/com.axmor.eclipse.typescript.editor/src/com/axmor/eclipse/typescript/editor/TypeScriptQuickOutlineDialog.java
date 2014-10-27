@@ -165,10 +165,10 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
         treeViewer = new TreeViewer(widget);
         namePatternFilter = new QuickOutlineNamePatternFilter();
         treeViewer.addFilter(namePatternFilter);
-		if ("1.0".equals(TypeScriptUtils.getTypeScriptVersion())) {
-	        treeContentProvider = new TypeScriptOutlineContentProvider_10(outlinePage.getModel());
+		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+	        treeContentProvider = new TypeScriptOutlineContentProviderLegacy(outlinePage.getModel());
 		} else {
-	        treeContentProvider = new TypeScriptOutlineContentProvider(outlinePage.getModel());
+	        treeContentProvider = new TypeScriptOutlineContentProvider();
 		}
         treeViewer.setContentProvider(treeContentProvider);
         treeLabelProvider = new TypeScriptOutlineLabelProvider();
