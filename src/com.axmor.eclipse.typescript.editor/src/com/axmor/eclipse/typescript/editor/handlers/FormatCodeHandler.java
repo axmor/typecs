@@ -17,6 +17,7 @@ import org.eclipse.jface.text.DocumentRewriteSessionType;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension4;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.Position;
 import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -27,6 +28,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
 
 import com.axmor.eclipse.typescript.editor.TypeScriptEditor;
+import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 import com.google.common.base.Throwables;
 
 import us.monoid.json.JSONArray;
@@ -64,24 +66,23 @@ public class FormatCodeHandler extends AbstractHandler {
         try {
             for (int i = 0; i < formatDetails.length(); i++) {
                 JSONObject object = formatDetails.getJSONObject(i);
-                int minChar = Integer.parseInt(object.getString("minChar"));
-                int limChar = Integer.parseInt(object.getString("limChar"));
-                if (minChar == end)//Ignore space that added by ets_host.js
+                Position position = TypeScriptEditorUtils.getPosition(object);
+                if (position.offset == end)//Ignore space that added by ets_host.js
                     continue;
-                if ((object == null) || (minChar < start) || (minChar > end)) {
+                if ((object == null) || (position.offset < start) || (position.offset > end)) {
                     break;
                 }
-                if (object.has("text")) {
-                    String text = object.getString("text");
+                if (object.has("text") || object.has("newText")) {
+                    String text = object.has("text") ? object.getString("text") : object.getString("newText");
                     if (text.isEmpty()) {
-                        if (minChar < limChar) {
-                            textEdit.addChild(new DeleteEdit(minChar, limChar - minChar));
+                        if (position.length > 0) {
+                            textEdit.addChild(new DeleteEdit(position.offset, position.length));
                         }
                     } else {
-                        if (minChar < limChar) {
-                            textEdit.addChild(new ReplaceEdit(minChar, limChar - minChar, text));
-                        } else if (minChar == limChar) {
-                            textEdit.addChild(new InsertEdit(minChar, text));
+                        if (position.length > 0) {
+                            textEdit.addChild(new ReplaceEdit(position.offset, position.length, text));
+                        } else if (position.length == 0) {
+                            textEdit.addChild(new InsertEdit(position.offset, text));
                         }
                     }
                 }

@@ -1,5 +1,7 @@
 package com.axmor.eclipse.typescript.editor;
 
+import static com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils.getPosition;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -402,13 +404,18 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 					for (int i = 0; i < diagnostics.length(); i++) {
 						JSONObject diagnostic = diagnostics.getJSONObject(i);
 						IMarker marker = file.createMarker(MARKER_TYPE);
-						String message = diagnostic.getString("diagnosticCode");
-						if (diagnostic.has("arguments")) {
-							JSONArray arguments = diagnostic.getJSONArray("arguments");
-							for (int j = 0; j < arguments.length(); j++) {
-								message = message.replaceAll("\\{" + j + "\\}",
-										Matcher.quoteReplacement(arguments.getString(j)));
+						String message = "";
+						if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+							message = diagnostic.getString("diagnosticCode");
+							if (diagnostic.has("arguments")) {
+								JSONArray arguments = diagnostic.getJSONArray("arguments");
+								for (int j = 0; j < arguments.length(); j++) {
+									message = message.replaceAll("\\{" + j + "\\}",
+											Matcher.quoteReplacement(arguments.getString(j)));
+								}
 							}
+						} else {
+							message = diagnostic.getString("messageText");
 						}
 						marker.setAttribute(IMarker.MESSAGE, message);
 						marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
@@ -726,25 +733,4 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		IPartService service = window.getPartService();
 		return service.getActivePart();
 	}
-
-	private Position getPosition(JSONObject json) throws JSONException {
-		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-			int startPos = json.getInt("minChar");
-			int endPos = json.getInt("limChar");
-			return new Position(startPos, endPos - startPos);
-		} else {
-			if (json.has("spans")) {
-				JSONArray spans = json.getJSONArray("spans");
-				if (spans != null && spans.length() > 0) {
-					JSONObject span = spans.getJSONObject(0);
-					return new Position(span.getInt("start"), span.getInt("length"));
-				}
-			} else if (json.has("textSpan")) {
-				JSONObject span = json.getJSONObject("textSpan");
-				return new Position(span.getInt("start"), span.getInt("length"));
-			}
-			throw new JSONException("Object: " + json + " - does not contains position");
-		}
-	}
-
 }

@@ -43,7 +43,7 @@ exports.getDefinitionAtPosition = function(file, params) {
 }
 
 exports.getFormattingEditsForDocument = function(file, start, end, options) {
-  return ts.getFormattingEditsForDocument(file, start, end, options);
+  return ts.getFormattingEditsForRange(file, start, end, options);
 }
 
 exports.getReferencesAtPosition = function(file, params) {
