@@ -15,6 +15,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorPart;
@@ -22,6 +23,7 @@ import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
 
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.google.common.base.Throwables;
 import com.ibm.icu.text.UTF16;
 
@@ -56,11 +58,11 @@ public final class TypeScriptEditorUtils {
         if (typeDef.length() > 0) {
             try {
                 JSONObject object = typeDef.getJSONObject(0);
-                int objectOffset = Integer.parseInt(object.getString("minChar"));
+                Position position = getPosition(object);
                 String containerName = object.getString("fileName");
                 if (containerName.equals(file.getProjectRelativePath().toString())) {
                     // go to the previously defined position in the same editor
-                    editor.selectAndReveal(objectOffset, 0);
+                    editor.selectAndReveal(position.offset, 0);
                 } else {
                     // open the editor for a corresponding file and select needful declaration
                     IPath path = new Path(containerName);
@@ -68,7 +70,7 @@ public final class TypeScriptEditorUtils {
                     IEditorPart editorPart = IDE.openEditor(Activator.getDefault().getWorkbench()
                             .getActiveWorkbenchWindow().getActivePage(), newFile, true);
                     if (editorPart != null && editorPart instanceof AbstractTextEditor) {
-                        ((AbstractTextEditor) editorPart).selectAndReveal(objectOffset, 0);
+                        ((AbstractTextEditor) editorPart).selectAndReveal(position.offset, 0);
                     }
                 }
             } catch (JSONException | CoreException e) {
@@ -152,4 +154,26 @@ public final class TypeScriptEditorUtils {
         return null;
     }
 
+    public static Position getPosition(JSONObject json) throws JSONException {
+		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+			int startPos = json.getInt("minChar");
+			int endPos = json.getInt("limChar");
+			return new Position(startPos, endPos - startPos);
+		} else {
+			if (json.has("spans")) {
+				JSONArray spans = json.getJSONArray("spans");
+				if (spans != null && spans.length() > 0) {
+					JSONObject span = spans.getJSONObject(0);
+					return new Position(span.getInt("start"), span.getInt("length"));
+				}
+			} else if (json.has("textSpan")) {
+				JSONObject span = json.getJSONObject("textSpan");
+				return new Position(span.getInt("start"), span.getInt("length"));
+			} else if (json.has("span")) {
+				JSONObject span = json.getJSONObject("span");
+				return new Position(span.getInt("start"), span.getInt("length"));
+			}
+			throw new JSONException("Object: " + json + " - does not contains position");
+		}
+	}
 }

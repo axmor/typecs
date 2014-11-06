@@ -20,7 +20,10 @@ var tss = require('./ts_' + args.version + '/ets_service.js');
 //tss.getScriptLexicalStructure('test_ts2.ts');
 //tss.addFile('module1.ts');
 //log.debug(tss.getCompletionsAtPosition('module2.ts', 100));
-
+//log.debug(tss.getDefinitionAtPosition('module2.ts', 100));
+//log.info(tss.getFormattingEditsForDocument('module2.ts', 0, 500, { "ConvertTabsToSpaces":true, "IndentSize":4, "InsertSpaceAfterCommaDelimiter":true, "InsertSpaceAfterFunctionKeywordForAnonymousFunctions":false, "InsertSpaceAfterKeywordsInControlFlowStatements":true, "InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis":false, "InsertSpaceAfterSemicolonInForStatements":true, "InsertSpaceBeforeAndAfterBinaryOperators":true, "NewLineCharacter":"\r\n", "PlaceOpenBraceOnNewLineForControlBlocks":false,"PlaceOpenBraceOnNewLineForFunctions":false,"TabSize":4}));
+//tss.getScriptLexicalStructure('module2.ts');
+//tss.setFileContent('module2.ts', 'class 1TestM {}');
 /*********************************************************************
 Service functions
   cleanupSemanticCache: [Function: cleanupSemanticCache],
@@ -121,7 +124,12 @@ if (args.serv) {
             break;    
           case 'getSemanticDiagnostics':
               log.debug('bridge.getSemanticDiagnostics: ' + o.file);
-              socket.end(JSON.stringify({ 'model' : tss.getSemanticDiagnostics(o.file) }));
+              socket.end(JSON.stringify({ 'model' : tss.getSemanticDiagnostics(o.file) }, 
+              	function(key, value) {
+  					if (key == 'file') return value.filename;
+  					return value;
+				}
+			  ));
               break;
           default:
             socket.end(JSON.stringify({ 'version' : args.version }));
