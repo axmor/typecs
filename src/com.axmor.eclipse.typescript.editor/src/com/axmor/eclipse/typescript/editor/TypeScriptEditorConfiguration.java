@@ -24,6 +24,7 @@ import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.source.DefaultAnnotationHover;
 import org.eclipse.jface.text.source.IAnnotationHover;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
@@ -53,6 +54,11 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
      * TypeScript editor
      */
     private TypeScriptEditor editor;
+    
+    /**
+     * TypeScript syntax scanner
+     */
+    private TypeScriptSyntaxScanner syntaxScanner;
 
     /**
      * An outline presenter to implement quick outline functionality
@@ -74,25 +80,32 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
     public void setEditor(TypeScriptEditor editor) {
         this.editor = editor;
     }
+    
+    private TypeScriptSyntaxScanner getSyntaxScanner() {
+    	if (syntaxScanner == null ) {
+    		syntaxScanner = new TypeScriptSyntaxScanner();
+    	}
+    	return syntaxScanner;
+    }
 
     @Override
     public IPresentationReconciler getPresentationReconciler(ISourceViewer sourceViewer) {
         PresentationReconciler reconciler = new PresentationReconciler();
         reconciler.setDocumentPartitioning(IDocumentExtension3.DEFAULT_PARTITIONING);
 
-        DefaultDamagerRepairer dr = new DefaultDamagerRepairer(new TypeScriptSyntaxScanner());
+        DefaultDamagerRepairer dr = new DefaultDamagerRepairer(getSyntaxScanner());
         reconciler.setDamager(dr, DEFAULT_CONTENT_TYPE);
         reconciler.setRepairer(dr, DEFAULT_CONTENT_TYPE);
 
-        dr = new DefaultDamagerRepairer(new TypeScriptSyntaxScanner());
+        dr = new DefaultDamagerRepairer(getSyntaxScanner());
         reconciler.setDamager(dr, TypeScriptPartitionScanner.TS_JAVA_DOC);
         reconciler.setRepairer(dr, TypeScriptPartitionScanner.TS_JAVA_DOC);
 
-        dr = new DefaultDamagerRepairer(new TypeScriptSyntaxScanner());
+        dr = new DefaultDamagerRepairer(getSyntaxScanner());
         reconciler.setDamager(dr, TypeScriptPartitionScanner.TS_COMMENT);
         reconciler.setRepairer(dr, TypeScriptPartitionScanner.TS_COMMENT);
 
-        dr = new DefaultDamagerRepairer(new TypeScriptSyntaxScanner());
+        dr = new DefaultDamagerRepairer(getSyntaxScanner());
         reconciler.setDamager(dr, TypeScriptPartitionScanner.TS_REFERENCE);
         reconciler.setRepairer(dr, TypeScriptPartitionScanner.TS_REFERENCE);
 
@@ -171,8 +184,8 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
 
     @Override
     public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
-        if (assistant == null) {
-            assistant = new ContentAssistant();
+    	if (editor != null && assistant == null) {
+    		assistant = new ContentAssistant();
             assistant.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
             assistant.setContentAssistProcessor(new TypeScriptAssistProcessor(editor.getApi(), file),
                     IDocument.DEFAULT_CONTENT_TYPE);
@@ -181,7 +194,7 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
             assistant.enableAutoInsert(true);
             assistant.enableColoredLabels(true);
             assistant.setShowEmptyList(true);
-        }
+    	}       
 
         return assistant;
     }
@@ -206,4 +219,15 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
         targets.put("com.axmor.eclipse.typescript.sourceFiles", editor); //$NON-NLS-1$
         return targets;
     }
+    
+    /**
+	 * Preference colors have changed.  
+	 * Update the default tokens of the scanners.
+	 */
+	public void adaptToPreferenceChange(PropertyChangeEvent event) {
+		if (syntaxScanner == null) {
+			return; //property change before the editor is fully created
+		}
+		syntaxScanner.adaptToPreferenceChange(event);		
+	}
 }

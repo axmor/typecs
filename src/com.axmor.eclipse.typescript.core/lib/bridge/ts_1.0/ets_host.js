@@ -88,7 +88,7 @@ exports.addFile = function(fileName) {
     files[fileName].snapshot = null;
   }
   else {
-	  files[fileName] = emptyEntry();
+	files[fileName] = emptyEntry();
   }
 };
 

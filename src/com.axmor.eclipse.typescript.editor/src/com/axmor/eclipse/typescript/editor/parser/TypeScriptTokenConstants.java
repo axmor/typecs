@@ -26,7 +26,11 @@ public final class TypeScriptTokenConstants {
     /** Token constant. */
 	public static final String TS_JAVA_DOC = "ts_java_doc";
     /** Token constant. */
-	public static final String TS_BOLD = "ts_bold";
+	public static final String TS_BRACKETS = "ts_brackets";
+	/** Token constant. */
+	public static final String TS_BOLD_SUFFIX = "_bold";
+	/** Token constant. */
+	public static final String TS_ITALIC_SUFFIX = "_italic";
 	
 	/**
      * Protect from initialization.
