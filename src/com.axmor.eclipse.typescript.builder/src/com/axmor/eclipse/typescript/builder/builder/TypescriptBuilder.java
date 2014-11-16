@@ -58,8 +58,12 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
     @Override
     protected IProject[] build(int kind, Map<String, String> args, final IProgressMonitor monitor) throws CoreException {
         // check if no TS file was modified and incremental build
-        if (!filterDelta(getDelta(getProject())) && (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD)) {
-            return null;
+        IResourceDelta delta = null; // null when FULL_BUILD or CLEAN_BUILD
+        if (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD) {
+            delta = getDelta(getProject());
+            if (!filterDelta(delta)) {
+                return null;
+            }
         }
 
         getProject().deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
