@@ -77,19 +77,31 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
             // folder compilation
             IResource res = Strings.isNullOrEmpty(settings.getSource()) ? getProject() : getProject().getFolder(
                     settings.getSource());
-            res.accept(new IResourceVisitor() {
-                @Override
-                public boolean visit(IResource resource) throws CoreException {
-                    if (resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
-                            && !isTypeScriptDefinitionFile(resource.getName())) {
-                        compileFile((IFile) resource, settings, monitor);
-                    }
-                    return true;
-                }
-            });
+            final TypescriptResourceCompiler typescriptResourceCompiler = new TypescriptResourceCompiler(settings,
+                    monitor);
+            res.accept(typescriptResourceCompiler);
         }
 
         return null;
+    }
+
+    private final class TypescriptResourceCompiler implements IResourceVisitor {
+        private final TypeScriptCompilerSettings settings;
+        private final IProgressMonitor monitor;
+
+        private TypescriptResourceCompiler(TypeScriptCompilerSettings settings, IProgressMonitor monitor) {
+            this.settings = settings;
+            this.monitor = monitor;
+        }
+
+        @Override
+        public boolean visit(IResource resource) throws CoreException {
+            if (resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
+                    && !isTypeScriptDefinitionFile(resource.getName())) {
+                compileFile((IFile) resource, settings, monitor);
+            }
+            return true;
+        }
     }
 
     /**
