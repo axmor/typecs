@@ -34,7 +34,6 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
-import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
@@ -61,7 +60,7 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
         IResourceDelta delta = null; // null when FULL_BUILD or CLEAN_BUILD
         if (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD) {
             delta = getDelta(getProject());
-            if (!filterDelta(delta)) {
+            if (!containsTypeScriptFileToCompile(delta)) {
                 return null;
             }
         }
@@ -107,12 +106,17 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
 
         @Override
         public boolean visit(IResource resource) throws CoreException {
-            if (resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
-                    && !isTypeScriptDefinitionFile(resource.getName())) {
+            if (isTypeScriptFileToCompile(resource)) {
                 compileFile((IFile) resource, settings, monitor);
             }
             return true;
         }
+
+    }
+
+    private boolean isTypeScriptFileToCompile(IResource resource) {
+        return resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
+                && !isTypeScriptDefinitionFile(resource.getName());
     }
 
     /**
@@ -121,15 +125,21 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
      * @return <code>true</code> if delta contains TS files
      * @throws CoreException
      */
-    private boolean filterDelta(IResourceDelta delta) throws CoreException {
+    private boolean containsTypeScriptFileToCompile(IResourceDelta delta) throws CoreException {
         final AtomicBoolean needCompile = new AtomicBoolean(false);
         if (delta != null) {
             delta.accept(new IResourceDeltaVisitor() {
                 @Override
                 public boolean visit(IResourceDelta delta) throws CoreException {
+                    if (needCompile.get()) {
+                        return false; // return as quickly as possible (can't "properly" break out
+                                      // of iteration even with exceptions)
+                    }
                     IResource resource = delta.getResource();
-                    if (resource != null && resource.getType() == IResource.FILE) {
-                        needCompile.set(TypeScriptResources.isTypeScriptFile(resource.getName()));
+                    if (isTypeScriptFileToCompile(resource)) {
+                        needCompile.set(true);
+                        return false; // return as quickly as possible (can't "properly" break out
+                                      // of iteration even with exceptions)
                     }
                     return true;
                 }
