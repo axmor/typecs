@@ -132,14 +132,15 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
                 @Override
                 public boolean visit(IResourceDelta delta) throws CoreException {
                     if (needCompile.get()) {
-                        return false; // return as quickly as possible (can't "properly" break out
-                                      // of iteration even with exceptions)
+                        // return as quickly as possible
+                        return false;
                     }
                     IResource resource = delta.getResource();
                     if (isTypeScriptFileToCompile(resource)) {
                         needCompile.set(true);
-                        return false; // return as quickly as possible (can't "properly" break out
-                                      // of iteration even with exceptions)
+                        // return as quickly as possible
+                        // (can't "properly" break out of iteration even with exceptions)
+                        return false;
                     }
                     return true;
                 }
