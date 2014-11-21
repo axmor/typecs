@@ -49,6 +49,7 @@ import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 
 import com.axmor.eclipse.typescript.editor.Activator;
 import com.axmor.eclipse.typescript.editor.TypeScriptEditorConfiguration;
+import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 import com.axmor.eclipse.typescript.editor.actions.Messages;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptPartitionScanner;
 import com.axmor.eclipse.typescript.editor.preferences.OverlayPreferenceStore.OverlayKey;
@@ -387,7 +388,7 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
 		Font font= JFaceResources.getFont(JFaceResources.TEXT_FONT);
 		fPreviewViewer.getTextWidget().setFont(font);		
 		
-		String content= loadPreviewContentFromFile("SyntaxPreviewCode.txt"); //$NON-NLS-1$
+		String content= TypeScriptEditorUtils.loadPreviewContentFromFile(getClass().getResourceAsStream("SyntaxPreviewCode.txt")); //$NON-NLS-1$
 		IDocument document = new Document(content);
 		IDocumentPartitioner partitioner = new FastPartitioner(new TypeScriptPartitionScanner(),
                 TypeScriptPartitionScanner.TS_PARTITION_TYPES);
@@ -400,26 +401,5 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
 		fPreviewerUpdater= new TypescriptPreviewerUpdater(fPreviewViewer, configuration, store);
 		
 		return fPreviewViewer.getControl();
-	}
-	
-	private String loadPreviewContentFromFile(String filename) {
-		String line;
-		String separator= System.getProperty("line.separator"); //$NON-NLS-1$
-		StringBuffer buffer= new StringBuffer(512);
-		BufferedReader reader= null;
-		try {
-			reader= new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(filename)));
-			while ((line= reader.readLine()) != null) {
-				buffer.append(line);
-				buffer.append(separator);
-			}
-		} catch (IOException io) {
-			Activator.error(io);
-		} finally {
-			if (reader != null) {
-				try { reader.close(); } catch (IOException e) {}
-			}
-		}
-		return buffer.toString();
-	}
+	}	
 }
