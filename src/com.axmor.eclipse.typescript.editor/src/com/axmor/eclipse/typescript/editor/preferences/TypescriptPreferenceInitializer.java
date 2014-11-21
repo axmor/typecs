@@ -12,7 +12,9 @@ import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstant
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.ui.PlatformUI;
 
 import com.axmor.eclipse.typescript.editor.Activator;
 
@@ -37,5 +39,42 @@ public class TypescriptPreferenceInitializer extends
 		PreferenceConverter.setDefault(prefs, TS_STRING, new RGB(42, 0, 255));
 		PreferenceConverter.setDefault(prefs, TS_BRACKETS, new RGB(42, 0, 255));
 		prefs.setDefault(TS_BRACKETS + TS_BOLD_SUFFIX, true);
+	}
+	
+	public static void setThemeBasedPreferences(IPreferenceStore store, boolean fireEvent) {
+		ColorRegistry registry= null;
+		if (PlatformUI.isWorkbenchRunning())
+			registry= PlatformUI.getWorkbench().getThemeManager().getCurrentTheme().getColorRegistry();
+
+		setDefault(
+				store,
+				TS_STRING,
+				findRGB(registry, "java_string", new RGB(42, 0, 255)), fireEvent);
+
+	}
+	
+	private static void setDefault(IPreferenceStore store, String key, RGB newValue, boolean fireEvent) {
+		if (!fireEvent) {
+			PreferenceConverter.setDefault(store, key, newValue);
+			return;
+		}
+
+		RGB oldValue= null;
+		if (store.isDefault(key))
+			oldValue= PreferenceConverter.getDefaultColor(store, key);
+
+		PreferenceConverter.setDefault(store, key, newValue);
+
+		if (oldValue != null && !oldValue.equals(newValue))
+			store.firePropertyChangeEvent(key, oldValue, newValue);
+	}
+	
+	private static RGB findRGB(ColorRegistry registry, String key, RGB defaultRGB) {
+		if (registry == null)
+			return defaultRGB;
+		RGB rgb= registry.getRGB(key);
+		if (rgb != null)
+			return rgb;
+		return defaultRGB;
 	}
 }
