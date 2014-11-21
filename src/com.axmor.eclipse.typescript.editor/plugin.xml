@@ -356,4 +356,18 @@
         <super type="org.eclipse.core.resources.problemmarker"/>
         <persistent value="true"/>
     </extension>
+    
+    <extension point="org.eclipse.ui.newWizards">      
+      <category
+            id="typescriptCategoryWizard"
+            name="TypeScript">
+        </category>
+        <wizard
+            category="typescriptCategoryWizard"
+            class="com.axmor.eclipse.typescript.editor.wizards.NewClassWizard"
+            icon="icons/typescript_file.png"
+            id="com.axmor.eclipse.typescript.editor.wizards.NewClassWizard"
+            name="TypeScript File">
+        </wizard>
+   </extension>
 </plugin>
