@@ -27,6 +27,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -43,6 +44,9 @@ import com.google.common.base.Throwables;
  * @author Konstantin Zaitcev
  */
 public class TypescriptBuilder extends IncrementalProjectBuilder {
+    private static final int WORK_TOTAL = 100;
+    private static final int WORK_BEFORE_COMPILER = 2;
+    private static final int WORK_IN_COMPILER = WORK_TOTAL - WORK_BEFORE_COMPILER;
 
     /** Constant for builder identifier. */
     public static final String BUILDER_ID = "com.axmor.eclipse.typescript.builder.typescriptBuilder";
@@ -56,6 +60,10 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
 
     @Override
     protected IProject[] build(int kind, Map<String, String> args, final IProgressMonitor monitor) throws CoreException {
+        SubMonitor progress = SubMonitor.convert(monitor, WORK_TOTAL);
+        SubMonitor beforeCompileProgress = progress.newChild(WORK_BEFORE_COMPILER);
+        beforeCompileProgress.setWorkRemaining(WORK_BEFORE_COMPILER);
+
         // check if no TS file was modified and incremental build
         IResourceDelta delta = null; // null when FULL_BUILD or CLEAN_BUILD
         if (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD) {
@@ -76,8 +84,15 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
             // folder compilation
             IResource res = Strings.isNullOrEmpty(settings.getSource()) ? getProject() : getProject().getFolder(
                     settings.getSource());
+
+            TypeScriptSourceFilesCounter tsSourceFilesCounter = new TypeScriptSourceFilesCounter();
+            int filesToCompile = delta != null ? tsSourceFilesCounter.count(delta) : tsSourceFilesCounter.count(res);
+            beforeCompileProgress.done();
+
+            SubMonitor compilerMonitor = progress.newChild(WORK_IN_COMPILER).setWorkRemaining(filesToCompile);
+
             final TypescriptResourceCompiler typescriptResourceCompiler = new TypescriptResourceCompiler(settings,
-                    monitor);
+                    compilerMonitor);
             IResourceVisitorHelper compilerHelper = new IResourceVisitorHelper(typescriptResourceCompiler);
             if (delta != null) {
                 compilerHelper.accept(delta);
@@ -90,9 +105,9 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
 
     private final class TypescriptResourceCompiler implements IResourceVisitor {
         private final TypeScriptCompilerSettings settings;
-        private final IProgressMonitor monitor;
+        private final SubMonitor monitor;
 
-        private TypescriptResourceCompiler(TypeScriptCompilerSettings settings, IProgressMonitor monitor) {
+        private TypescriptResourceCompiler(TypeScriptCompilerSettings settings, SubMonitor monitor) {
             this.settings = settings;
             this.monitor = monitor;
         }
@@ -100,14 +115,14 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
         @Override
         public boolean visit(IResource resource) throws CoreException {
             if (isTypeScriptFileToCompile(resource)) {
-                compileFile((IFile) resource, settings, monitor);
+                compileFile((IFile) resource, settings, monitor.newChild(1));
             }
             return true;
         }
 
     }
 
-    private boolean isTypeScriptFileToCompile(IResource resource) {
+    static boolean isTypeScriptFileToCompile(IResource resource) {
         return resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
                 && !isTypeScriptDefinitionFile(resource.getName());
     }
@@ -153,6 +168,7 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
      *            progress monitor
      */
     private void compileFile(IFile file, TypeScriptCompilerSettings settings, IProgressMonitor monitor) {
+        monitor.setTaskName("Compiling file " + file.getFullPath());
         JSONObject json = TypeScriptAPIFactory.getTypeScriptAPI(getProject()).compile(file, settings);
         try {
             if (json.has("files")) {
