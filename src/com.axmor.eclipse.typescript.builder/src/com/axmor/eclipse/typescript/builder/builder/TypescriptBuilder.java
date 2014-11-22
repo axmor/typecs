@@ -78,20 +78,13 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
                     settings.getSource());
             final TypescriptResourceCompiler typescriptResourceCompiler = new TypescriptResourceCompiler(settings,
                     monitor);
+            IResourceVisitorHelper compilerHelper = new IResourceVisitorHelper(typescriptResourceCompiler);
             if (delta != null) {
-                delta.accept(new IResourceDeltaVisitor() {
-                    @Override
-                    public boolean visit(IResourceDelta delta) throws CoreException {
-                        IResource resource = delta.getResource();
-                        typescriptResourceCompiler.visit(resource);
-                        return true;
-                    }
-                });
+                compilerHelper.accept(delta);
             } else {
-                res.accept(typescriptResourceCompiler);
+                compilerHelper.accept(res);
             }
         }
-
         return null;
     }
 
