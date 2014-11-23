@@ -82,7 +82,9 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
                             displayString += " : ";
                         }
                         
-                        displayString += details.getString("type");
+                        if (details.has("type")) {
+                        	displayString += details.getString("type");
+                        }
                         String fullSymbolName = details.getString("fullSymbolName");
                         String[] parts = fullSymbolName.split("\\.");
                         if (parts.length > 1) {

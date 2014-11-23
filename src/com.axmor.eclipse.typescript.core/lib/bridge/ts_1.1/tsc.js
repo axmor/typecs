@@ -14845,6 +14845,7 @@ var ts;
         }
     }
     ts.executeCommandLine = executeCommandLine;
+    ts.createCompilerHost = createCompilerHost;
     function watchProgram(commandLine, compilerHost) {
         var watchers = {};
         var updatedFiles = {};
