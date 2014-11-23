@@ -16,6 +16,7 @@ public class Messages extends NLS {
     public static String TypescriptEditorPreferencePage_comments;
     public static String TypescriptEditorPreferencePage_java_doc;
     public static String TypescriptEditorPreferencePage_brackets;
+	public static String TypescriptSyntaxColoringPage_default;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

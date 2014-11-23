@@ -370,4 +370,57 @@
             name="TypeScript File">
         </wizard>
    </extension>
+   
+   <extension point="org.eclipse.ui.themes">
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_default"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="0,0,0"/>
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_reference"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="90,90,90"/>
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_keyword"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="127,0,85"/>
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_string"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="42,0,255"/>
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_comment"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="63,127,25"/>
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_number"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="51,0,102"/>
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_java_doc"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="63,95,121"/>
+		<colorDefinition
+        	id="com.axmor.eclipse.typescript.editor.ts_brackets"
+         	isEditable="false"
+         	label="%Dummy.label"
+         	value="42,0,255"/>
+   </extension>
+   
+   <extension
+         point="org.eclipse.e4.ui.css.swt.theme">
+      <stylesheet
+            uri="css/e4-dark_typecs_syntaxhighlighting.css">
+         <themeid
+               refid="org.eclipse.e4.ui.css.theme.e4_dark">
+         </themeid>
+      </stylesheet>
+   </extension>
 </plugin>

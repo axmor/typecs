@@ -8,9 +8,17 @@
 
 package com.axmor.eclipse.typescript.editor.preferences;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_BOLD_SUFFIX;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_BRACKETS;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_COMMENT;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_DEFAULT;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_ITALIC_SUFFIX;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_JAVA_DOC;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_KEYWORD;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_NUMBER;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_REFERENCE;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_STRING;
+
 import java.util.ArrayList;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -53,8 +61,6 @@ import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 import com.axmor.eclipse.typescript.editor.actions.Messages;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptPartitionScanner;
 import com.axmor.eclipse.typescript.editor.preferences.OverlayPreferenceStore.OverlayKey;
-
-import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.*;
 
 /**
  * @author Kudrin Pavel
@@ -195,6 +201,7 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
 	 * The keys of the overlay store.
 	 */ 
 	private final String[][] fSyntaxColorListModel= new String[][] {
+			{ Messages.TypescriptSyntaxColoringPage_default, TS_DEFAULT },
 			{ Messages.TypescriptEditorPreferencePage_comments, TS_COMMENT },
 			{ Messages.TypescriptEditorPreferencePage_references, TS_REFERENCE },
 			{ Messages.TypescriptEditorPreferencePage_string, TS_STRING },
