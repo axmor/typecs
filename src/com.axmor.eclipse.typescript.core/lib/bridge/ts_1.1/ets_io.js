@@ -45,7 +45,6 @@ exports.compile = function(file, _settings) {
     errors = TypeScript.concatenate(semanticErrors, emitErrors);
   }
   
-  log.error(errors);  
   var result = {
     errors : []
   };
