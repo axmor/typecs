@@ -151,7 +151,7 @@ public class TypeScriptSyntaxScanner extends RuleBasedScanner {
 		Object value= event.getNewValue();
 		if (value instanceof RGB) {
 			rgb= (RGB) value;
-		} else if (value instanceof String) {
+		} else if (value instanceof String && !((String) value).isEmpty()) {
 			rgb= StringConverter.asRGB((String) value);
 		}
 			
@@ -187,7 +187,7 @@ public class TypeScriptSyntaxScanner extends RuleBasedScanner {
 			adaptToStyleChange(event, getToken(tokenProperties[index]), SWT.BOLD);
 		} else if (property.endsWith(TS_ITALIC_SUFFIX)) {
 			adaptToStyleChange(event, getToken(tokenProperties[index]), SWT.ITALIC);
-		} else {
+		} else if (index >= 0) {
 			adaptToColorChange(event, getToken(tokenProperties[index]));
 		}
     }	
