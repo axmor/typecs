@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 
 import org.eclipse.core.filesystem.URIUtil;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -152,13 +153,24 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             } else {
                 params.put("moduleGenTarget", 2);
             }
-            if (settings.getTarget() != null && settings.getTarget().toLowerCase().endsWith(".js")) {
-                params.put("outFileOption", settings.getTarget());
+
+            String settingsTarget = settings.getTarget();
+            boolean outputToFile = settingsTarget != null && settingsTarget.toLowerCase().endsWith(".js");
+            if (outputToFile) {
+                params.put("outFileOption", settingsTarget);
                 params.put("outDirOption", "");
             } else {
                 params.put("outFileOption", "");
-                params.put("outDirOption", settings.getTarget());
+                String outDirOption = settingsTarget;
+                if (settings.isTargetRelativePathBasedOnSource()) {
+                    IContainer inputFileDir = file.getParent();
+                    IPath sourceDir = file.getProject().getFolder(settings.getSource()).getFullPath();
+                    IPath relativePath = inputFileDir.getFullPath().makeRelativeTo(sourceDir);
+                    outDirOption += "/" + relativePath.toString();
+                }
+                params.put("outDirOption", outDirOption);
             }
+
             params.put("mapSourceFiles", settings.isSourceMap());
             params.put("mapRoot", settings.getMapRoot());
             params.put("sourceRoot", "");
