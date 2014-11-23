@@ -24,6 +24,30 @@ var tss = require('./ts_' + args.version + '/ets_service.js');
 //log.info(tss.getFormattingEditsForDocument('module2.ts', 0, 500, { "ConvertTabsToSpaces":true, "IndentSize":4, "InsertSpaceAfterCommaDelimiter":true, "InsertSpaceAfterFunctionKeywordForAnonymousFunctions":false, "InsertSpaceAfterKeywordsInControlFlowStatements":true, "InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis":false, "InsertSpaceAfterSemicolonInForStatements":true, "InsertSpaceBeforeAndAfterBinaryOperators":true, "NewLineCharacter":"\r\n", "PlaceOpenBraceOnNewLineForControlBlocks":false,"PlaceOpenBraceOnNewLineForFunctions":false,"TabSize":4}));
 //tss.getScriptLexicalStructure('module2.ts');
 //tss.setFileContent('module2.ts', 'class 1TestM {}');
+/*
+log.error(tsc.compile('module2.ts', 
+    {
+      "allowAutomaticSemicolonInsertion":true,
+      "allowBool":false,
+      "allowModuleKeywordInExternalModuleReference":false,
+      "codeGenTarget":1,
+      "gatherDiagnostics":false,
+      "generateDeclarationFiles":false,
+      "mapRoot":"",
+      "mapSourceFiles":true,
+      "moduleGenTarget":0,
+      "noImplicitAny":false,
+      "noLib":false,
+      "noResolve":false,
+      "outDirOption":"target",
+      "outFileOption":"",
+      "propagateEnumConstants":false,
+      "removeComments":false,
+      "sourceRoot":"",
+      "updateTC":false,
+      "useCaseSensitiveFileResolution":false,
+      "watch":false}));
+*/
 /*********************************************************************
 Service functions
   cleanupSemanticCache: [Function: cleanupSemanticCache],

@@ -11,6 +11,7 @@ package com.axmor.eclipse.typescript.builder.builder;
 import static com.axmor.eclipse.typescript.core.TypeScriptResources.isTypeScriptDefinitionFile;
 import static com.axmor.eclipse.typescript.core.TypeScriptResources.isTypeScriptFile;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -181,13 +182,17 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
      * @return IFile relative to string path if path not found it returns <code>null</code>
      */
     private IFile getFileByPath(String path) {
-        IFile[] ifiles = ResourcesPlugin.getWorkspace().getRoot()
-                .findFilesForLocationURI(URIUtil.toURI(Path.fromOSString(path)));
-        for (IFile ifile : ifiles) {
-            if (ifile.getProject() == getProject()) {
-                return ifile;
-            }
-        }
+		URI uri = URIUtil.toURI(Path.fromOSString(path));
+		if (!uri.isAbsolute()) {
+			return getProject().getFile(Path.fromOSString(path));
+		} else {
+			IFile[] ifiles = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(uri);
+			for (IFile ifile : ifiles) {
+				if (ifile.getProject() == getProject()) {
+					return ifile;
+				}
+			}
+		}
         return null;
     }
 }

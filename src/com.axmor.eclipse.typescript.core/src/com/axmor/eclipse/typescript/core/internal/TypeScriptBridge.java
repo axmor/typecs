@@ -107,7 +107,7 @@ public class TypeScriptBridge implements Runnable {
             File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
             String nodeJSPath = TypeScriptUtils.findNodeJS();
             ProcessBuilder ps = new ProcessBuilder(nodeJSPath, "bridge.js", "version=" + version, "src="
-                    + baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=debug")
+                    + baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error")
                     .directory(new File(bundleFile, LIB_BRIDGE));
 
             p = ps.start();
