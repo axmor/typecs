@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Position;
 import org.eclipse.search.core.text.TextSearchScope;
 import org.eclipse.search.internal.ui.text.FileMatch;
 import org.eclipse.search.internal.ui.text.LineElement;
@@ -38,6 +39,7 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.editor.Activator;
+import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 import com.google.common.base.Throwables;
 
 /**
@@ -126,19 +128,18 @@ public class TypeScriptSearchQuery implements ISearchQuery {
                     if (currentFile == null) {
                         continue;
                     }
-                    int offset = Integer.parseInt(obj.getString("minChar"));
+                    Position position = TypeScriptEditorUtils.getPosition(obj);
                     provider.connect(currentFile);
                     currentDocument = provider.getDocument(currentFile);
-                    int lineNumber = currentDocument.getLineOfOffset(offset);
-                    IRegion lineInfo = currentDocument.getLineInformationOfOffset(offset);
+                    int lineNumber = currentDocument.getLineOfOffset(position.offset);
+                    IRegion lineInfo = currentDocument.getLineInformationOfOffset(position.offset);
                     int lineStart = lineInfo.getOffset();
                     String lineContents = currentDocument.get(lineStart, lineInfo.getLength());
-                    LineElement lineElement = getCachedLineElement(offset);
+                    LineElement lineElement = getCachedLineElement(position.offset);
                     if (lineElement == null) {
                         lineElement = new LineElement(currentFile, lineNumber, lineStart, lineContents);
                     }
-                    cachedMatches.add(new FileMatch(currentFile, offset, Integer.parseInt(obj.getString("limChar"))
-                            - offset, lineElement));
+                    cachedMatches.add(new FileMatch(currentFile, position.offset, position.length, lineElement));
                 }
             } catch (JSONException | CoreException | BadLocationException e) {
                 throw Throwables.propagate(e);

@@ -64,8 +64,8 @@ exports.getScriptSnapshot = function(fileName) {
   if (files[fileName].snapshot == null) {
     files[fileName].snapshot = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ');
     files[fileName].snapshot.getTextChangeRangeSinceVersion = function(scriptVersion) {
-	    return null;
- 	}
+      return null;
+    }
   }
   return files[fileName].snapshot; 
 };
