@@ -13,6 +13,8 @@ import java.io.FileNotFoundException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 
+import com.google.common.base.Strings;
+
 /**
  * @author Konstantin Zaitcev
  */
@@ -46,6 +48,23 @@ public final class TypeScriptUtils {
     }
 
     /**
+     * @return version of TypeScript compiler
+     */
+    public static String getTypeScriptVersion() {
+        String version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
+        
+        if (Strings.isNullOrEmpty(version)) {
+            version = TypeScriptAPI.DEFAULT_TS_VERSION;
+        }
+        // backward compatibility
+        if ("1.0.0".equals(version)) {
+        	version = "1.0";
+        }
+        return version;
+    }
+    
+
+    /**
      * @param path
      *            path to check
      * @return <code>true</code> if nodejs exist in this location
@@ -58,5 +77,9 @@ public final class TypeScriptUtils {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    public static boolean isTypeScriptLegacyVersion() {
+    	return "1.0".equals(getTypeScriptVersion());
     }
 }

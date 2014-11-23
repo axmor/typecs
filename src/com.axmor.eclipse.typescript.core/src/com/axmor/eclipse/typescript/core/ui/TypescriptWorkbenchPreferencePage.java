@@ -29,6 +29,6 @@ public class TypescriptWorkbenchPreferencePage extends FieldEditorPreferencePage
     @Override
     protected void createFieldEditors() {
         addField(new ComboFieldEditor("compiler_version", Messages.TypescriptWorkbenchPreferencePage_compiler_version,
-                new String[][] { { "1.0.1", "1.0" }, { "0.9.5", "0.9.5" }}, getFieldEditorParent()));
+                new String[][] { { "1.1", "1.1" }, { "1.0.1", "1.0" }}, getFieldEditorParent()));
     }
 }

@@ -282,5 +282,4 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             initBridge();
         }
     }
-
 }

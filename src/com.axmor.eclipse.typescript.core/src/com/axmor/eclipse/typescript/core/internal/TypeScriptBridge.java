@@ -34,7 +34,6 @@ import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
-import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.core.i18n.Messages;
 import com.axmor.eclipse.typescript.core.ui.ErrorDialog;
@@ -95,11 +94,7 @@ public class TypeScriptBridge implements Runnable {
      */
     public TypeScriptBridge(File baseDirectory) {
         this.baseDirectory = baseDirectory;
-        this.version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
-
-        if (Strings.isNullOrEmpty(this.version) || "1.0.0".equals(this.version)) {
-            this.version = TypeScriptAPI.DEFAULT_TS_VERSION;
-        }
+        this.version = TypeScriptUtils.getTypeScriptVersion();
     }
 
     @Override
@@ -265,6 +260,8 @@ public class TypeScriptBridge implements Runnable {
                         if ("null".equals(str)) {
                             return EMPTY_JSON_OBJECT;
                         }
+                        System.err.println("[" + method + "]");
+                        System.out.println(new JSONObject(str).toString(1));
                         return new JSONObject(str);
                     }
                 }
@@ -309,16 +306,19 @@ public class TypeScriptBridge implements Runnable {
      * @return path to lib.d.ts file.
      */
     public static String getStdLibPath() {
-        try {
-            String version = Activator.getDefault().getPreferenceStore().getString("compiler_version");
-
-            if (Strings.isNullOrEmpty(version) || "1.0.0".equals(version)) {
-                version = TypeScriptAPI.DEFAULT_TS_VERSION;
-            }
-            File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
-            return new File(bundleFile, LIB_BRIDGE + "/ts_" + version + "/lib.d.ts").getCanonicalPath();
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+		try {
+			File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
+			return new File(bundleFile, LIB_BRIDGE + "/ts_" + TypeScriptUtils.getTypeScriptVersion() + "/lib.d.ts")
+					.getCanonicalPath();
+		} catch (IOException e) {
+			throw Throwables.propagate(e);
+		}
     }
+    
+    /**
+	 * @return the version
+	 */
+	public String getVersion() {
+		return version;
+	}
 }

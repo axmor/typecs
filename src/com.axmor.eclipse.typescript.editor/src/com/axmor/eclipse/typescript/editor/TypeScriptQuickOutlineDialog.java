@@ -46,6 +46,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
+
 /**
  * Class that implements a quick outline dialog
  * 
@@ -163,7 +165,11 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
         treeViewer = new TreeViewer(widget);
         namePatternFilter = new QuickOutlineNamePatternFilter();
         treeViewer.addFilter(namePatternFilter);
-        treeContentProvider = new TypeScriptOutlineContentProvider(outlinePage.getModel());
+		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+	        treeContentProvider = new TypeScriptOutlineContentProviderLegacy(outlinePage.getModel());
+		} else {
+	        treeContentProvider = new TypeScriptOutlineContentProvider();
+		}
         treeViewer.setContentProvider(treeContentProvider);
         treeLabelProvider = new TypeScriptOutlineLabelProvider();
         treeViewer.setLabelProvider(treeLabelProvider);

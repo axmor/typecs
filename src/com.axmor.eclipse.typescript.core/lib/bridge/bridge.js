@@ -14,11 +14,69 @@ log.debug(args);
 var tsc = require('./ts_' + args.version + '/ets_io.js');
 var tss = require('./ts_' + args.version + '/ets_service.js');
 
-//tss.getScriptLexicalStructure('test_ts1.ts');
-//tss.setFileContent('test_ts1.ts', 'asdasd');
-//tss.getScriptLexicalStructure('test_ts1.ts');
+//tss.getScriptLexicalStructure('module1.ts');
+//tss.setFileContent('module1.ts', 'class TestM {}');
+//tss.getScriptLexicalStructure('module1.ts');
 //tss.getScriptLexicalStructure('test_ts2.ts');
-
+//tss.addFile('module1.ts');
+//log.debug(tss.getCompletionsAtPosition('module2.ts', 100));
+//log.debug(tss.getDefinitionAtPosition('module2.ts', 100));
+//log.info(tss.getFormattingEditsForDocument('module2.ts', 0, 500, { "ConvertTabsToSpaces":true, "IndentSize":4, "InsertSpaceAfterCommaDelimiter":true, "InsertSpaceAfterFunctionKeywordForAnonymousFunctions":false, "InsertSpaceAfterKeywordsInControlFlowStatements":true, "InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis":false, "InsertSpaceAfterSemicolonInForStatements":true, "InsertSpaceBeforeAndAfterBinaryOperators":true, "NewLineCharacter":"\r\n", "PlaceOpenBraceOnNewLineForControlBlocks":false,"PlaceOpenBraceOnNewLineForFunctions":false,"TabSize":4}));
+//tss.getScriptLexicalStructure('module2.ts');
+//tss.setFileContent('module2.ts', 'class 1TestM {}');
+/*
+log.error(tsc.compile('module2.ts', 
+    {
+      "allowAutomaticSemicolonInsertion":true,
+      "allowBool":false,
+      "allowModuleKeywordInExternalModuleReference":false,
+      "codeGenTarget":1,
+      "gatherDiagnostics":false,
+      "generateDeclarationFiles":false,
+      "mapRoot":"",
+      "mapSourceFiles":true,
+      "moduleGenTarget":0,
+      "noImplicitAny":false,
+      "noLib":false,
+      "noResolve":false,
+      "outDirOption":"target",
+      "outFileOption":"",
+      "propagateEnumConstants":false,
+      "removeComments":false,
+      "sourceRoot":"",
+      "updateTC":false,
+      "useCaseSensitiveFileResolution":false,
+      "watch":false}));
+*/
+/*********************************************************************
+Service functions
+  cleanupSemanticCache: [Function: cleanupSemanticCache],
+  getSyntacticDiagnostics: [Function: getSyntacticDiagnostics],
+  getSemanticDiagnostics: [Function: getSemanticDiagnostics],
+  getCompilerOptionsDiagnostics: [Function: getCompilerOptionsDiagnostics],
+  getCompletionsAtPosition: [Function: getCompletionsAtPosition],
+  getCompletionEntryDetails: [Function: getCompletionEntryDetails],
+  getTypeAtPosition: [Function: getTypeAtPosition],
+  getSignatureHelpItems: [Function],
+  getSignatureHelpCurrentArgumentState: [Function],
+  getDefinitionAtPosition: [Function: getDefinitionAtPosition],
+  getReferencesAtPosition: [Function: getReferencesAtPosition],
+  getOccurrencesAtPosition: [Function: getOccurrencesAtPosition],
+  getImplementorsAtPosition: [Function],
+  getNameOrDottedNameSpan: [Function: getNameOrDottedNameSpan],
+  getBreakpointStatementAtPosition: [Function: getBreakpointStatementAtPosition],
+  getNavigateToItems: [Function],
+  getRenameInfo: [Function],
+  getNavigationBarItems: [Function: getNavigationBarItems],
+  getOutliningSpans: [Function: getOutliningSpans],
+  getTodoComments: [Function: getTodoComments],
+  getBraceMatchingAtPosition: [Function: getBraceMatchingAtPosition],
+  getIndentationAtPosition: [Function: getIndentationAtPosition],
+  getFormattingEditsForRange: [Function: getFormattingEditsForRange],
+  getFormattingEditsForDocument: [Function: getFormattingEditsForDocument],
+  getFormattingEditsAfterKeystroke: [Function: getFormattingEditsAfterKeystroke],
+  getEmitOutput: [Function] }
+************************************************************************/
 if (args.serv) {
   var net = require('net');
 
@@ -90,7 +148,12 @@ if (args.serv) {
             break;    
           case 'getSemanticDiagnostics':
               log.debug('bridge.getSemanticDiagnostics: ' + o.file);
-              socket.end(JSON.stringify({ 'model' : tss.getSemanticDiagnostics(o.file) }));
+              socket.end(JSON.stringify({ 'model' : tss.getSemanticDiagnostics(o.file) }, 
+              	function(key, value) {
+  					if (key == 'file') return value.filename;
+  					return value;
+				}
+			  ));
               break;
           default:
             socket.end(JSON.stringify({ 'version' : args.version }));

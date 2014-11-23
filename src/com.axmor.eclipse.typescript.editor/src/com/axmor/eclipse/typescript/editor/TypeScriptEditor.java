@@ -1,5 +1,7 @@
 package com.axmor.eclipse.typescript.editor;
 
+import static com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils.getPosition;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +62,7 @@ import us.monoid.json.JSONObject;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJobCanceler;
@@ -84,7 +87,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	public static final String EDITOR_MATCHING_BRACKETS_COLOR = "matchingBracketsColor";
 
 	/** Constant for marker type. */
-    private static final String MARKER_TYPE = "com.axmor.eclipse.typescript.editor.tsDiagnostic";
+	private static final String MARKER_TYPE = "com.axmor.eclipse.typescript.editor.tsDiagnostic";
 
 	/**
 	 * An outline page for the editor's content
@@ -356,38 +359,36 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 			return;
 		}
 		try {
-			int offset = Integer.parseInt(reference.getString("minChar"));
-			if (offset < 0) {
-				return;
-			}
-			int length = Integer.parseInt(reference.getString("limChar")) - offset;
-			if (length < 0) {
-				return;
-			}
 
+			Position pos = getPosition(reference);
+			if (pos.offset < 0 || pos.length < 0) {
+				return;
+			}
 			textWidget.setRedraw(false);
 
-			String documentPart = sourceViewer.getDocument().get(offset, length);
-			String name = reference.getString("name");
+			String documentPart = sourceViewer.getDocument().get(pos.offset, pos.length);
+
+			// Try to find name because position returns for whole block
+			String name = reference.getString(TypeScriptUtils.isTypeScriptLegacyVersion() ? "name" : "text");
 			if (name != null) {
-				int nameoffset = documentPart.indexOf(reference.getString("name"));
+				int nameoffset = documentPart.indexOf(name);
 				if (nameoffset != -1) {
-					offset += nameoffset;
-					length = name.length();
+					pos.offset += nameoffset;
+					pos.length = name.length();
 				}
 			}
-			if (length > 0) {
-				setHighlightRange(offset, length, moveCursor);
+			if (pos.length > 0) {
+				setHighlightRange(pos.offset, pos.length, moveCursor);
 			}
 
 			if (!moveCursor) {
 				return;
 			}
 
-			if (offset > -1 && length > 0) {
-				sourceViewer.revealRange(offset, length);
+			if (pos.offset > -1 && pos.length > 0) {
+				sourceViewer.revealRange(pos.offset, pos.length);
 				// Selected region begins one index after offset
-				sourceViewer.setSelectedRange(offset, length);
+				sourceViewer.setSelectedRange(pos.offset, pos.length);
 				markInNavigationHistory();
 			}
 		} catch (JSONException | BadLocationException e) {
@@ -415,16 +416,22 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 					for (int i = 0; i < diagnostics.length(); i++) {
 						JSONObject diagnostic = diagnostics.getJSONObject(i);
 						IMarker marker = file.createMarker(MARKER_TYPE);
-						String message = diagnostic.getString("diagnosticCode");
-						if (diagnostic.has("arguments")) {
-							JSONArray arguments = diagnostic.getJSONArray("arguments");
-							for (int j = 0; j < arguments.length(); j++) {
-								message = message.replaceAll("\\{" + j + "\\}", Matcher.quoteReplacement(arguments.getString(j)));
+						String message = "";
+						if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+							message = diagnostic.getString("diagnosticCode");
+							if (diagnostic.has("arguments")) {
+								JSONArray arguments = diagnostic.getJSONArray("arguments");
+								for (int j = 0; j < arguments.length(); j++) {
+									message = message.replaceAll("\\{" + j + "\\}",
+											Matcher.quoteReplacement(arguments.getString(j)));
+								}
 							}
+						} else {
+							message = diagnostic.getString("messageText");
 						}
 						marker.setAttribute(IMarker.MESSAGE, message);
 						marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-						
+
 						marker.setAttribute(IMarker.CHAR_START, diagnostic.getInt("start"));
 						marker.setAttribute(IMarker.CHAR_END, diagnostic.getInt("start") + diagnostic.getInt("length"));
 					}
@@ -444,24 +451,59 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 */
 	private ArrayList<Position> getPositions(JSONArray model) {
 		ArrayList<Position> positions = new ArrayList<>();
-		for (int i = 0; i < model.length(); i++) {
-			if (!model.isNull(i)) {
+		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+			for (int i = 0; i < model.length(); i++) {
+				if (!model.isNull(i)) {
+					try {
+						if (model.get(i) instanceof JSONObject) {
+							JSONObject obj = (JSONObject) model.get(i);
+							String kind = obj.getString("kind");
+							if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
+									&& !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
+								int offset = Integer.parseInt(obj.getString("minChar"));
+								positions
+										.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
+							}
+						}
+					} catch (JSONException e) {
+						throw Throwables.propagate(e);
+					}
+				}
+			}
+		} else {
+			addChildPositions(positions, model);
+		}
+		return positions;
+	}
+
+	private void addChildPositions(List<Position> positions, JSONArray childItems) {
+		for (int i = 0; i < childItems.length(); i++) {
+			if (!childItems.isNull(i)) {
 				try {
-					if (model.get(i) instanceof JSONObject) {
-						JSONObject obj = (JSONObject) model.get(i);
-						String kind = obj.getString("kind");
+					if (childItems.get(i) instanceof JSONObject) {
+						JSONObject item = (JSONObject) childItems.get(i);
+						String kind = item.getString("kind");
 						if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
 								&& !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
-							int offset = Integer.parseInt(obj.getString("minChar"));
-							positions.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
+							if (item.has("spans")) {
+								JSONArray spans = (JSONArray) item.get("spans");
+								if (spans != null && spans.length() > 0) {
+									JSONObject span = (JSONObject) spans.get(0);
+									positions.add(new Position(span.getInt("start"), span.getInt("length")));
+								}
+							}
+						}
+						if (item.has("childItems") && !item.isNull("childItems")
+								&& item.get("childItems") instanceof JSONArray) {
+							addChildPositions(positions, (JSONArray) item.get("childItems"));
 						}
 					}
 				} catch (JSONException e) {
 					throw Throwables.propagate(e);
 				}
+
 			}
 		}
-		return positions;
 	}
 
 	@Override
@@ -659,10 +701,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		List<Position> positions = new ArrayList<>(occurrences.length());
 		try {
 			for (int i = 0; i < occurrences.length(); i++) {
-				JSONObject json = occurrences.getJSONObject(i);
-				int startPos = json.getInt("minChar");
-				int endPos = json.getInt("limChar");
-				positions.add(new Position(startPos, endPos - startPos));
+				positions.add(getPosition(occurrences.getJSONObject(i)));
 			}
 		} catch (JSONException e) {
 			Activator.error(e);

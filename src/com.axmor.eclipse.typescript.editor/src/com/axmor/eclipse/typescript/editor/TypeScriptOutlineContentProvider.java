@@ -1,8 +1,5 @@
 package com.axmor.eclipse.typescript.editor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
@@ -11,45 +8,38 @@ import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
-import com.google.common.base.Throwables;
 
 /**
+ * For TypeScript compiler v1.1 and above
  * A content provider mediates between the viewer's model and the viewer itself.
  * 
  * @author Asya Vorobyova
- *
  */
 public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
     
-    /**
-     * ts file model
-     */
-    private JSONArray model;
-    
-    /**
-     * Constructor
-     * 
-     * @param model file model
-     */
-    public TypeScriptOutlineContentProvider(JSONArray model) {
-        super();
-        this.model = model;
-    }
-
     @Override
     public void dispose() {
     }
 
     @Override
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-    	if (newInput instanceof JSONArray) {
-    		this.model = (JSONArray) newInput;
-    	}
     }
 
     @Override
     public Object[] getElements(Object inputElement) {
-        return getChildren(inputElement);
+    	if (inputElement instanceof JSONArray) {
+    		JSONArray jsonArray = (JSONArray) inputElement;
+    		Object[] result = new Object[jsonArray.length()];
+    		for (int i = 0; i < jsonArray.length(); i++) {
+				try {
+					result[i] = jsonArray.get(i);
+				} catch (JSONException e) {
+					Activator.error(e);
+				}
+			}
+    		return result;
+    	}
+    	return TypeScriptContentOutlinePage.NO_CHILDREN;
     }
 
     @Override
@@ -66,93 +56,26 @@ public class TypeScriptOutlineContentProvider implements ITreeContentProvider {
                         || kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
                     return TypeScriptContentOutlinePage.NO_CHILDREN;
                 }
-                String name = obj.getString("name");
-                if (obj.getString("containerKind").equals(TypeScriptModelKinds.Kinds.MODULE.toString())) {
-                    name = obj.getString("containerName") + "." + name;
-                }
-                return getChildren(kind, name);
+                return getElements(obj.get("childItems"));
             } catch (JSONException e) {
                 Activator.error(e);
             }
-        } else if (parentElement instanceof JSONArray) {
-            return getChildren("", "");
         }
         return TypeScriptContentOutlinePage.NO_CHILDREN;
     }
 
-    /**
-     * Looks for children in document model for a given model object
-     * 
-     * @param kind a kind of the object
-     * @param name a name of the object
-     * @return an array of children
-     */
-    private Object[] getChildren(String kind, String name) {
-        List<Object> children = new ArrayList<Object>();
-        for (int i = 0; i < model.length(); i++) {
-            if (!model.isNull(i)) {
-                try {
-                    if (model.get(i) instanceof JSONObject) {
-                        JSONObject obj = (JSONObject) model.get(i);
-                        String parentKind = obj.getString("containerKind");
-                        String parentName = obj.getString("containerName");
-                        if (parentKind.equals(kind) && parentName.equals(name)) {
-                            children.add(obj);
-                        }
-                    }
-                } catch (JSONException e) {
-                    throw Throwables.propagate(e);
-                }
-            }
-        }
-        return children.toArray();
-    }
-
     @Override
     public Object getParent(Object element) {
-        if (element instanceof JSONObject) {
-            JSONObject obj = (JSONObject) element;
-            try {
-                String parentKind = obj.getString("containerKind");
-                String parentName = obj.getString("containerName");
-                return getElement(parentKind, parentName);
-            } catch (JSONException e) {
-                throw Throwables.propagate(e);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Looks in model for a given element
-     * 
-     * @param elKind a kind of the element
-     * @param elName a name of the element
-     * @return desired element
-     */
-    private Object getElement(String elKind, String elName) {
-        for (int i = 0; i < model.length(); i++) {
-            if (!model.isNull(i)) {
-                try {
-                    if (model.get(i) instanceof JSONObject) {
-                        JSONObject obj = (JSONObject) model.get(i);
-                        String kind = obj.getString("kind");
-                        String name = obj.getString("name");
-                        if (elKind.equals(kind) && elName.equals(name)) {
-                            return obj;
-                        }
-                    }
-                } catch (JSONException e) {
-                    throw Throwables.propagate(e);
-                }
-            }
-        }
         return null;
     }
 
     @Override
     public boolean hasChildren(Object element) {
-        return getChildren(element).length > 0;
+        try {
+			return element instanceof JSONObject && ((JSONObject) element).has("childItems") && ((JSONObject) element).getJSONArray("childItems").length() > 0;
+		} catch (JSONException e) {
+			return false;
+		}
     }
 
 }

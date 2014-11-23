@@ -20,7 +20,7 @@ import us.monoid.json.JSONObject;
  */
 public interface TypeScriptAPI extends IDisposable {
     /** The latest default TypeScript version. */
-    String DEFAULT_TS_VERSION = "1.0";
+    String DEFAULT_TS_VERSION = "1.1";
     
     /**
      * @param file
