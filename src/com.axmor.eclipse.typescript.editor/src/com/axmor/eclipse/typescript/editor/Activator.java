@@ -3,9 +3,15 @@ package com.axmor.eclipse.typescript.editor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.themes.IThemeManager;
 import org.osgi.framework.BundleContext;
+
+import com.axmor.eclipse.typescript.editor.preferences.TypescriptPreferenceInitializer;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -21,6 +27,8 @@ public class Activator extends AbstractUIPlugin {
 	 * The shared instance
 	 */
 	private static Activator plugin;
+	
+	private IPropertyChangeListener fThemeListener;
 
 	/**
 	 * The constructor
@@ -32,6 +40,24 @@ public class Activator extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		if (PlatformUI.isWorkbenchRunning()) {
+			fThemeListener= new IPropertyChangeListener() {
+				public void propertyChange(PropertyChangeEvent event) {
+					if (IThemeManager.CHANGE_CURRENT_THEME.equals(event.getProperty()))
+						TypescriptPreferenceInitializer.setThemeBasedPreferences(Activator.getDefault().getPreferenceStore(), true);
+				}
+			};
+			
+			Runnable r = new Runnable(){
+				public void run() {
+					PlatformUI.getWorkbench().getThemeManager().addPropertyChangeListener(fThemeListener);
+				}
+			};
+			if (Display.getCurrent()!=null)
+				r.run();
+			else 
+				Display.getDefault().asyncExec(r);			
+		}
 	}
 
 	@Override

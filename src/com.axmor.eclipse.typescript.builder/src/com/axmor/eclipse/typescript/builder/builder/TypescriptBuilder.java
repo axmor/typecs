@@ -28,6 +28,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -35,7 +36,6 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
-import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
@@ -45,6 +45,9 @@ import com.google.common.base.Throwables;
  * @author Konstantin Zaitcev
  */
 public class TypescriptBuilder extends IncrementalProjectBuilder {
+    private static final int WORK_TOTAL = 100;
+    private static final int WORK_BEFORE_COMPILER = 2;
+    private static final int WORK_IN_COMPILER = WORK_TOTAL - WORK_BEFORE_COMPILER;
 
     /** Constant for builder identifier. */
     public static final String BUILDER_ID = "com.axmor.eclipse.typescript.builder.typescriptBuilder";
@@ -58,9 +61,17 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
 
     @Override
     protected IProject[] build(int kind, Map<String, String> args, final IProgressMonitor monitor) throws CoreException {
+        SubMonitor progress = SubMonitor.convert(monitor, WORK_TOTAL);
+        SubMonitor beforeCompileProgress = progress.newChild(WORK_BEFORE_COMPILER);
+        beforeCompileProgress.setWorkRemaining(WORK_BEFORE_COMPILER);
+
         // check if no TS file was modified and incremental build
-        if (!filterDelta(getDelta(getProject())) && (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD)) {
-            return null;
+        IResourceDelta delta = null; // null when FULL_BUILD or CLEAN_BUILD
+        if (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD) {
+            delta = getDelta(getProject());
+            if (!containsTypeScriptFileToCompile(delta)) {
+                return null;
+            }
         }
 
         getProject().deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
@@ -74,19 +85,47 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
             // folder compilation
             IResource res = Strings.isNullOrEmpty(settings.getSource()) ? getProject() : getProject().getFolder(
                     settings.getSource());
-            res.accept(new IResourceVisitor() {
-                @Override
-                public boolean visit(IResource resource) throws CoreException {
-                    if (resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
-                            && !isTypeScriptDefinitionFile(resource.getName())) {
-                        compileFile((IFile) resource, settings, monitor);
-                    }
-                    return true;
-                }
-            });
+
+            TypeScriptSourceFilesCounter tsSourceFilesCounter = new TypeScriptSourceFilesCounter();
+            int filesToCompile = delta != null ? tsSourceFilesCounter.count(delta) : tsSourceFilesCounter.count(res);
+            beforeCompileProgress.done();
+
+            SubMonitor compilerMonitor = progress.newChild(WORK_IN_COMPILER).setWorkRemaining(filesToCompile);
+
+            final TypescriptResourceCompiler typescriptResourceCompiler = new TypescriptResourceCompiler(settings,
+                    compilerMonitor);
+            IResourceVisitorHelper compilerHelper = new IResourceVisitorHelper(typescriptResourceCompiler);
+            if (delta != null) {
+                compilerHelper.accept(delta);
+            } else {
+                compilerHelper.accept(res);
+            }
+        }
+        return null;
+    }
+
+    private final class TypescriptResourceCompiler implements IResourceVisitor {
+        private final TypeScriptCompilerSettings settings;
+        private final SubMonitor monitor;
+
+        private TypescriptResourceCompiler(TypeScriptCompilerSettings settings, SubMonitor monitor) {
+            this.settings = settings;
+            this.monitor = monitor;
         }
 
-        return null;
+        @Override
+        public boolean visit(IResource resource) throws CoreException {
+            if (isTypeScriptFileToCompile(resource)) {
+                compileFile((IFile) resource, settings, monitor.newChild(1));
+            }
+            return true;
+        }
+
+    }
+
+    static boolean isTypeScriptFileToCompile(IResource resource) {
+        return resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
+                && !isTypeScriptDefinitionFile(resource.getName());
     }
 
     /**
@@ -95,15 +134,22 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
      * @return <code>true</code> if delta contains TS files
      * @throws CoreException
      */
-    private boolean filterDelta(IResourceDelta delta) throws CoreException {
+    private boolean containsTypeScriptFileToCompile(IResourceDelta delta) throws CoreException {
         final AtomicBoolean needCompile = new AtomicBoolean(false);
         if (delta != null) {
             delta.accept(new IResourceDeltaVisitor() {
                 @Override
                 public boolean visit(IResourceDelta delta) throws CoreException {
+                    if (needCompile.get()) {
+                        // return as quickly as possible
+                        return false;
+                    }
                     IResource resource = delta.getResource();
-                    if (resource != null && resource.getType() == IResource.FILE) {
-                        needCompile.set(TypeScriptResources.isTypeScriptFile(resource.getName()));
+                    if (isTypeScriptFileToCompile(resource)) {
+                        needCompile.set(true);
+                        // return as quickly as possible
+                        // (can't "properly" break out of iteration even with exceptions)
+                        return false;
                     }
                     return true;
                 }
@@ -123,6 +169,7 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
      *            progress monitor
      */
     private void compileFile(IFile file, TypeScriptCompilerSettings settings, IProgressMonitor monitor) {
+        monitor.setTaskName("Compiling file " + file.getFullPath());
         JSONObject json = TypeScriptAPIFactory.getTypeScriptAPI(getProject()).compile(file, settings);
         try {
             if (json.has("files")) {

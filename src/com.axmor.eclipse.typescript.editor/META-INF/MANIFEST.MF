@@ -19,6 +19,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.compare,
  org.eclipse.search,
  org.eclipse.pde.ui,
- org.eclipse.core.filesystem
+ org.eclipse.core.filesystem,
+ org.eclipse.swt
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy

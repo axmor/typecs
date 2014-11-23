@@ -32,6 +32,7 @@ import org.eclipse.jface.text.source.projection.ProjectionAnnotation;
 import org.eclipse.jface.text.source.projection.ProjectionAnnotationModel;
 import org.eclipse.jface.text.source.projection.ProjectionSupport;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.IPostSelectionProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -212,6 +213,16 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	private OccurrencesFinderJobCanceler fOccurrencesFinderJobCanceler;
 
 	private ITextSelection fForcedMarkOccurrencesSelection;
+	
+	private IPropertyChangeListener propertyChangedListener = new IPropertyChangeListener() {
+		public void propertyChange(PropertyChangeEvent event) {
+			TypeScriptEditorConfiguration sourceViewerConfiguration= (TypeScriptEditorConfiguration)getSourceViewerConfiguration();
+	        if (sourceViewerConfiguration != null) {
+	        	sourceViewerConfiguration.adaptToPreferenceChange(event);
+	        	getViewer().invalidateTextPresentation();
+	        }
+		}
+	};
 
 	/**
 	 * A constructor
@@ -234,7 +245,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		listener.addDocumentProcessor(this);
 		doc.addDocumentListener(listener);
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
-		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);		
+		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(propertyChangedListener);
 	}
 
 	@Override
@@ -599,7 +611,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 				}
 			}
 			return;
-		}
+		}		
 		super.handlePreferenceStoreChanged(event);
 	}
 
@@ -625,6 +637,11 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 				shell.removeShellListener(activationListener);
 			}
 			activationListener = null;
+		}
+		
+		if (propertyChangedListener != null) {
+			getPreferenceStore().removePropertyChangeListener(propertyChangedListener);
+			propertyChangedListener = null;
 		}
 		super.dispose();
 	}

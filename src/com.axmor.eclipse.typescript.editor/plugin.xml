@@ -315,6 +315,20 @@
         </menuContribution>
     </extension>    
     
+    <extension point="org.eclipse.ui.preferencePages">    
+    <page
+          class="com.axmor.eclipse.typescript.editor.preferences.TypescriptSyntaxColoringPage"
+          id="com.axmor.eclipse.typescript.editor.preferences.TypescriptSyntaxColoringPage"
+          category="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
+          name="Syntax Coloring">
+    </page>
+	</extension>
+	
+	<extension point="org.eclipse.core.runtime.preferences">    
+    <initializer class="com.axmor.eclipse.typescript.editor.preferences.TypescriptPreferenceInitializer">
+ 	</initializer>
+	</extension>
+    
     <extension point="org.eclipse.ui.actionSets">
  		<actionSet label="TypeScript Editor Presentation" 
  			visible="false" 
@@ -342,4 +356,18 @@
         <super type="org.eclipse.core.resources.problemmarker"/>
         <persistent value="true"/>
     </extension>
+    
+    <extension point="org.eclipse.ui.newWizards">      
+      <category
+            id="typescriptCategoryWizard"
+            name="TypeScript">
+        </category>
+        <wizard
+            category="typescriptCategoryWizard"
+            class="com.axmor.eclipse.typescript.editor.wizards.NewClassWizard"
+            icon="icons/typescript_file.png"
+            id="com.axmor.eclipse.typescript.editor.wizards.NewClassWizard"
+            name="TypeScript File">
+        </wizard>
+   </extension>
 </plugin>

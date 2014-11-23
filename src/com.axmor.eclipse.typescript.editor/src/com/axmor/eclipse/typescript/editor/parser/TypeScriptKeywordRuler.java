@@ -1,14 +1,9 @@
 package com.axmor.eclipse.typescript.editor.parser;
 
-import static com.axmor.eclipse.typescript.editor.color.TypeScriptColorRegistry.COLOR_REGISTRY;
-import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_KEYWORD;
-
-import java.awt.Font;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
 
-import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.ICharacterScanner;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWordDetector;
@@ -86,7 +81,7 @@ public class TypeScriptKeywordRuler extends WordRule {
 	/**
 	 * A constructor which determine a word detector for keywords
 	 */
-	public TypeScriptKeywordRuler() {
+	public TypeScriptKeywordRuler(Token token) {
 		super(new IWordDetector() {
 			@Override
 			public boolean isWordStart(char c) {
@@ -98,11 +93,10 @@ public class TypeScriptKeywordRuler extends WordRule {
 				return Character.isJavaIdentifierPart(c);
 			}
 		});
-		final Token token = new Token(new TextAttribute(COLOR_REGISTRY.get(TS_KEYWORD), null, Font.BOLD));
 		for (String keyword : KEYWORDS) {
 			addWord(keyword, token);
 		}
-	}
+	}	
 	
 	@Override
 	public IToken evaluate(ICharacterScanner scanner) {

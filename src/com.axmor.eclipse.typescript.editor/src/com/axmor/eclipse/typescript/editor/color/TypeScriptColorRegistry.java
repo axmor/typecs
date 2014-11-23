@@ -48,4 +48,9 @@ public enum TypeScriptColorRegistry {
     public Color get(String name) {
         return registry.get(name);
     }
+    
+    public Color put(String name, RGB rgb) {
+    	registry.put(name, rgb);
+    	return get(name);
+    }
 }

@@ -7,6 +7,12 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.editor;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -153,6 +159,36 @@ public final class TypeScriptEditorUtils {
 
         return null;
     }
+    
+    /**
+     * Load content from file
+     * 
+     * @param filename
+     *            a file name
+     *            
+     * @return content
+     * 		content from file
+     */
+    public static String loadPreviewContentFromFile(InputStream input) {
+		String line;
+		String separator= System.getProperty("line.separator"); //$NON-NLS-1$
+		StringBuffer buffer= new StringBuffer(512);
+		BufferedReader reader= null;
+		try {
+			reader= new BufferedReader(new InputStreamReader(input));
+			while ((line= reader.readLine()) != null) {
+				buffer.append(line);
+				buffer.append(separator);
+			}
+		} catch (IOException io) {
+			Activator.error(io);
+		} finally {
+			if (reader != null) {
+				try { reader.close(); } catch (IOException e) {}
+			}
+		}
+		return buffer.toString();
+	}
 
     public static Position getPosition(JSONObject json) throws JSONException {
 		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
