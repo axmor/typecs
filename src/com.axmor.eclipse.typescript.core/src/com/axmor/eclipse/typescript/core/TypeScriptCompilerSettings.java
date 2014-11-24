@@ -22,11 +22,18 @@ import com.google.common.base.Strings;
  * @author Konstantin Zaitcev
  */
 public final class TypeScriptCompilerSettings {
+    /** by default behave the same way as in older version */
+    public static final boolean TARGET_RELATIVE_PATH_BASED_ON_SOURCE_DEFAULT = false;
 
     /** Source file or directory . */
     private String source;
     /** Target file or directory. */
     private String target;
+    /**
+     * relative path from {@link #target} to output file is detected based on relative path from
+     * {@link #source} to input file
+     */
+    private boolean targetRelativePathBasedOnSource = TARGET_RELATIVE_PATH_BASED_ON_SOURCE_DEFAULT;
     /** NoResolve. */
     private boolean noResolve;
     /** NoImplicitAny. */
@@ -88,6 +95,14 @@ public final class TypeScriptCompilerSettings {
      */
     public void setTarget(String target) {
         this.target = target;
+    }
+
+    public boolean isTargetRelativePathBasedOnSource() {
+        return targetRelativePathBasedOnSource;
+    }
+
+    public void setTargetRelativePathBasedOnSource(boolean targetRelativePathBasedOnSource) {
+        this.targetRelativePathBasedOnSource = targetRelativePathBasedOnSource;
     }
 
     /**
@@ -238,6 +253,8 @@ public final class TypeScriptCompilerSettings {
 
         settings.setSource(pref.get("source", ""));
         settings.setTarget(pref.get("target", ""));
+        settings.setTargetRelativePathBasedOnSource(pref.getBoolean("targetRelativePathBasedOnSource",
+                TypeScriptCompilerSettings.TARGET_RELATIVE_PATH_BASED_ON_SOURCE_DEFAULT));
         settings.setNoResolve(pref.getBoolean("noResolve", false));
         settings.setNoImplicitAny(pref.getBoolean("noImplicitAny", false));
         settings.setSourceMap(pref.getBoolean("sourceMap", true));
@@ -257,6 +274,7 @@ public final class TypeScriptCompilerSettings {
         try {
             pref.put("source", getSource());
             pref.put("target", getTarget());
+            pref.putBoolean("targetRelativePathBasedOnSource", isTargetRelativePathBasedOnSource());
             pref.putBoolean("noResolve", isNoResolve());
             pref.putBoolean("noImplicitAny", isNoImplicitAny());
             pref.putBoolean("sourceMap", isSourceMap());
