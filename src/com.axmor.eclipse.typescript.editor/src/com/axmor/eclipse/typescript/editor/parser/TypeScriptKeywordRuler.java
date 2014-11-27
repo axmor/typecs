@@ -56,7 +56,7 @@ public class TypeScriptKeywordRuler extends WordRule {
         "number", /* NumberKeyword */
         "package", /* PackageKeyword */
         "private", /* PrivateKeyword */
-//        "protected", /* ProtectedKeyword */ TypeScript hasn't protected modifier
+        "protected", /* ProtectedKeyword */
         "public", /* PublicKeyword */
         "require", /* RequireKeyword */
         "return", /* ReturnKeyword */
