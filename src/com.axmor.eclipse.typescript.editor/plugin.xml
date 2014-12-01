@@ -322,6 +322,12 @@
           category="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
           name="Syntax Coloring">
     </page>
+    <page
+          class="com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplatePreferencePage"
+          id="com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplatePreferencePage"
+          category="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
+          name="Templates">
+    </page>
 	</extension>
 	
 	<extension point="org.eclipse.core.runtime.preferences">    
@@ -423,4 +429,17 @@
          </themeid>
       </stylesheet>
    </extension>
+   
+   <extension point="org.eclipse.ui.editors.templates">
+      <contextType
+            name="typeScript"
+            class="com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplateContextType"
+            id="typeScript">
+      </contextType>   
+      <include
+      		file="templates/typescript-default.xml"
+      		translations="$nl$/templates/typescript-default.properties">
+      </include>
+   </extension>  
+   
 </plugin>
