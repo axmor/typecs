@@ -40,7 +40,7 @@
            activate="true"
            class="com.axmor.eclipse.typescript.editor.TypeScriptElementHyperlinkDetector"
 	       description="A hyperlink detector for Type Script source code elements"
-    	   id="com.axmor.eclipse.typescript.AntElementHyperlinkDetector"
+    	   id="com.axmor.eclipse.typescript.TypeScriptElementHyperlinkDetector"
 	       name="TypeScript Element"
     	   targetId="com.axmor.eclipse.typescript.sourceFiles">
       </hyperlinkDetector>
