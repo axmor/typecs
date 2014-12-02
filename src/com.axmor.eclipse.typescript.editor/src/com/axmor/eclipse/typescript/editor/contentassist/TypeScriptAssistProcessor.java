@@ -7,25 +7,46 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.editor.contentassist;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.ui.PreferenceConstants;
+import org.eclipse.jface.internal.text.html.HTMLPrinter;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
+import org.eclipse.jface.text.templates.Template;
+import org.eclipse.jface.text.templates.TemplateCompletionProcessor;
+import org.eclipse.jface.text.templates.TemplateContext;
+import org.eclipse.jface.text.templates.TemplateContextType;
+import org.eclipse.jface.text.templates.TemplateException;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
+import org.osgi.framework.Bundle;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
+import com.axmor.eclipse.typescript.editor.Activator;
 import com.axmor.eclipse.typescript.editor.TypeScriptUIImages;
+import com.axmor.eclipse.typescript.editor.parser.TypeScriptImageKeys;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
+import com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplateAccess;
 import com.google.common.base.Throwables;
 
 /**
@@ -33,7 +54,8 @@ import com.google.common.base.Throwables;
  * 
  * @author Asya Vorobyova
  */
-public class TypeScriptAssistProcessor implements IContentAssistProcessor {
+public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
+	private static String fgCSSStyles;
 
 	/** TypeScript API. */
 	private TypeScriptAPI api;
@@ -80,7 +102,8 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
 					}
 				}
 			}
-			return (ICompletionProposal[]) result.toArray(new ICompletionProposal[result.size()]);
+			return mergeProposals(result.toArray(new ICompletionProposal[result.size()]),
+					determineTemplateProposalsForContext(viewer, offset));
 
 		} catch (JSONException e) {
 			throw Throwables.propagate(e);
@@ -114,10 +137,11 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
 			}
 		}
 		return new TypeScriptCompletionProposal(original, offset - replacement.length(), replacement.length(),
-				original.length(), image, displayString, context);
+				original.length(), image, displayString, context, null);
 
 	}
 
+	@SuppressWarnings("restriction")
 	private TypeScriptCompletionProposal createCompletionProposal_1_3(String original, String replacement, int offset,
 			Image image, JSONObject details) throws JSONException {
 		HashMap<String, String> map = new HashMap<>();
@@ -157,11 +181,40 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
 			if (map.containsKey("moduleName")) {
 				context = " - " + map.get("moduleName");
 			}
-		} else {
-			System.err.println("!!!!! " + parts.toString());
+		}
+		String doc = null;
+		if (details.has("documentation")) {
+			JSONArray docs = details.getJSONArray("documentation");
+			if (docs != null && docs.length() > 0) {
+				if (docs.length() > 1) {
+					// for testing purpose
+					System.err.println(docs.toString(1));
+				}
+				StringBuffer sb = new StringBuffer();
+				HTMLPrinter.insertPageProlog(sb, 0, getCSSStyles());
+				for (int i = 0; i < docs.length(); i++) {
+
+					JSONObject docItem = docs.getJSONObject(i);
+					if (docItem.getString("kind").equals("lineBreak")) {
+						sb.append("<br>");
+					} else {
+						String docItemTxt = docItem.getString("text");
+						if (docItemTxt.startsWith("@return")) {
+							sb.append("<br>");
+							HTMLPrinter.addSmallHeader(sb, "Returns:");
+							sb.append("<pre>       </pre>").append(docItemTxt.trim().substring("@return".length() + 1));
+						} else {
+							sb.append(docItemTxt);
+						}
+					}
+				}
+				HTMLPrinter.addPageEpilog(sb);
+				doc = sb.toString();
+				System.out.println(doc);
+			}
 		}
 		return new TypeScriptCompletionProposal(original, offset - replacement.length(), replacement.length(),
-				original.length(), image, displayString, context);
+				original.length(), image, displayString, context, doc);
 	}
 
 	/**
@@ -198,6 +251,53 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
 		return currentPrefix;
 	}
 
+	private ICompletionProposal[] mergeProposals(ICompletionProposal[] proposals1, ICompletionProposal[] proposals2) {
+
+		ICompletionProposal[] combinedProposals = new ICompletionProposal[proposals1.length + proposals2.length];
+
+		System.arraycopy(proposals1, 0, combinedProposals, 0, proposals1.length);
+		System.arraycopy(proposals2, 0, combinedProposals, proposals1.length, proposals2.length);
+
+		return combinedProposals;
+	}
+
+	private ICompletionProposal[] determineTemplateProposalsForContext(ITextViewer viewer, int offset) {
+		ITextSelection selection = (ITextSelection) viewer.getSelectionProvider().getSelection();
+
+		// adjust offset to end of normalized selection
+		int newoffset = offset;
+		if (selection.getOffset() == newoffset) {
+			newoffset = selection.getOffset() + selection.getLength();
+		}
+
+		String prefix = extractPrefix(viewer, newoffset);
+		Region region = new Region(newoffset - prefix.length(), prefix.length());
+		TemplateContext context = createContext(viewer, region);
+		if (context == null) {
+			return new ICompletionProposal[0];
+		}
+
+		context.setVariable("selection", selection.getText()); // name of the selection variables {line, word}_selection //$NON-NLS-1$
+
+		String templateContextId = getContextType(viewer, region).getId();
+		Template[] templates = getTemplates(templateContextId);
+
+		List<ICompletionProposal> matches = new ArrayList<ICompletionProposal>();
+		for (int i = 0; i < templates.length; i++) {
+			Template template = templates[i];
+			try {
+				context.getContextType().validate(template.getPattern());
+			} catch (TemplateException e) {
+				continue;
+			}
+			if (template.matches(prefix, templateContextId) && template.getName().startsWith(prefix)) {
+				matches.add(createProposal(template, context, (IRegion) region, getRelevance(template, prefix)));
+			}
+		}
+
+		return matches.toArray(new ICompletionProposal[matches.size()]);
+	}
+
 	@Override
 	public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset) {
 		return null;
@@ -221,6 +321,58 @@ public class TypeScriptAssistProcessor implements IContentAssistProcessor {
 	@Override
 	public IContextInformationValidator getContextInformationValidator() {
 		return null;
+	}
+
+	@Override
+	protected Template[] getTemplates(String contextTypeId) {
+		return TypescriptTemplateAccess.getDefault().getTemplateStore().getTemplates(contextTypeId);
+	}
+
+	@Override
+	protected TemplateContextType getContextType(ITextViewer viewer, IRegion region) {
+		return TypescriptTemplateAccess.getDefault().getContextTypeRegistry().getContextType("typeScript");
+	}
+
+	@Override
+	protected Image getImage(Template template) {
+		return TypeScriptUIImages.getImage(TypeScriptImageKeys.IMG_TEMPLATE_PROPOSAL);
+	}
+
+	protected String getCSSStyles() {
+		if (fgCSSStyles == null) {
+			Bundle bundle = Platform.getBundle(Activator.PLUGIN_ID);
+			URL url = bundle.getEntry("/css/JavadocHoverStyleSheet.css"); //$NON-NLS-1$
+			if (url != null) {
+				BufferedReader reader = null;
+				try {
+					url = FileLocator.toFileURL(url);
+					reader = new BufferedReader(new InputStreamReader(url.openStream()));
+					StringBuffer buffer = new StringBuffer(200);
+					String line = reader.readLine();
+					while (line != null) {
+						buffer.append(line);
+						buffer.append('\n');
+						line = reader.readLine();
+					}
+					fgCSSStyles = buffer.toString();
+				} catch (IOException ex) {
+				} finally {
+					try {
+						if (reader != null)
+							reader.close();
+					} catch (IOException e) {
+					}
+				}
+
+			}
+		}
+		String css = fgCSSStyles;
+		if (css != null) {
+			FontData fontData = JFaceResources.getFontRegistry().getFontData(
+					PreferenceConstants.APPEARANCE_JAVADOC_FONT)[0];
+			css = HTMLPrinter.convertTopLevelFont(css, fontData);
+		}
+		return css;
 	}
 
 }

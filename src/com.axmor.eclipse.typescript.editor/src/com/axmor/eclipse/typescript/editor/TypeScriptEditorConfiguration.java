@@ -7,6 +7,7 @@ import java.util.Map;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.text.AbstractInformationControlManager;
+import org.eclipse.jface.text.DefaultInformationControl;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.IInformationControl;
@@ -154,7 +155,8 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
      */
     private IInformationControlCreator getOutlinePresenterControlCreator(ISourceViewer sourceViewer) {
         return new IInformationControlCreator() {
-            public IInformationControl createInformationControl(Shell parent) {
+            @Override
+			public IInformationControl createInformationControl(Shell parent) {
                 int shellStyle = SWT.RESIZE;
                 TypeScriptQuickOutlineDialog dialog = new TypeScriptQuickOutlineDialog(parent, shellStyle, editor);
                 return dialog;
@@ -194,6 +196,12 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
             assistant.enableAutoInsert(true);
             assistant.enableColoredLabels(true);
             assistant.setShowEmptyList(true);
+			assistant.setInformationControlCreator(new IInformationControlCreator() {
+				@Override
+				public IInformationControl createInformationControl(Shell parent) {
+					return new DefaultInformationControl(parent, true);
+				}
+			});
     	}       
 
         return assistant;

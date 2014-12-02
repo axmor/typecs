@@ -7,7 +7,6 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.editor.contentassist;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DefaultInformationControl;
 import org.eclipse.jface.text.DocumentEvent;
@@ -19,7 +18,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension3;
-import org.eclipse.jface.text.contentassist.ICompletionProposalExtension5;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.viewers.StyledString;
@@ -31,8 +29,8 @@ import org.eclipse.swt.widgets.Shell;
  * @author Konstantin Zaitcev
  */
 public class TypeScriptCompletionProposal implements ICompletionProposal, ICompletionProposalExtension,
-        ICompletionProposalExtension2, ICompletionProposalExtension3, ICompletionProposalExtension5,
-        ICompletionProposalExtension6 {
+		ICompletionProposalExtension2, ICompletionProposalExtension3,
+		ICompletionProposalExtension6 {
 
     /** Original string for replacement. */
     private String replacementString;
@@ -48,6 +46,8 @@ public class TypeScriptCompletionProposal implements ICompletionProposal, ICompl
     private String content;
     /** Styled text to display. */
     private StyledString displayStyled;
+	/** Additional context information. */
+	private String info;
     
     /** Control creator. */
     private IInformationControlCreator controlCreator = new IInformationControlCreator() {
@@ -58,29 +58,32 @@ public class TypeScriptCompletionProposal implements ICompletionProposal, ICompl
     };
 
     /**
-     * @param replacementString
-     *            replacementString
-     * @param replacementOffset
-     *            replacementOffset
-     * @param replacementLength
-     *            replacementLength
-     * @param cursorPosition
-     *            cursorPosition
-     * @param image
-     *            image
-     * @param content
-     *            content
-     * @param context
-     *            context
-     */
+	 * @param replacementString
+	 *            replacementString
+	 * @param replacementOffset
+	 *            replacementOffset
+	 * @param replacementLength
+	 *            replacementLength
+	 * @param cursorPosition
+	 *            cursorPosition
+	 * @param image
+	 *            image
+	 * @param content
+	 *            content
+	 * @param context
+	 *            context
+	 * @param info
+	 *            info
+	 */
     public TypeScriptCompletionProposal(String replacementString, int replacementOffset, int replacementLength,
-            int cursorPosition, Image image, String content, String context) {
+			int cursorPosition, Image image, String content, String context, String info) {
         this.replacementString = replacementString;
         this.replacementOffset = replacementOffset;
         this.replacementLength = replacementLength;
         this.cursorPosition = cursorPosition;
         this.image = image;
         this.content = content;
+		this.info = info;
         displayStyled = new StyledString(content + context);
         displayStyled.setStyle(content.length(), context.length(), StyledString.QUALIFIER_STYLER);
     }
@@ -114,7 +117,7 @@ public class TypeScriptCompletionProposal implements ICompletionProposal, ICompl
 
     @Override
     public String getAdditionalProposalInfo() {
-        return "asdasd";
+		return info;
     }
 
     @Override
@@ -175,10 +178,6 @@ public class TypeScriptCompletionProposal implements ICompletionProposal, ICompl
     public void unselected(ITextViewer viewer) {
     }
 
-    @Override
-    public Object getAdditionalProposalInfo(IProgressMonitor monitor) {
-        return null;
-    }
 
     @Override
     public boolean isValidFor(IDocument document, int offset) {

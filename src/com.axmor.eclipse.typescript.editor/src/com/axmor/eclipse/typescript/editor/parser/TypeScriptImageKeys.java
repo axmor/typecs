@@ -70,6 +70,9 @@ public final class TypeScriptImageKeys {
     /** Key for image. */
     public static final String IMG_TOGGLE_OCCURRENCE = PLUGIN_ID + "IMG_TOGGLE_OCCURRENCE";
 
+	/** Key for template proposal image. */
+	public static final String IMG_TEMPLATE_PROPOSAL = PLUGIN_ID + "IMG_TEMPLATE_PROPOSAL";
+
     /**
      * Protect from initialization.
      */

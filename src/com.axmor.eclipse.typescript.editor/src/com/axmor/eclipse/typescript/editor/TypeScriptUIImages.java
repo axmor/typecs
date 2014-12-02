@@ -80,7 +80,8 @@ public class TypeScriptUIImages {
         declareRegistryImage(TypeScriptImageKeys.IMG_DTS_FILE, "$nl$/icons/typescript_def_file.png");
 
         declareRegistryImage(TypeScriptImageKeys.IMG_TOGGLE_OCCURRENCE, "$nl$/icons/full/etool16/mark_occurrences.png");
-}
+		declareRegistryImage(TypeScriptImageKeys.IMG_TEMPLATE_PROPOSAL, ICONS_PATH + "template_obj.png");
+	}
 
     /**
      * Declare an Image in the registry table.
