@@ -31,6 +31,7 @@ public class Messages extends NLS {
     public static String ProjectPrefPage_sourceSelectionDesc;
     public static String ProjectPrefPage_sourceSelectionTitle;
     public static String ProjectPrefPage_targetLabel;
+    public static String ProjectPrefPage_targetRelativePathBasedOnSource;
     public static String ProjectPrefPage_targetSelectionDesc;
     public static String ProjectPrefPage_targetSelectionTitle;
     public static String ProjectPrefPage_targetVersion;
