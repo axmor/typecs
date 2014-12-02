@@ -38,8 +38,8 @@ public class TypescriptTemplatePreferencePage extends TemplatePreferencePage {
     
     public TypescriptTemplatePreferencePage() {
         setPreferenceStore(Activator.getDefault().getPreferenceStore());
-        setTemplateStore(TypescriptTamplateAccess.getDefault().getTemplateStore());
-        setContextTypeRegistry(TypescriptTamplateAccess.getDefault().getContextTypeRegistry());
+        setTemplateStore(TypescriptTemplateAccess.getDefault().getTemplateStore());
+        setContextTypeRegistry(TypescriptTemplateAccess.getDefault().getContextTypeRegistry());
     }
     
     /* (non-Javadoc)
