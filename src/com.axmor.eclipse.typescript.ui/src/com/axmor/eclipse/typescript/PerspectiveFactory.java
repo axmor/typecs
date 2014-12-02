@@ -36,6 +36,8 @@ public class PerspectiveFactory implements IPerspectiveFactory {
         rightFolder.addView("org.eclipse.ui.views.ContentOutline");
 
         layout.addActionSet("org.eclipse.debug.ui.launchActionSet");
+        
+        layout.addNewWizardShortcut("com.axmor.eclipse.typescript.editor.wizards.NewClassWizard");
     }
     
 }

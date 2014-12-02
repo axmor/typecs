@@ -42,6 +42,12 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
     private Text compileSourceResource;
     /** UI control for compileTargetResource. */
     private Text compileTargetResource;
+    /**
+     * relative path from {@link #target} to output file is detected based on relative path from
+     * {@link #source} to input file
+     */
+    private Button targetRelativePathBasedOnSource;
+
     /** UI control for noResolve. */
     private Button noResolve;
     /** UI control for noImplicitAny. */
@@ -91,6 +97,8 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
         createBrowseButton(group, compileTargetResource, Messages.ProjectPrefPage_targetSelectionTitle,
                 Messages.ProjectPrefPage_targetSelectionDesc);
 
+        targetRelativePathBasedOnSource = SWTFactory.createCheckButton(group,
+                Messages.ProjectPrefPage_targetRelativePathBasedOnSource, null, true, 3);
         noImplicitAny = SWTFactory.createCheckButton(group, Messages.ProjectPrefPage_noImlicitAny, null, true, 3);
         noResolve = SWTFactory.createCheckButton(group, Messages.ProjectPrefPage_noResolve, null, true, 3);
 
@@ -133,6 +141,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
                 .getAdapter(IProject.class));
         settings.setSource(compileSourceResource.getText());
         settings.setTarget(compileTargetResource.getText());
+        settings.setTargetRelativePathBasedOnSource(targetRelativePathBasedOnSource.getSelection());
         settings.setNoResolve(noResolve.getSelection());
         settings.setNoImplicitAny(noImplicitAny.getSelection());
         settings.setModule(module.getText());
@@ -168,6 +177,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
                 .getAdapter(IProject.class));
         compileSourceResource.setText(settings.getSource());
         compileTargetResource.setText(settings.getTarget());
+        targetRelativePathBasedOnSource.setSelection(settings.isTargetRelativePathBasedOnSource());
         noResolve.setSelection(settings.isNoResolve());
         noImplicitAny.setSelection(settings.isNoImplicitAny());
         module.setText(settings.getModule());

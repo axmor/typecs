@@ -191,7 +191,6 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
 	
 	private TableViewer fHighlightingColorListViewer;
 	private SourceViewer fPreviewViewer;
-	private TypescriptPreviewerUpdater fPreviewerUpdater;
 	/**
 	 * Highlighting color list
 	 */
@@ -405,7 +404,7 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
 		
 		TypeScriptEditorConfiguration configuration = new TypeScriptEditorConfiguration();	
 		fPreviewViewer.configure(configuration);
-		fPreviewerUpdater= new TypescriptPreviewerUpdater(fPreviewViewer, configuration, store);
+		new TypescriptPreviewerUpdater(fPreviewViewer, configuration, store);
 		
 		return fPreviewViewer.getControl();
 	}	
