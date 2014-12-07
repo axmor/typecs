@@ -138,6 +138,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 * Selection changed listener for the outline view.
 	 */
 	private ISelectionChangedListener selectionChangedListener = new ISelectionChangedListener() {
+		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
 			selectionSetFromOutline = false;
 			doSelectionChanged(event);
@@ -215,6 +216,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	private ITextSelection fForcedMarkOccurrencesSelection;
 	
 	private IPropertyChangeListener propertyChangedListener = new IPropertyChangeListener() {
+		@Override
 		public void propertyChange(PropertyChangeEvent event) {
 			TypeScriptEditorConfiguration sourceViewerConfiguration= (TypeScriptEditorConfiguration)getSourceViewerConfiguration();
 	        if (sourceViewerConfiguration != null) {
@@ -542,7 +544,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 	@Override
 	protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
-		ISourceViewer viewer = new TypeScriptProjectionViewer(parent, ruler, getOverviewRuler(),
+		ISourceViewer viewer = new TypeScriptProjectionViewer(this, parent, ruler, getOverviewRuler(),
 				isOverviewRulerVisible(), styles);
 
 		// ensure decoration support has been created and configured.

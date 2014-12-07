@@ -31,18 +31,29 @@ public class TypeScriptProjectionViewer extends ProjectionViewer {
      */
     private IInformationPresenter outlinePresenter;
 
+	private TypeScriptEditor editor;
+
     /**
-     * Constructor
-     * 
-     * @param parent the SWT parent control
-     * @param ruler the vertical ruler
-     * @param overviewRuler the overview ruler
-     * @param showsAnnotationOverview <code>true</code> if the overview ruler should be shown
-     * @param styles the SWT style bits
-     */
-    public TypeScriptProjectionViewer(Composite parent, IVerticalRuler ruler, IOverviewRuler overviewRuler,
+	 * Constructor
+	 * 
+	 * @param editor
+	 * 
+	 * @param parent
+	 *            the SWT parent control
+	 * @param ruler
+	 *            the vertical ruler
+	 * @param overviewRuler
+	 *            the overview ruler
+	 * @param showsAnnotationOverview
+	 *            <code>true</code> if the overview ruler should be shown
+	 * @param styles
+	 *            the SWT style bits
+	 */
+	public TypeScriptProjectionViewer(TypeScriptEditor editor, Composite parent, IVerticalRuler ruler,
+			IOverviewRuler overviewRuler,
             boolean showsAnnotationOverview, int styles) {
         super(parent, ruler, overviewRuler, showsAnnotationOverview, styles);
+		this.editor = editor;
     }
     
     @Override
@@ -104,4 +115,11 @@ public class TypeScriptProjectionViewer extends ProjectionViewer {
         // Unconfigure default operations
         super.unconfigure();
     }
+
+	/**
+	 * @return the editor
+	 */
+	public TypeScriptEditor getEditor() {
+		return editor;
+	}
 }

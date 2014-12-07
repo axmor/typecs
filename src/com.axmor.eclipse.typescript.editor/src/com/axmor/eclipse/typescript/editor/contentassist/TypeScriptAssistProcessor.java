@@ -54,6 +54,7 @@ import com.google.common.base.Throwables;
  * 
  * @author Asya Vorobyova
  */
+@SuppressWarnings("restriction")
 public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 	private static String fgCSSStyles;
 
@@ -141,7 +142,6 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 
 	}
 
-	@SuppressWarnings("restriction")
 	private TypeScriptCompletionProposal createCompletionProposal_1_3(String original, String replacement, int offset,
 			Image image, JSONObject details) throws JSONException {
 		HashMap<String, String> map = new HashMap<>();
@@ -210,7 +210,6 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 				}
 				HTMLPrinter.addPageEpilog(sb);
 				doc = sb.toString();
-				System.out.println(doc);
 			}
 		}
 		return new TypeScriptCompletionProposal(original, offset - replacement.length(), replacement.length(),
