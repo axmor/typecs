@@ -12,6 +12,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.IInformationControl;
 import org.eclipse.jface.text.IInformationControlCreator;
+import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
@@ -31,6 +32,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 
 import com.axmor.eclipse.typescript.editor.contentassist.TypeScriptAssistProcessor;
+import com.axmor.eclipse.typescript.editor.hover.TypeScriptTextHover;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptPartitionScanner;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptSyntaxScanner;
 
@@ -228,6 +230,11 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
         return targets;
     }
     
+	@Override
+	public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
+		return new TypeScriptTextHover(sourceViewer);
+	}
+
     /**
 	 * Preference colors have changed.  
 	 * Update the default tokens of the scanners.

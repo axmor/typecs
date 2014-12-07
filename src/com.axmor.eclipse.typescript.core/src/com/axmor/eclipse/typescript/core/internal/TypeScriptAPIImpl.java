@@ -114,7 +114,15 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public JSONObject getSignature(IFile file, int position) {
         checkBridge();
-        return bridge.invokeBridgeMethod("getSignature", file, String.valueOf(position));
+		JSONObject object = bridge.invokeBridgeMethod("getSignature", file, String.valueOf(position));
+		try {
+			if (!object.isNull("model")) {
+				return object.getJSONObject("model");
+			}
+			return new JSONObject();
+		} catch (JSONException e) {
+			throw Throwables.propagate(e);
+		}
     }
 
     @Override

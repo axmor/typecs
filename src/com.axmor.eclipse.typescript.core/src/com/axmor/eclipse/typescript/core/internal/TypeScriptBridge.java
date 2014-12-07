@@ -260,8 +260,8 @@ public class TypeScriptBridge implements Runnable {
                         if ("null".equals(str)) {
                             return EMPTY_JSON_OBJECT;
                         }
-                        //System.err.println("[" + method + "]");
-                        //System.out.println(new JSONObject(str).toString(1));
+						// System.err.println("[" + method + "]");
+						// System.out.println(new JSONObject(str).toString(1));
                         return new JSONObject(str);
                     }
                 }

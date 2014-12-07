@@ -20,12 +20,12 @@ import com.axmor.eclipse.typescript.editor.Activator;
  * @author kudrin
  *
  */
-public class TypescriptTamplateAccess {
+public class TypescriptTemplateAccess {
     /** Key to store custom templates. */
     private static final String CUSTOM_TEMPLATES_KEY= "com.axmor.eclipse.typescript.customtemplates"; //$NON-NLS-1$
     
     /** The shared instance. */
-    private static TypescriptTamplateAccess fgInstance;
+    private static TypescriptTemplateAccess fgInstance;
     
     /** The template store. */
     private TemplateStore fStore;
@@ -33,7 +33,7 @@ public class TypescriptTamplateAccess {
     /** The context type registry. */
     private ContributionContextTypeRegistry fRegistry;
     
-    private TypescriptTamplateAccess() {
+    private TypescriptTemplateAccess() {
     }
 
     /**
@@ -41,9 +41,9 @@ public class TypescriptTamplateAccess {
      * 
      * @return the shared instance
      */
-    public static TypescriptTamplateAccess getDefault() {        
+    public static TypescriptTemplateAccess getDefault() {        
         if (fgInstance == null) {
-            fgInstance= new TypescriptTamplateAccess();
+            fgInstance= new TypescriptTemplateAccess();
         }
         return fgInstance;
     }

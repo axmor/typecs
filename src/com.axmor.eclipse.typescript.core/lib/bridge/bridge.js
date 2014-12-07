@@ -24,6 +24,7 @@ var tss = require('./ts_' + args.version + '/ets_service.js');
 //log.info(tss.getFormattingEditsForDocument('module2.ts', 0, 500, { "ConvertTabsToSpaces":true, "IndentSize":4, "InsertSpaceAfterCommaDelimiter":true, "InsertSpaceAfterFunctionKeywordForAnonymousFunctions":false, "InsertSpaceAfterKeywordsInControlFlowStatements":true, "InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis":false, "InsertSpaceAfterSemicolonInForStatements":true, "InsertSpaceBeforeAndAfterBinaryOperators":true, "NewLineCharacter":"\r\n", "PlaceOpenBraceOnNewLineForControlBlocks":false,"PlaceOpenBraceOnNewLineForFunctions":false,"TabSize":4}));
 //tss.getScriptLexicalStructure('module2.ts');
 //tss.setFileContent('module2.ts', 'class 1TestM {}');
+//log.debug(tss.getSignatureAtPosition('module2.ts', 107));
 /*
 log.error(tsc.compile('module2.ts', 
     {
@@ -124,7 +125,7 @@ if (args.serv) {
             break;    
           case 'getSignature':                            
             log.debug('bridge.getSignature: ' + o.file + ', pos: ' + o.params);
-            socket.end(JSON.stringify(tss.getSignatureAtPosition(o.file, o.params)));
+            socket.end(JSON.stringify({ 'model' : tss.getSignatureAtPosition(o.file, o.params)}));
             break;    
           case 'getTypeDefinition':                            
             log.debug('bridge.getTypeDefinition: ' + o.file + ', param: ' + o.params);
