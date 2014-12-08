@@ -423,4 +423,11 @@
          </themeid>
       </stylesheet>
    </extension>
+   
+   <extension point="org.eclipse.ui.console.consoleFactories">
+    <consoleFactory
+      class="com.axmor.eclipse.typescript.editor.console.TypescriptConsoleFactory"
+      icon="icons/typescript_file.png"
+      label="TypeScript Console" />
+  </extension>
 </plugin>
