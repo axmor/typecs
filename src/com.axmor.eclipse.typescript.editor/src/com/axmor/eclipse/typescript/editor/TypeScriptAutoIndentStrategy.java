@@ -14,7 +14,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
-import org.eclipse.swt.SWT;
+import static org.eclipse.swt.SWT.TAB;
 
 /**
  * @author kudrin
@@ -71,7 +71,9 @@ public class TypeScriptAutoIndentStrategy extends DefaultIndentLineAutoEditStrat
             StringBuffer textToInsert) {
         try {            
             IRegion block = bracketMatcher.match(document, command.offset + 1);
-            if (block == null) return;
+            if (block == null) {
+                return;
+            }
 
             boolean bothBracketsWereOnSameLine = document.getLineOfOffset(block.getOffset()) == 
                     document.getLineOfOffset(command.offset);
@@ -79,7 +81,7 @@ public class TypeScriptAutoIndentStrategy extends DefaultIndentLineAutoEditStrat
             textToInsert.append(getIndentOfLine(document, document.getLineOfOffset(block.getOffset())));
 
             if (bothBracketsWereOnSameLine) {
-                textToInsert.append(SWT.TAB);
+                textToInsert.append(TAB);
                 command.shiftsCaret = false;
                 command.caretOffset = command.offset + textToInsert.length();
                 textToInsert.append(TextUtilities.getDefaultLineDelimiter(document));
@@ -120,24 +122,24 @@ public class TypeScriptAutoIndentStrategy extends DefaultIndentLineAutoEditStrat
     
     private void handleNewLineWithinBlock(IDocument document, DocumentCommand command, StringBuffer textToInsert) {
         int docLength = document.getLength();
-            int p = command.offset == docLength ? command.offset - 1 : command.offset;
-            int line;
-            try {
-                line = document.getLineOfOffset(p);
-                int start = document.getLineOffset(line);
-                int whiteend = findEndOfWhiteSpace(document, start, command.offset);              
-                textToInsert.append(document.get(start, whiteend - start));
-                
-                String lineText = document.get(start, document.getLineLength(line));
-                int openBracketIndex = lineText.indexOf('{'); 
-                if (openBracketIndex == -1) {
-                    return;            
-                }
-                else {
-                    textToInsert.append(SWT.TAB);
-                }
-            } catch (BadLocationException e) {
-                Activator.error(e);
-            }      
+        int p = command.offset == docLength ? command.offset - 1 : command.offset;
+        int line;
+        try {
+            line = document.getLineOfOffset(p);
+            int start = document.getLineOffset(line);
+            int whiteend = findEndOfWhiteSpace(document, start, command.offset);              
+            textToInsert.append(document.get(start, whiteend - start));
+            
+            String lineText = document.get(start, document.getLineLength(line));
+            int openBracketIndex = lineText.indexOf('{'); 
+            if (openBracketIndex == -1) {
+                return;            
+            }
+            else {
+                textToInsert.append(TAB);
+            }
+        } catch (BadLocationException e) {
+            Activator.error(e);
+        }
     }
 }
