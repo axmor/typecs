@@ -223,7 +223,10 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             params.put("settings", settings);
 
             JSONObject res = bridge.invokeBridgeMethod("getFormattingCode", file, params);
-            return res.getJSONArray("model");
+            if (!res.isNull("model")) {
+                return res.getJSONArray("model");
+            }
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
@@ -237,7 +240,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
             }
-            return null;
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
@@ -257,7 +260,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
             }
-            return null;
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
@@ -271,7 +274,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
             }
-            return null;
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
