@@ -27,4 +27,9 @@
           name="Editor">
     </page>
 	</extension>
+	
+	<extension point="org.eclipse.core.runtime.preferences">    
+    	<initializer class="com.axmor.eclipse.typescript.core.TypeScriptSettingsInitializer">
+ 		</initializer>
+	</extension>
 </plugin>

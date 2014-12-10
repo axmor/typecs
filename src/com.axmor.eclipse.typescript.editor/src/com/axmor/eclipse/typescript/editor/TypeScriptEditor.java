@@ -21,6 +21,7 @@ import org.eclipse.jface.text.IInformationControl;
 import org.eclipse.jface.text.IInformationControlCreator;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.Position;
+import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
 import org.eclipse.jface.text.source.IAnnotationModel;
@@ -64,6 +65,7 @@ import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
+import com.axmor.eclipse.typescript.editor.compare.TypeScriptBracketInserter;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJobCanceler;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
@@ -215,6 +217,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 	private ITextSelection fForcedMarkOccurrencesSelection;
 	
+	private TypeScriptBracketInserter fBracketInserter;
+	
 	private IPropertyChangeListener propertyChangedListener = new IPropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent event) {
@@ -222,9 +226,18 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	        if (sourceViewerConfiguration != null) {
 	        	sourceViewerConfiguration.adaptToPreferenceChange(event);
 	        	getViewer().invalidateTextPresentation();
-	        }
+	        }	        
 		}
 	};
+	
+	private IPropertyChangeListener propertyBracketsChangedListener = new IPropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent event) {            
+            if (event.getProperty().equals("insertCloseBrackets")) {
+                fBracketInserter.setInsertCloseBrackets((boolean) event.getNewValue());
+            }
+        }
+    };
 
 	/**
 	 * A constructor
@@ -249,6 +262,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);		
 		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(propertyChangedListener);
+		com.axmor.eclipse.typescript.core.Activator.getDefault().getPreferenceStore()
+		    .addPropertyChangeListener(propertyBracketsChangedListener);
 	}
 
 	@Override
@@ -535,6 +550,12 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 		editorSelectionChangedListener = new EditorSelectionChangedListener();
 		editorSelectionChangedListener.install(getSelectionProvider());
+		
+		fBracketInserter = new TypeScriptBracketInserter();
+		fBracketInserter.setInsertCloseBrackets(com.axmor.eclipse.typescript.core.Activator.getDefault()
+		        .getPreferenceStore().getBoolean("insertCloseBrackets"));
+		viewer.prependVerifyKeyListener(fBracketInserter);
+		fBracketInserter.setViewer(viewer);
 	}
 
 	@Override
@@ -645,6 +666,10 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 			getPreferenceStore().removePropertyChangeListener(propertyChangedListener);
 			propertyChangedListener = null;
 		}
+		
+		if (fBracketInserter != null) {
+		    ((TextViewer) fBracketInserter.getViewer()).removeVerifyKeyListener(fBracketInserter);
+        }
 		super.dispose();
 	}
 
