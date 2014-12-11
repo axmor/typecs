@@ -5,12 +5,15 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.TextUtilities;
-import org.eclipse.ui.console.TextConsole;
 
 import com.axmor.eclipse.typescript.editor.Activator;
 
@@ -25,15 +28,17 @@ public class TypeScriptConsoleDocumentListener implements IDocumentListener {
     
     private TypeScriptConsoleViewer viewer;
     
+    private ICommandHandler handler;
+    
     private static final Pattern compiled = Pattern.compile("\\r?\\n|\\r");    
 
-    public TypeScriptConsoleDocumentListener(TypeScriptConsoleViewer typeScriptConsoleViewer, TextConsole console) {
+    public TypeScriptConsoleDocumentListener(TypeScriptConsoleViewer typeScriptConsoleViewer, ICommandHandler console) {
         this.viewer = typeScriptConsoleViewer;
+        this.handler = console;
     }
 
     @Override
     public void documentAboutToBeChanged(DocumentEvent arg0) {
-        // TODO Auto-generated method stub
 
     }
 
@@ -49,61 +54,16 @@ public class TypeScriptConsoleDocumentListener implements IDocumentListener {
         }      
     }
     
-    private void proccessAddition(int offset, String text) {
-        //we have to do some gymnastics here to add line-by-line the contents that the user entered.
-        //(mostly because it may have been a copy/paste with multi-lines)
-
-        String indentString = "";
-        boolean addedNewLine = false;
-        boolean addedParen = false;
-        boolean addedCloseParen = false;
-        int addedLen = text.length();
-        if (addedLen == 1) {
-            if (text.equals("\r") || text.equals("\n")) {
-                addedNewLine = true;
-
-            } else if (text.equals("(")) {
-                addedParen = true;
-
-            } else if (text.equals(")")) {
-                addedCloseParen = true;
-            }
-
-        } else if (addedLen == 2) {
-            if (text.equals("\r\n")) {
-                addedNewLine = true;
-            }
-        }
-
+    private void proccessAddition(int offset, String text) {    
         String delim = getDelimeter();
-
-        int newDeltaCaretPosition = doc.getLength() - (offset + text.length());
-
         try {
-            doc.replace(offset, text.length(), ""); //$NON-NLS-1$
+            doc.replace(offset, text.length(), "");
             text = text + doc.get(offset, doc.getLength() - offset);
-            doc.replace(offset, doc.getLength() - offset, "");
-            
-            /*if (!offset_in_command_line) {
-                offset = newDeltaCaretPosition = getCommandLineOffset();
-                // Remove any existing command line text and prepend it to the text
-                // we're inserting
-                text = doc.get(getCommandLineOffset(), getCommandLineLength()) + text;
-                doc.replace(getCommandLineOffset(), getCommandLineLength(), "");
-            } else {
-                // paste is within the command line
-                text = text + doc.get(offset, doc.getLength() - offset);
-                doc.replace(offset, doc.getLength() - offset, "");
-            }*/
+            doc.replace(offset, doc.getLength() - offset, "");       
+           
         } catch (BadLocationException e) {
-            text = "";
             Activator.error(e);
         }
-
-        //text = replaceNewLines(text, delim);
-
-        //now, add it line-by-line (it won't even get into the loop if there's no
-        //new line in the text added).
         int start = 0;
         int index = -1;
         List<String> commands = new ArrayList<String>();
@@ -112,18 +72,12 @@ public class TypeScriptConsoleDocumentListener implements IDocumentListener {
             commands.add(cmd);
             start = index + delim.length();
         }
-
-        final String[] finalIndentString = new String[] { indentString };
-
         if (commands.size() > 0) {
             //Note that we'll disconnect from the document here and reconnect when the last line is executed.
             startDisconnected();
             String cmd = commands.get(0);
-            execCommand(addedNewLine, delim, finalIndentString, cmd, commands, 0, text, addedParen, start,
-                    addedCloseParen, newDeltaCaretPosition);
-        } else {
-            //onAfterAllLinesHandled(text, addedParen, start, offset, addedCloseParen, finalIndentString[0],
-            //        newDeltaCaretPosition);
+            execCommand(delim, cmd, commands, text, start);
+        } else {            
             appendText(text);
         }
 
@@ -193,26 +147,30 @@ public class TypeScriptConsoleDocumentListener implements IDocumentListener {
      */
     public String getDelimeter() {
         return TextUtilities.getDefaultLineDelimiter(doc);
-    }
+    }    
     
-    /**
-     * Here is where we run things not using the UI thread. It's a recursive function. In summary, it'll
-     * run each line in the commands received in a new thread, and as each finishes, it calls itself again
-     * for the next command. The last command will reconnect to the document.
-     *
-     * Exceptions had to be locally handled, because they're not well tolerated under this scenario
-     * (if on of the callbacks fail, the others won't be executed and we'd get into a situation
-     * where the shell becomes unusable).
-     */
-    private void execCommand(final boolean addedNewLine, final String delim, final String[] finalIndentString,
-            final String cmd, final List<String> commands, final int currentCommand, final String text,
-            final boolean addedParen, final int start, final boolean addedCloseParen, final int newDeltaCaretPosition) {        
-        appendText(cmd);
-        
-    }
-    
-    public static String replaceNewLines(String text, String repl) {
-        return compiled.matcher(text).replaceAll(repl);
-    }
+    private void execCommand(final String delim, final String cmd, final List<String> commands, final String text, final int start) {
+        int lastLine = doc.getNumberOfLines() - 1;
+        try {
+            int commandLineOffset = doc.getLineOffset(lastLine);
+            int commandLineLength = doc.getLineLength(lastLine);
+            final String commandLine = doc.get(commandLineOffset, commandLineLength);
+            appendText(getDelimeter());
+          //Handle the command in a thread that doesn't block the U/I.
+            Job j = new Job("TypeScript Console Hander") {           
+
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    handler.handleCommand(commandLine);
+                    return Status.OK_STATUS;
+                };
+            };
+            j.setSystem(true);
+            j.schedule();
+        } catch (BadLocationException e) {
+            Activator.error(e);
+        }         
+
+    }  
 
 }

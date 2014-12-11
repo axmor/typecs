@@ -5,7 +5,7 @@ import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.TextConsole;
 import org.eclipse.ui.part.IPageBookViewPage;
 
-public class TypescriptConsole extends TextConsole {
+public class TypescriptConsole extends TextConsole  implements ICommandHandler {
     
     public static final String CONSOLE_NAME = "TypeScript Console";
     
@@ -66,13 +66,7 @@ public class TypescriptConsole extends TextConsole {
      *
      * @param userInput that's the command to be evaluated by the user.
      */
-    public void handleCommand(String userInput) {
-        /*final Object[] listeners = consoleListeners.getListeners();
-
-        //notify about the user request
-        for (Object listener : listeners) {
-            ((IScriptConsoleListener) listener).userRequest(userInput, prompt);
-        }*/
+    public void handleCommand(String userInput) {        
 
         //executes the user input in the interpreter
         if (interpreter != null) {

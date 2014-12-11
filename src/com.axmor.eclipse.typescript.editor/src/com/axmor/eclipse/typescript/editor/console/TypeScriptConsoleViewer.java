@@ -1,20 +1,8 @@
 package com.axmor.eclipse.typescript.editor.console;
 
-import org.eclipse.jface.text.DocumentEvent;
-import org.eclipse.jface.text.IDocumentListener;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.custom.VerifyKeyListener;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
-import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.console.TextConsole;
 import org.eclipse.ui.console.TextConsoleViewer;
 
 public class TypeScriptConsoleViewer extends TextConsoleViewer {
@@ -24,19 +12,15 @@ public class TypeScriptConsoleViewer extends TextConsoleViewer {
      */
     private TypeScriptConsoleDocumentListener listener;
 
-    public TypeScriptConsoleViewer(Composite parent, TextConsole console) {
+    public TypeScriptConsoleViewer(Composite parent, TypescriptConsole console) {
         super(parent, console);
         this.listener = new TypeScriptConsoleDocumentListener(this, console);
-
-        this.listener.setDocument(getDocument());
-        
-        
+        this.listener.setDocument(getDocument());      
     }
     
     /**
-     * Sets the new caret position in the console.
-     *
-     * TODO: async should not be allowed (only clearing the shell at the constructor still uses that)
+     * Sets the new caret position in the console.     *
+     * 
      */
     public void setCaretOffset(final int offset, boolean async) {
         final StyledText textWidget = getTextWidget();

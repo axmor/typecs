@@ -42,7 +42,6 @@ public class TypescriptConsoleFactory implements IConsoleFactory  {
             protected IStatus run(IProgressMonitor monitor) {
                 monitor.beginTask("Create Interactive Console", 4);
                 try {
-                    //sayHello(interpreter, new SubProgressMonitor(monitor, 1));
                     connectDebugger(interpreter, additionalInitialComands, new SubProgressMonitor(monitor, 2));
                     enableGuiEvents(interpreter, new SubProgressMonitor(monitor, 1));
                     return Status.OK_STATUS;

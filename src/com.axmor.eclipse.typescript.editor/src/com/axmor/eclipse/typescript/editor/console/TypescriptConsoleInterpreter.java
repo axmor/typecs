@@ -2,7 +2,8 @@ package com.axmor.eclipse.typescript.editor.console;
 
 public class TypescriptConsoleInterpreter {
 
-	public void close() {		
+	public void close() {
+	    
 	}
 
     public Object getFrame() {
@@ -10,6 +11,6 @@ public class TypescriptConsoleInterpreter {
     }
 
     public void exec(String userInput) {
+        //TODO
     }
-
 }
