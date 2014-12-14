@@ -152,7 +152,7 @@ public class TypeScriptOpenTypeSelectionDialog extends FilteredItemsSelectionDia
      */
     public TypeScriptOpenTypeSelectionDialog(Shell shell, boolean multi) {
         super(shell, multi);
-        setInitialPattern("**");
+		setInitialPattern("**");
         setListLabelProvider(new OpenTypeLabelProvider());
         setDetailsLabelProvider(new DetailsLabelProvider());
     }
@@ -181,17 +181,14 @@ public class TypeScriptOpenTypeSelectionDialog extends FilteredItemsSelectionDia
     @Override
     protected ItemsFilter createFilter() {
         return new ItemsFilter() {
-            public boolean matchItem(Object item) {
+            @Override
+			public boolean matchItem(Object item) {
                 TypeDocument matchItem = (TypeDocument) item;
-                String pattern = patternMatcher.getPattern();
-                if (pattern.indexOf("*") != 0 & pattern.indexOf("?") != 0 & pattern.indexOf(".") != 0) {
-                    pattern = "*" + pattern;
-                    patternMatcher.setPattern(pattern);
-                }
                 return patternMatcher.matches(matchItem.getString("name"));
             }
 
-            public boolean isConsistentItem(Object item) {
+            @Override
+			public boolean isConsistentItem(Object item) {
                 return true;
             }
         };
@@ -201,7 +198,8 @@ public class TypeScriptOpenTypeSelectionDialog extends FilteredItemsSelectionDia
     @Override
     protected Comparator getItemsComparator() {
         return new Comparator() {
-            public int compare(Object arg0, Object arg1) {
+            @Override
+			public int compare(Object arg0, Object arg1) {
                 return ((TypeDocument) arg0).getString("name").toString()
                         .compareTo(((TypeDocument) arg1).getString("name").toString());
             }
@@ -212,7 +210,7 @@ public class TypeScriptOpenTypeSelectionDialog extends FilteredItemsSelectionDia
     protected void fillContentProvider(AbstractContentProvider contentProvider, ItemsFilter itemsFilter,
             IProgressMonitor progressMonitor) throws CoreException {
         progressMonitor.beginTask("Searching", 100); //$NON-NLS-1$
-        TypeDocument[] results = com.axmor.eclipse.typescript.core.Activator.getDefault().getSearchResults(
+		Iterable<TypeDocument> results = com.axmor.eclipse.typescript.core.Activator.getDefault().getSearchResults(
                 itemsFilter.getPattern());
 
         for (TypeDocument res : results) {
