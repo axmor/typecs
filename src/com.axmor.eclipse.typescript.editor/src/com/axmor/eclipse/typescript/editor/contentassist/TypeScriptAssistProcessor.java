@@ -186,10 +186,6 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 		if (details.has("documentation")) {
 			JSONArray docs = details.getJSONArray("documentation");
 			if (docs != null && docs.length() > 0) {
-				if (docs.length() > 1) {
-					// for testing purpose
-					System.err.println(docs.toString(1));
-				}
 				StringBuffer sb = new StringBuffer();
 				HTMLPrinter.insertPageProlog(sb, 0, getCSSStyles());
 				for (int i = 0; i < docs.length(); i++) {
