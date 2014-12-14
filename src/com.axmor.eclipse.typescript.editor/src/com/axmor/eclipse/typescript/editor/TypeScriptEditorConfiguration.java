@@ -7,7 +7,9 @@ import java.util.Map;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.text.AbstractInformationControlManager;
+import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy;
 import org.eclipse.jface.text.DefaultInformationControl;
+import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.IInformationControl;
@@ -234,6 +236,12 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
 	public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
 		return new TypeScriptTextHover(sourceViewer);
 	}
+	
+	@Override
+	public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer, String contentType) {
+	    return TypeScriptPartitionScanner.TS_COMMENT.equals(contentType) ? new IAutoEditStrategy[] { 
+	        new DefaultIndentLineAutoEditStrategy() } : new IAutoEditStrategy[] { new TypeScriptAutoIndentStrategy() };
+	    }
 
     /**
 	 * Preference colors have changed.  

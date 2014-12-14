@@ -43,6 +43,8 @@ public final class TypeScriptEditorSettings {
     private boolean placeOpenBraceFunctions = false;
     /** PlaceOpenBraceOnNewLineForControlBlocks. */
     private boolean placeOpenBraceControlBlocks = false;
+    /** InsertCloseBrackets. */
+    private boolean insertCloseBrackets = true;
 
     /**
      * @return the indentSize
@@ -211,6 +213,20 @@ public final class TypeScriptEditorSettings {
     public void setPlaceOpenBraceControlBlocks(boolean placeOpenBraceControlBlocks) {
         this.placeOpenBraceControlBlocks = placeOpenBraceControlBlocks;
     }
+    
+    /**
+     * @return the insertCloseBrackets
+     */
+    public boolean isInsertCloseBrackets() {
+        return insertCloseBrackets;
+    }
+
+    /**
+     * @param insertCloseBrackets the insertCloseBrackets to set
+     */
+    public void setInsertCloseBrackets(boolean insertCloseBrackets) {
+        this.insertCloseBrackets = insertCloseBrackets;
+    }
 
     /**
      * Loads settings from preferences.
@@ -256,6 +272,9 @@ public final class TypeScriptEditorSettings {
         if (store.contains("placeBraceBlocks")) {
             settings.setPlaceOpenBraceControlBlocks(store.getBoolean("placeBraceBlocks"));
         }
+        if (store.contains("insertCloseBrackets")) {
+            settings.setInsertCloseBrackets(store.getBoolean("insertCloseBrackets"));
+        }        
         return settings;
     }
     
@@ -276,5 +295,26 @@ public final class TypeScriptEditorSettings {
         store.setValue("insertSpaceParenthesis", isInsertSpaceAfterNonemptyParenthesis());
         store.setValue("placeBraceFunctions", isPlaceOpenBraceFunctions());
         store.setValue("placeBraceBlocks", isPlaceOpenBraceControlBlocks());
-    }
+        store.setValue("insertCloseBrackets", isInsertCloseBrackets());
+    }    
+
+    /**
+     * Set to default values
+     */
+    public static void setToDefault() {
+        IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+        store.setToDefault("indentSize");
+        store.setToDefault("tabSize");
+        store.setToDefault("newLineChar");
+        store.setToDefault("convertTabs");
+        store.setToDefault("insertSpaceComma");
+        store.setToDefault("insertSpaceSemicolon");
+        store.setToDefault("insertSpaceBinary");
+        store.setToDefault("insertSpaceKeywords");
+        store.setToDefault("insertSpaceFunction");
+        store.setToDefault("insertSpaceParenthesis");
+        store.setToDefault("placeBraceFunctions");
+        store.setToDefault("placeBraceBlocks");
+        store.setToDefault("insertCloseBrackets");        
+    }    
 }
