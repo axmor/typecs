@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: TypEcs Builder Plugin
+Bundle-SymbolicName: com.axmor.eclipse.typescript.builder;singleton:=true
+Bundle-Version: 2.0.0.qualifier
+Bundle-Activator: com.axmor.eclipse.typescript.builder.Activator
+Bundle-Vendor: Axmor Software Inc.
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.core.filesystem;bundle-version="1.3.200",
+ com.axmor.eclipse.typescript.core,
+ org.eclipse.ui.ide,
+ org.eclipse.core.expressions;bundle-version="3.4.500"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
+Export-Package: com.axmor.eclipse.typescript.builder.builder
