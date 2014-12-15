@@ -146,12 +146,28 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 			Image image, JSONObject details) throws JSONException {
 		HashMap<String, String> map = new HashMap<>();
 		JSONArray parts = details.getJSONArray("displayParts");
+		StringBuilder fullModuleNameBldr = new StringBuilder();
 		for (int i = 0; i < parts.length(); i++) {
-			map.put(parts.getJSONObject(i).getString("kind"), parts.getJSONObject(i).getString("text"));
+			JSONObject jsonObject = parts.getJSONObject(i);
+			String kind = jsonObject.getString("kind");
+			String value = jsonObject.getString("text");
+			if ("moduleName".equals(kind)) {
+				if (fullModuleNameBldr.length() > 0) {
+					fullModuleNameBldr.append(".");
+				}
+				fullModuleNameBldr.append(value);
+			} else {
+				map.put(kind,value);
+			}
 		}
+		
+		String fullModuleName = fullModuleNameBldr.toString();
+		
 		JSONObject part1 = parts.getJSONObject(0);
 		String part1kind = part1.getString("kind");
 		String part1text = part1.getString("text");
+		
+		String keyWord = part1kind.equals("keyword") ? part1text : null;
 		
 		String context = "";
 		String displayString = "";
@@ -169,19 +185,32 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 			}
 			if (displayString.indexOf('.') > 0) {
 				int idx = displayString.lastIndexOf('.');
-				context = " - " + displayString.substring(0, idx);
+				context = displayString.substring(0, idx);
 				displayString = displayString.substring(idx + 1, displayString.length());
 			}
-		} else if (part1kind.equals("keyword") && part1text.equals("interface")) {
-			displayString = parts.getJSONObject(3).getString("text");
-		} else if (part1kind.equals("keyword") && part1text.equals("module")) {
-			displayString = parts.getJSONObject(3).getString("text");
-		} else if (part1kind.equals("keyword") && part1text.equals("class")) {
-			displayString = map.get("className");
-			if (map.containsKey("moduleName")) {
-				context = " - " + map.get("moduleName");
+		} else if ("interface".equals(keyWord)) {
+			if (map.containsKey("interfaceName")) {
+				displayString = map.get("interfaceName");
+			} else {
+				displayString = getFirstValue(parts, "localName");	
 			}
+			context = fullModuleName;
+		} else if ("module".equals(keyWord)) {
+			int idx = fullModuleName.lastIndexOf(".");
+			if (idx < 0) {
+				displayString = fullModuleName;
+			} else {
+				displayString = fullModuleName.substring(idx+1);
+				context = fullModuleName;
+			}
+		} else if ("class".equals(keyWord)) {
+			displayString = map.get("className");
+			context = fullModuleName;
+		} else if ("import".equals(keyWord)) {
+			displayString = getFirstValue(parts,"text");
+			context = getAliasDescription(parts);
 		}
+		
 		String doc = null;
 		if (details.has("documentation")) {
 			JSONArray docs = details.getJSONArray("documentation");
@@ -209,9 +238,49 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 			}
 		}
 		return new TypeScriptCompletionProposal(original, offset - replacement.length(), replacement.length(),
-				original.length(), image, displayString, context, doc);
+				original.length(), image, displayString, prefixContext(context), doc);
+	}
+	
+	private String prefixContext(String context) {
+		return context != null && !context.isEmpty() ? " - " + context : ""; 
 	}
 
+	private String getFirstValue(JSONArray jsonArray, String kind) throws JSONException {
+		String firstValue = null;
+		if (jsonArray != null) {
+			for (int i = 0; i < jsonArray.length(); i++) {
+				JSONObject jsonObject = jsonArray.getJSONObject(i);
+				if (kind.equals(jsonObject.getString("kind"))) {
+					firstValue = jsonObject.getString("text");
+					break;
+				}
+			}
+		}
+		if (firstValue == null) {
+			firstValue = "";
+		}
+		return firstValue;
+	}
+	
+	private String getAliasDescription(JSONArray parts) throws JSONException {
+		StringBuilder descriptionBuilder = new StringBuilder();
+		boolean collect = false;
+		if (parts != null) {
+			for (int i = 0; i < parts.length(); i++) {
+				JSONObject o = parts.getJSONObject(i);
+				if ("punctuation".equals(o.getString("kind")) && "=".equals(o.getString("text"))) {
+					collect = true;
+				} else if (collect) {
+					String text = o.getString("text");
+					if (text != null) {
+						descriptionBuilder.append(text.trim());
+					}
+				}
+			}
+		}
+		return descriptionBuilder.toString();
+	}
+	
 	/**
 	 * Calculates word part before a position corresponding to an offset
 	 * 
