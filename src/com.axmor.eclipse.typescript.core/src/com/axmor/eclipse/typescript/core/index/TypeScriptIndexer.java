@@ -12,10 +12,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.NavigableSet;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -35,7 +34,7 @@ import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.google.common.collect.Iterables;
 
 /**
- * Indexer that uses Lucene engine and TS api.
+ * Indexer that uses MapDB engine and TS api.
  * 
  * @author Konstantin Zaitcev
  */
@@ -139,12 +138,10 @@ public class TypeScriptIndexer {
 		this.idxDB = DBMaker.newFileDB(indexPath).closeOnJvmShutdown().make();
 		this.idxTypes = idxDB.getTreeSet("types");
 		final HashSet<String> files = new HashSet<>();
-		this.idxTypes.forEach(new Consumer<Fun.Tuple4<String, String, String, IndexInfo>>() {
-			@Override
-			public void accept(Tuple4<String, String, String, IndexInfo> t) {
-				files.add(t.a);
-			}
-		});
+
+		for (Tuple4<String, String, String, IndexInfo> t : this.idxTypes) {
+			files.add(t.a);
+		}
 
 		for (String file : files) {
 			if (!ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(file)).exists()) {
@@ -160,12 +157,13 @@ public class TypeScriptIndexer {
 	 *            file path
 	 */
 	public synchronized void removeFromIndex(final String path) {
-		idxTypes.removeIf(new Predicate<Fun.Tuple4<String, String, String, IndexInfo>>() {
-			@Override
-			public boolean test(Tuple4<String, String, String, IndexInfo> t) {
-				return path.equals(t.a);
+		Iterator<Tuple4<String, String, String, IndexInfo>> iterator = idxTypes.iterator();
+		while (iterator.hasNext()) {
+			Fun.Tuple4<String, String, String, IndexInfo> t = iterator.next();
+			if (path.equals(t.a)) {
+				iterator.remove();
 			}
-		});
+		}
 		idxDB.commit();
 	}
 
@@ -354,11 +352,13 @@ public class TypeScriptIndexer {
 			switch (kind) {
 			case "interface":
 				addDocumentToIndex(qname, name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
-						baseTypes.getOrDefault(qname, EMPTY_BASE_TYPES), file.getModificationStamp());
+						baseTypes.get(qname) != null ? baseTypes.get(qname) : EMPTY_BASE_TYPES,
+						file.getModificationStamp());
 				break;
 			case "enum":
 				addDocumentToIndex(qname, name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
-						baseTypes.getOrDefault(qname, EMPTY_BASE_TYPES), file.getModificationStamp());
+						baseTypes.get(qname) != null ? baseTypes.get(qname) : EMPTY_BASE_TYPES,
+						file.getModificationStamp());
 				break;
 			case "class":
 				addDocumentToIndex(
@@ -368,7 +368,8 @@ public class TypeScriptIndexer {
 						path,
 						DocumentKind.CLASS.getIntValue(),
 						"private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
-								.getIntValue(), offset, baseTypes.getOrDefault(qname, EMPTY_BASE_TYPES),
+								.getIntValue(), offset, baseTypes.get(qname) != null ? baseTypes.get(qname)
+								: EMPTY_BASE_TYPES,
 						file.getModificationStamp());
 				break;
 			default:
