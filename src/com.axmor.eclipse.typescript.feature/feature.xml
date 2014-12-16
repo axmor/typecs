@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.axmor.eclipse.typescript.feature"
+      label="%featureName"
+      version="2.0.0.qualifier"
+      provider-name="%providerName"
+      plugin="com.axmor.eclipse.typescript">
+
+   <description>
+      %description
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="%licenseURL">
+      %license
+   </license>
+
+   <includes
+         id="org.chromium.sdk"
+         version="0.0.0"/>
+
+   <includes
+         id="org.chromium.sdk.wipbackends"
+         version="0.0.0"/>
+
+   <includes
+         id="org.chromium.debug"
+         version="0.0.0"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript.builder"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript.editor"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript.debug"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.axmor.eclipse.typescript.debug.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>
