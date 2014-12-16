@@ -97,7 +97,7 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 					Image image = imagesFactory.getImageForModelObject(completions.getJSONObject(i));
 					JSONObject details = api.getCompletionDetails(file, offset, original);
 					if (details.has("displayParts")) { // displayParts was introduced in TS 1.3
-						result.add(createCompletionProposal_1_3(original, replacement, offset, image, details));
+						result.add(createCompletionProposal_1_3(original, replacement, offset, image, completions.getJSONObject(i), details));
 					} else {
 						result.add(createCompletionProposal_1_1(original, replacement, offset, image, details));
 					}
@@ -143,74 +143,97 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 	}
 
 	private TypeScriptCompletionProposal createCompletionProposal_1_3(String original, String replacement, int offset,
-			Image image, JSONObject details) throws JSONException {
-		HashMap<String, String> map = new HashMap<>();
-		JSONArray parts = details.getJSONArray("displayParts");
-		StringBuilder fullModuleNameBldr = new StringBuilder();
-		for (int i = 0; i < parts.length(); i++) {
-			JSONObject jsonObject = parts.getJSONObject(i);
-			String kind = jsonObject.getString("kind");
-			String value = jsonObject.getString("text");
-			if ("moduleName".equals(kind)) {
-				if (fullModuleNameBldr.length() > 0) {
-					fullModuleNameBldr.append(".");
-				}
-				fullModuleNameBldr.append(value);
-			} else {
-				map.put(kind,value);
-			}
-		}
+			Image image, JSONObject completion, JSONObject details) throws JSONException {
 		
-		String fullModuleName = fullModuleNameBldr.toString();
+		String context = "";
+		String displayString = "";
+		
+		JSONArray parts = details.getJSONArray("displayParts");
 		
 		JSONObject part1 = parts.getJSONObject(0);
 		String part1kind = part1.getString("kind");
 		String part1text = part1.getString("text");
 		
-		String keyWord = part1kind.equals("keyword") ? part1text : null;
-		
-		String context = "";
-		String displayString = "";
-
 		if (parts.length() == 1) {
+			
 			displayString = part1text;
-		} else if (part1kind.equals("punctuation")) {
+			
+		} else if ("punctuation".equals(part1kind)) {
+			
 			StringBuilder sb = new StringBuilder();
 			for (int i = 4; i < parts.length(); i++) {
 				sb.append(parts.getJSONObject(i).getString("text"));
 			}
 			displayString = sb.toString();
 			if (displayString.contains("\n")) {
-				displayString = map.get("localName");
+				displayString = getFirstValue(parts, "localName");
 			}
-			if (displayString.indexOf('.') > 0) {
-				int idx = displayString.lastIndexOf('.');
+			
+			Object kind = completion.get("kind");
+			int leftBraceIndex = displayString.indexOf("(");
+			int colonIndex = displayString.indexOf(":");
+			
+			int idx = -1;
+			if (("method".equals(kind) || "function".equals(kind)) && leftBraceIndex > 0) {
+				idx = displayString.lastIndexOf('.',leftBraceIndex);
+			} else if ("property".equals(kind) && colonIndex > 0) {
+				idx = displayString.lastIndexOf('.',colonIndex);
+			} else {
+				idx = displayString.lastIndexOf('.'); 
+			}
+			
+			if (idx > 0) {
 				context = displayString.substring(0, idx);
 				displayString = displayString.substring(idx + 1, displayString.length());
 			}
-		} else if ("interface".equals(keyWord)) {
-			if (map.containsKey("interfaceName")) {
-				displayString = map.get("interfaceName");
-			} else {
-				displayString = getFirstValue(parts, "localName");	
+			
+		} else {
+			
+			String keyWord = part1kind.equals("keyword") ? part1text : null;
+			
+			HashMap<String, String> map = new HashMap<>();
+			
+			StringBuilder fullModuleNameBldr = new StringBuilder();
+			for (int i = 0; i < parts.length(); i++) {
+				JSONObject jsonObject = parts.getJSONObject(i);
+				String kind = jsonObject.getString("kind");
+				String value = jsonObject.getString("text");
+				if ("moduleName".equals(kind)) {
+					if (fullModuleNameBldr.length() > 0) {
+						fullModuleNameBldr.append(".");
+					}
+					fullModuleNameBldr.append(value);
+				} else {
+					map.put(kind,value);
+				}
 			}
-			context = fullModuleName;
-		} else if ("module".equals(keyWord)) {
-			int idx = fullModuleName.lastIndexOf(".");
-			if (idx < 0) {
-				displayString = fullModuleName;
-			} else {
-				displayString = fullModuleName.substring(idx+1);
+			
+			String fullModuleName = fullModuleNameBldr.toString();
+			if ("interface".equals(keyWord)) {
+				if (map.containsKey("interfaceName")) {
+					displayString = map.get("interfaceName");
+				} else {
+					displayString = getFirstValue(parts, "localName");	
+				}
 				context = fullModuleName;
+			} else if ("module".equals(keyWord)) {
+				int idx = fullModuleName.lastIndexOf(".");
+				if (idx < 0) {
+					displayString = fullModuleName;
+				} else {
+					displayString = fullModuleName.substring(idx+1);
+					context = fullModuleName;
+				}
+			} else if ("class".equals(keyWord)) {
+				displayString = map.get("className");
+				context = fullModuleName;
+			} else if ("import".equals(keyWord)) {
+				displayString = getFirstValue(parts,"text");
+				context = getAliasDescription(parts);
 			}
-		} else if ("class".equals(keyWord)) {
-			displayString = map.get("className");
-			context = fullModuleName;
-		} else if ("import".equals(keyWord)) {
-			displayString = getFirstValue(parts,"text");
-			context = getAliasDescription(parts);
+			
 		}
-		
+				
 		String doc = null;
 		if (details.has("documentation")) {
 			JSONArray docs = details.getJSONArray("documentation");
