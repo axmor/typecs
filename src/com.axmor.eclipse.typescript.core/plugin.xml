@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+    <extension
+          point="org.eclipse.core.contenttype.contentTypes">
+          <content-type 
+                id="ts"
+                base-type="org.eclipse.core.runtime.text" 
+                name="TypeScript Source File" 
+                file-extensions="ts,d.ts" 
+                default-charset="utf-8">
+          </content-type>
+    </extension>
+    
+	<extension
+	      point="org.eclipse.ui.preferencePages">
+    <page
+          class="com.axmor.eclipse.typescript.core.ui.TypescriptWorkbenchPreferencePage"
+          id="com.axmor.eclipse.typescript.core.ui.TypescriptWorkbenchPreferencePage"
+          name="TypeScript">
+    </page>
+
+    <page
+          class="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
+          id="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
+          category="com.axmor.eclipse.typescript.core.ui.TypescriptWorkbenchPreferencePage"
+          name="Editor">
+    </page>
+	</extension>
+	
+	<extension point="org.eclipse.core.runtime.preferences">    
+    	<initializer class="com.axmor.eclipse.typescript.core.TypeScriptSettingsInitializer">
+ 		</initializer>
+	</extension>
+</plugin>

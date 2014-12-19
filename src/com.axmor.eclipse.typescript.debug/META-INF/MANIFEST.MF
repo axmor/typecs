@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Debug
+Bundle-SymbolicName: com.axmor.eclipse.typescript.debug;singleton:=true
+Bundle-Version: 2.0.0.qualifier
+Bundle-Activator: com.axmor.eclipse.typescript.debug.Activator
+Bundle-Vendor: Axmor Software Inc
+Require-Bundle: org.chromium.sdk,
+ org.chromium.debug.ui,
+ org.chromium.debug.core,
+ org.chromium.sdk.wip.eclipse,
+ org.eclipse.debug.core;bundle-version="3.8.0",
+ org.eclipse.core.runtime;bundle-version="3.9.0",
+ com.axmor.eclipse.typescript.core,
+ org.eclipse.ui;bundle-version="3.105.0",
+ org.eclipse.debug.ui;bundle-version="3.9.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
+Export-Package: com.axmor.eclipse.typescript.debug.launching,
+ com.axmor.eclipse.typescript.debug.model
