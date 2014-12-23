@@ -37,15 +37,13 @@ public class TreeRoot {
     private int offset;
     private TypeScriptAPI api;
     private IFile file;
-    private IFile[] projectFiles;
     private int callOffset;
     private int callLength;
     
-    public TreeRoot(TypeScriptAPI api, JSONObject obj, int callOffset, int callLength, IFile currentFile, IFile[] projectFiles) {
+    public TreeRoot(TypeScriptAPI api, JSONObject obj, int callOffset, int callLength, IFile currentFile) {
         this.name = getText(obj);
         this.image = createImage(obj);
         this.file = currentFile;
-        this.projectFiles = projectFiles;
         this.api = api;
         this.callOffset = callOffset;
         this.callLength = callLength;
@@ -112,22 +110,7 @@ public class TreeRoot {
                 if (references.get(i) instanceof JSONObject) {
                     JSONObject obj = (JSONObject) references.get(i);
                     String fileName = obj.getString("fileName");
-                    int segmentsCount = fileName.split("/").length;
-                    currentFile = null;
-                    for (int j = 0; j < projectFiles.length; j++) {
-                        if (projectFiles[j].getFullPath().segmentCount() < segmentsCount) {
-                            continue;
-                        }
-                        if (projectFiles[j].getFullPath()
-                                .removeFirstSegments(projectFiles[j].getFullPath().segmentCount() - segmentsCount)
-                                .toString().equals(fileName)) {
-                            currentFile = projectFiles[j];
-                            break;
-                        }
-                    }
-                    if (currentFile == null) {
-                        continue;
-                    }
+                    currentFile = file.getProject().getFile(fileName);
                     Position position = TypeScriptEditorUtils.getPosition(obj);
                     JSONArray model = api.getScriptModel(currentFile);                    
                     for (int j = 0; j < model.length(); j++) {
@@ -155,7 +138,7 @@ public class TreeRoot {
                         fetchChildren(obj.getJSONArray("childItems"), offset, length, currentFile);
                     }
                     else {
-                        newRoots.add(new TreeRoot(api, obj, offset, length, currentFile, projectFiles));
+                        newRoots.add(new TreeRoot(api, obj, offset, length, currentFile));
                     }                    
                 }
             } catch (JSONException e) {

@@ -51,7 +51,7 @@ public class TypeScriptHierarchyUI {
         return fgInstance;
     }
     
-    public static CallHierarchyViewPart openView(TypeScriptEditor editor, IFile[] projectFiles, IFile file, 
+    public static CallHierarchyViewPart openView(TypeScriptEditor editor, IFile file, 
             JSONArray references) {
         IWorkbenchWindow window = editor.getSite().getWorkbenchWindow();
         TypeScriptAPI api = editor.getApi();
@@ -68,7 +68,7 @@ public class TypeScriptHierarchyUI {
             }                
             viewPart = (CallHierarchyViewPart)page.showView(CallHierarchyViewPart.ID_CALL_HIERARCHY, secondaryId, 
                     IWorkbenchPage.VIEW_ACTIVATE);
-            viewPart.setInputElements(createRoot(api, projectFiles, file, references));
+            viewPart.setInputElements(createRoot(api, file, references));
             return viewPart;
         } catch (CoreException e) {
             Activator.error(e);
@@ -96,28 +96,14 @@ public class TypeScriptHierarchyUI {
         return null;
     }
     
-    private static  TreeRoot[] createRoot(TypeScriptAPI api, IFile[] projectFiles, IFile file, JSONArray references) {
+    private static  TreeRoot[] createRoot(TypeScriptAPI api, IFile file, JSONArray references) {
         IFile currentFile = null;
         for (int i = 0; i < references.length(); i++) {
             try {
                 if (references.get(i) instanceof JSONObject) {
                     JSONObject obj = (JSONObject) references.get(i);
                     String fileName = obj.getString("fileName");
-                    int segmentsCount = fileName.split("/").length;
-                    currentFile = null;
-                    for (int j = 0; j < projectFiles.length; j++) {
-                        if (projectFiles[j].getFullPath().segmentCount() < segmentsCount)
-                            continue;
-                        if (projectFiles[j].getFullPath()
-                                .removeFirstSegments(projectFiles[j].getFullPath().segmentCount() - segmentsCount)
-                                .toString().equals(fileName)) {
-                            currentFile = projectFiles[j];
-                            break;
-                        }
-                    }
-                    if (currentFile == null) {
-                        continue;
-                    }
+                    currentFile = file.getProject().getFile(fileName);                   
                     Position position = TypeScriptEditorUtils.getPosition(obj);
                     JSONArray model = api.getScriptModel(currentFile);                    
                     for (int j = 0; j < model.length(); j++) {
@@ -126,8 +112,7 @@ public class TypeScriptHierarchyUI {
                             JSONObject root = findInitCall(item, position.offset);
                             if (root != null) {
                                 Position callPos = TypeScriptEditorUtils.getPosition(obj);
-                                return new TreeRoot[] {new TreeRoot(api, root, callPos.offset, callPos.length, currentFile, 
-                                        projectFiles)};
+                                return new TreeRoot[] {new TreeRoot(api, root, callPos.offset, callPos.length, currentFile)};
                             }
                         }
                     }

@@ -46,12 +46,9 @@ public class CallHierarchyHandler extends AbstractHandler {
         int start = selection.getOffset();
         IFile file = ((FileEditorInput) editor.getEditorInput()).getFile();
         api = editor.getApi();
-        JSONArray references = api.getReferencesAtPosition(file, start);
+        JSONArray references = api.getReferencesAtPosition(file, start);        
         
-        IFile[] projectFiles = TextSearchScope.newSearchScope(new IResource[] { file.getProject() }, Pattern.compile(".*\\.ts"),
-                false).evaluateFilesInScope(null);        
-        
-        TypeScriptHierarchyUI.openView(editor, projectFiles, file, references);
+        TypeScriptHierarchyUI.openView(editor, file, references);
         return null;
     }   
 
