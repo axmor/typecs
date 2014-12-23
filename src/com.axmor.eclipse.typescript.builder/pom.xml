@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.axmor.eclipse.typescript</groupId>
     <artifactId>product</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
   </parent>
 
   <groupId>com.axmor.eclipse.typescript</groupId>
