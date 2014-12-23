@@ -26,6 +26,33 @@ var tss = require('./ts_' + args.version + '/ets_service.js');
 //tss.setFileContent('module2.ts', 'class 1TestM {}');
 //log.debug(tss.getSignatureAtPosition('module2.ts', 107));
 /*
+log.debug(JSON.stringify({ 'model' : tss.getSyntaxTree('module2.ts') }, 
+              	function(key, value) {
+              		//log.debug(key);
+              		//log.debug(value);
+  					//if (key == '_sourceUnit') return null;
+  					//if (key == 'syntaxTree') return null;
+  					if (key == 'members') {
+  						return undefined;
+  					}
+  					if (value && (key == 'parent' || key == 'name')) {
+						if (key == 'name' && value) {
+							return {text: value.text ? value.text : "", filename: value.filename};
+						}
+						if (key == 'parent' && value) {
+							if (value.name) {
+	  							return {name: value.name.text, filename: value.filename};
+	  						} else {
+	  							return {filename: value.filename};
+	  						}
+						}
+						return value;
+  					}
+  					return value;
+				})
+);
+*/
+/*
 log.error(tsc.compile('module2.ts', 
     {
       "allowAutomaticSemicolonInsertion":true,
@@ -155,6 +182,30 @@ if (args.serv) {
   					return value;
 				}
 			  ));
+              break;
+          case 'getSyntaxTree':
+              log.debug('bridge.getSyntaxTree: ' + o.file);
+              socket.end(JSON.stringify({ 'model' : tss.getSyntaxTree(o.file) }, 
+              	function(key, value) {
+  					if (key == 'members') {
+  						return undefined;
+  					}
+  					if (value && (key == 'parent' || key == 'name')) {
+						if (key == 'name' && value) {
+							return {text: value.text ? value.text : "", filename: value.filename};
+						}
+						if (key == 'parent' && value) {
+							if (value.name) {
+	  							return {name: value.name.text, filename: value.filename};
+	  						} else {
+	  							return {filename: value.filename};
+	  						}
+						}
+						return value;
+  					}
+  					return value;
+				})
+			  );
               break;
           default:
             socket.end(JSON.stringify({ 'version' : args.version }));

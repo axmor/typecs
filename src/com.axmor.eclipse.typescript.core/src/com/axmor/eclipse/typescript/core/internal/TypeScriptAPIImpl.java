@@ -281,6 +281,20 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     }
 
     @Override
+	public JSONObject getSyntaxTree(IFile file) {
+		checkBridge();
+		JSONObject object = bridge.invokeBridgeMethod("getSyntaxTree", file, (String) null);
+		try {
+			if (!object.isNull("model")) {
+				return object.getJSONObject("model");
+			}
+			return null;
+		} catch (JSONException e) {
+			return null;
+		}
+	}
+
+	@Override
     public void dispose() {
         bridge.stop();
     }

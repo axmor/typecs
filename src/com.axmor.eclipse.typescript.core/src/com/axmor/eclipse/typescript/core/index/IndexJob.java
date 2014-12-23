@@ -9,10 +9,8 @@ package com.axmor.eclipse.typescript.core.index;
 
 import java.util.Set;
 
-import org.apache.lucene.store.NRTCachingDirectory;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceProxy;
-import org.eclipse.core.resources.IResourceProxyVisitor;
+import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -37,8 +35,6 @@ public class IndexJob extends Job {
     private Set<String> changedResources = Sets.newConcurrentHashSet();
     /** Indexer. */
     private TypeScriptIndexer indexer;
-    /** Caching indexed directory. */
-    private NRTCachingDirectory idxDir;
     
     /**
      * @param name
@@ -46,7 +42,6 @@ public class IndexJob extends Job {
     public IndexJob() {
         super("Indexing TypeScript source files");
         this.indexer = new TypeScriptIndexer();
-        this.idxDir = indexer.getIdxDir();
     }
     
     /**
@@ -67,19 +62,19 @@ public class IndexJob extends Job {
     protected IStatus run(IProgressMonitor monitor) {
         if (changedResources.size() == 0) {
             try {
-                ResourcesPlugin.getWorkspace().getRoot().accept(new IResourceProxyVisitor() {
+				ResourcesPlugin.getWorkspace().getRoot().accept(new IResourceVisitor() {
                     @Override
-                    public boolean visit(IResourceProxy proxy) throws CoreException {
-                        if (proxy.getType() == IResource.FILE 
-                                && TypeScriptResources.isTypeScriptFile(proxy.getName())) {
-                            String path = proxy.requestFullPath().toString();
-                            if (indexer.checkFile(path, proxy.getModificationStamp())) {
+					public boolean visit(IResource resource) throws CoreException {
+						if (resource.getType() == IResource.FILE
+								&& TypeScriptResources.isTypeScriptFile(resource.getName())) {
+							String path = resource.getFullPath().toString();
+							if (indexer.checkFile(path, resource.getModificationStamp())) {
                                 changedResources.add(path);
                             }
                         }
                         return true;
                     }
-                }, 0);
+				});
             } catch (CoreException e) {
                 throw Throwables.propagate(e);
             }
@@ -107,14 +102,5 @@ public class IndexJob extends Job {
         } finally {
             schedule(WAIT_PERIOD_MS);
         }
-    }
-    
-    /**
-     * Get index directory
-     * 
-     * @return caching directory
-     */
-    public NRTCachingDirectory getIndexDirectory() {
-        return idxDir;
     }
 }
