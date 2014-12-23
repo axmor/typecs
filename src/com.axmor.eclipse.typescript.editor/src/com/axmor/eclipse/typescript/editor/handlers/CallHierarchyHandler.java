@@ -7,15 +7,11 @@
  *******************************************************************************/ 
 package com.axmor.eclipse.typescript.editor.handlers;
 
-import java.util.regex.Pattern;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.text.ITextSelection;
-import org.eclipse.search.core.text.TextSearchScope;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
@@ -31,8 +27,6 @@ import com.axmor.eclipse.typescript.editor.hierarchy.TypeScriptHierarchyUI;
  *
  */
 public class CallHierarchyHandler extends AbstractHandler {
-    
-    TypeScriptAPI api;
 
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -45,7 +39,7 @@ public class CallHierarchyHandler extends AbstractHandler {
         ITextSelection selection = (ITextSelection) editor.getSelectionProvider().getSelection();
         int start = selection.getOffset();
         IFile file = ((FileEditorInput) editor.getEditorInput()).getFile();
-        api = editor.getApi();
+        TypeScriptAPI api = editor.getApi();
         JSONArray references = api.getReferencesAtPosition(file, start);        
         
         TypeScriptHierarchyUI.openView(editor, file, references);
