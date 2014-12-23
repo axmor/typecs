@@ -144,9 +144,28 @@ public class TypeScriptHierarchyUI {
         JSONObject result = null;
         try {
             itemPosition = TypeScriptEditorUtils.getPosition(item);
+            if (item.getString("kind").equals("class") && offset > itemPosition.offset && offset < (itemPosition.offset
+                    + itemPosition.length)) {
+                JSONArray children = item.getJSONArray("childItems");
+                boolean isChildItem = false;
+                for (int i = 0; i < children.length(); i++) {
+                    JSONObject child = (JSONObject) children.get(i);
+                    Position childPos = TypeScriptEditorUtils.getPosition(child);
+                    if (offset > childPos.offset) {
+                        isChildItem = true;
+                        break;
+                    }
+                }
+                if (!isChildItem) {
+                    result = item;
+                    result = TypeScriptEditorUtils.updatePosition(result, offset, itemPosition.length - (offset - 
+                            itemPosition.offset));
+                    return result;
+                }
+            }
             if (itemPosition.offset == offset) {
                 result = item;
-            }
+            }            
             else {
                 JSONArray children = item.getJSONArray("childItems");
                 for (int i = 0; i < children.length(); i++) {

@@ -211,4 +211,24 @@ public final class TypeScriptEditorUtils {
 			throw new JSONException("Object: " + json + " - does not contains position");
 		}
 	}
+    
+    public static JSONObject updatePosition(JSONObject json, int offset, int length) throws JSONException {
+        if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+            json.put("minChar", offset);
+            json.put("limChar", offset + length);
+            return json;
+        } else {
+            JSONObject span = new JSONObject().put("start", offset).put("length", length);
+            if (json.has("spans")) {                
+                JSONArray spans = new JSONArray();
+                spans.put(span);
+                return json.put("spans", spans);
+            } else if (json.has("textSpan")) {
+                return json.put("textSpan", span);
+            } else if (json.has("span")) {
+                return json.put("span", span);                
+            }
+            throw new JSONException("Object: " + json + " - does not contains position");
+        }
+    }
 }

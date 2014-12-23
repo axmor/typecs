@@ -64,11 +64,13 @@ public class CallHierarchyViewPart extends ViewPart implements IDoubleClickListe
     }
     
     private boolean isThisView(IWorkbenchPartReference partRef) {
-        if (!ID_CALL_HIERARCHY.equals(partRef.getId()))
+        if (!ID_CALL_HIERARCHY.equals(partRef.getId())) {
             return false;
+        }            
         String partRefSecondaryId= ((IViewReference)partRef).getSecondaryId();
         String thisSecondaryId= getViewSite().getSecondaryId();
-        return thisSecondaryId == null && partRefSecondaryId == null || thisSecondaryId != null && thisSecondaryId.equals(partRefSecondaryId);
+        return thisSecondaryId == null && partRefSecondaryId == null || thisSecondaryId != null && 
+                thisSecondaryId.equals(partRefSecondaryId);
     }
     
     private void addPartListener() {
@@ -77,8 +79,9 @@ public class CallHierarchyViewPart extends ViewPart implements IDoubleClickListe
              * @see org.eclipse.ui.IPartListener2#partActivated(org.eclipse.ui.IWorkbenchPartReference)
              */
             public void partActivated(IWorkbenchPartReference partRef) {
-                if (isThisView(partRef))
+                if (isThisView(partRef)) {
                     TypeScriptHierarchyUI.getDefault().callHierarchyViewActivated(CallHierarchyViewPart.this);
+                }
             }
 
             public void partBroughtToTop(IWorkbenchPartReference partRef) { }
