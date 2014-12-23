@@ -7,7 +7,6 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.core.index;
 
-import org.apache.lucene.store.NRTCachingDirectory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -16,10 +15,15 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.mapdb.Fun;
+import org.mapdb.Fun.Tuple4;
 
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 
 /**
  * @author Konstantin Zaitcev
@@ -28,22 +32,11 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
     /** Index job. */
     private IndexJob job;
 
-    /** Caching indexed directory. */
-    private NRTCachingDirectory idxDir;
-    
-    /**
-     * @return the idxDir
-     */
-    public NRTCachingDirectory getIdxDir() {
-        return idxDir;
-    }
-
     /**
      * Starts indexing process.
      */
     public void startIndex() {
         job = new IndexJob();
-        idxDir = job.getIndexDirectory();
         job.setSystem(true);
         job.schedule();
 
@@ -66,6 +59,25 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
     public void flush() {
         job.getIndexer().flush();
     }
+
+	public Iterable<IndexInfo> searchByName(final String name) {
+		return Iterables.transform(Iterables.filter(job.getIndexer().idxTypes,
+				new Predicate<Fun.Tuple4<String, String, String, IndexInfo>>() {
+					@Override
+					public boolean apply(Tuple4<String, String, String, IndexInfo> input) {
+						if (name.startsWith("*")) {
+							return name.length() < 2 || input.b.toLowerCase().contains(name.substring(1).toLowerCase());
+						} else {
+							return input.b.toLowerCase().startsWith(name.toLowerCase());
+						}
+					}
+				}), new Function<Fun.Tuple4<String, String, String, IndexInfo>, IndexInfo>() {
+			@Override
+			public IndexInfo apply(Tuple4<String, String, String, IndexInfo> input) {
+				return input.d;
+			}
+		});
+	}
 
     @Override
     public void resourceChanged(IResourceChangeEvent event) {

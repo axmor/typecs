@@ -58,3 +58,8 @@ exports.getOccurrencesAtPosition = function (file, position) {
 exports.getSemanticDiagnostics = function (file) {
   return ts.getSemanticDiagnostics(file);
 }
+
+exports.getSyntaxTree = function (file) {
+  var t = ts.getSyntaxTree(file);
+  return {statements: t.statements, imports: t.referencedFiles};
+}

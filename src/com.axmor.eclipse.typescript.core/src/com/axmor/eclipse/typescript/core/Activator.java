@@ -8,30 +8,17 @@
 
 package com.axmor.eclipse.typescript.core;
 
-import java.io.IOException;
-
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexNotFoundException;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TopFieldCollector;
-import org.apache.lucene.util.Version;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.axmor.eclipse.typescript.core.index.IndexInfo;
 import com.axmor.eclipse.typescript.core.index.TypeScriptIndexManager;
 import com.axmor.eclipse.typescript.core.index.TypeScriptIndexer.DocumentKind;
 import com.axmor.eclipse.typescript.core.index.TypeScriptIndexer.TypeVisibility;
-import com.google.common.base.Throwables;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 
 /**
  * The activator class controls the plug-in life cycle.
@@ -96,68 +83,32 @@ public class Activator extends AbstractUIPlugin {
      *            text to search
      * @return results
      */
-    public TypeDocument[] getSearchResults(String pattern) {
-        IndexReader ireader;
-        ScoreDoc[] hits = null;
-        TypeDocument[] docs = null;
-        try {
-            ireader = IndexReader.open(indexManager.getIdxDir());
-            IndexSearcher isearcher = new IndexSearcher(ireader);
-            // Parse a simple query that searches for "text":
-
-            Sort sort = new Sort(new SortField[] { SortField.FIELD_SCORE, new SortField("score", SortField.INT) });
-            TopFieldCollector topField = TopFieldCollector.create(sort, 100, true, true, true, false);
-
-            QueryParser parser = new QueryParser(Version.LUCENE_35, "name", new StandardAnalyzer(Version.LUCENE_35));
-            parser.setAllowLeadingWildcard(true);
-            parser.setAutoGeneratePhraseQueries(false);
-            Query query = parser.parse("name:(*" + pattern.toLowerCase() + "*) or terms:(*" + pattern.toLowerCase()
-                    + "*)");
-            isearcher.search(query, topField);
-            hits = topField.topDocs().scoreDocs;
-            // Iterate through the results:
-            docs = new TypeDocument[hits.length];
-            String innerName;
-            for (int i = 0; i < hits.length; i++) {
-                Document hitDoc = isearcher.doc(hits[i].doc);
-                innerName = hitDoc.get("name");
-                String[] terms = hitDoc.get("name").split(".");
-                if (terms.length > 0) {
-                    for (int j = 0; j < terms.length; j++) {
-                        if (terms[j].toLowerCase().contains(pattern.toLowerCase())) {
-                            innerName = terms[j];
-                            break;
-                        }
-                    }
-                }
-                int typeInt = Integer.parseInt(hitDoc.get("type"));
-                String type = "";
+	public Iterable<TypeDocument> getSearchResults(String pattern) {
+		if (pattern.endsWith("*")) {
+			pattern = pattern.substring(0, pattern.length() - 1);
+		}
+		return Iterables.transform(indexManager.searchByName(pattern), new Function<IndexInfo, TypeDocument>() {
+			@Override
+			public TypeDocument apply(IndexInfo input) {
+				String type = "";
                 for (int k = 0; k < DocumentKind.values().length; k++) {
-                    if (typeInt == DocumentKind.values()[k].getIntValue()) {
+					if (input.getType() == DocumentKind.values()[k].getIntValue()) {
                         type = DocumentKind.values()[k].getStringValue();
                         break;
                     }
                 }
-                int visibilityInt = Integer.parseInt(hitDoc.get("visibility"));
                 String visibility = "";
                 for (int k = 0; k < TypeVisibility.values().length; k++) {
-                    if (visibilityInt == TypeVisibility.values()[k].getIntValue()) {
+					if (input.getVisibility() == TypeVisibility.values()[k].getIntValue()) {
                         visibility = TypeVisibility.values()[k].getStringValue();
                         break;
                     }
                 }
-                docs[i] = new TypeDocument(innerName, hitDoc.get("file"), hitDoc.get("project"), hitDoc.get("offset"),
+				return new TypeDocument(input.getName(), input.getFile(), input.getProject(), String.valueOf(input
+						.getOffset()),
                         type, visibility);
-            }
-            isearcher.close();
-            ireader.close();
-        } catch (IndexNotFoundException e) {
-            indexManager.flush();
-            docs = new TypeDocument[0];
-        } catch (IOException | ParseException e) {
-            throw Throwables.propagate(e);
-        }
-        return docs;
+			}
+		});
     }
 
     /**

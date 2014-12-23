@@ -35602,7 +35602,8 @@ var ts;
             getFormattingEditsForDocument: getFormattingEditsForDocument,
             getFormattingEditsAfterKeystroke: getFormattingEditsAfterKeystroke,
             getEmitOutput: getEmitOutput,
-            getSignatureAtPosition: getSignatureAtPosition
+            getSignatureAtPosition: getSignatureAtPosition,
+            getSyntaxTree: getCurrentSourceFile
         };
     }
     ts.createLanguageService = createLanguageService;

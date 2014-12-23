@@ -9,25 +9,20 @@ package com.axmor.eclipse.typescript.core.index;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.NavigableSet;
+import java.util.Set;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.NumericField;
-import org.apache.lucene.index.IndexNotFoundException;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.NRTCachingDirectory;
-import org.apache.lucene.util.Version;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Fun;
+import org.mapdb.Fun.Tuple4;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -36,387 +31,397 @@ import us.monoid.json.JSONObject;
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptUtils;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 
 /**
- * Indexer that uses Lucene engine and TS api.
+ * Indexer that uses MapDB engine and TS api.
  * 
  * @author Konstantin Zaitcev
  */
 public class TypeScriptIndexer {
 
-    /** Indexer constant. */
-    private static final double IDX_MAX_CACHED_SIZE = 10.0;
-    /** Indexer constant. */
-    private static final double IDX_MAX_MERGED_SIZE = 1.0;
+	/** Index version. */
+	private static final int IDX_VERSION = 1;
+	private static final Set<String> EMPTY_BASE_TYPES = Collections.emptySet();
 
-    /** Path to index file. */
-    private File indexPath;
-    /** Index writer. */
-    private IndexWriter iwriter;
-    /** Caching indexed directory. */
-    private NRTCachingDirectory idxDir;
+	/** Index database. */
+	private DB idxDB;
 
-    /**
-     * Enum for hardcoding of document kind case
-     * 
-     * @author Asya Vorobyova
-     */
-    public enum DocumentKind {
-        /** interface case */
-        INTERFACE,
-        /** enum case */
-        ENUM,
-        /** class case */
-        CLASS;
+	/** File, Name, Parent, Index */
+	public NavigableSet<Fun.Tuple4<String, String, String, IndexInfo>> idxTypes;
 
-        /**
-         * Gets corresponding int identifier
-         * 
-         * @return int value
-         */
-        public int getIntValue() {
-            if (name().equals("INTERFACE")) {
-                return 1;
-            }
-            if (name().equals("ENUM")) {
-                return 2;
-            }
-            if (name().equals("CLASS")) {
-                return 3;
-            }
-            return 0;
-        }
-        
-        /**
-         * @return string value
-         */
-        public String getStringValue() {
-            return name().toLowerCase();
-        }
-    }
+	/**
+	 * Enum for hardcoding of document kind case
+	 * 
+	 * @author Asya Vorobyova
+	 */
+	public enum DocumentKind {
+		/** interface case */
+		INTERFACE,
+		/** enum case */
+		ENUM,
+		/** class case */
+		CLASS;
 
-    /**
-     * Enum for hardcoding of type modifier case
-     * 
-     * @author Asya Vorobyova
-     */
-    public enum TypeVisibility {
-        /** public */
-        PUBLIC,
-        /** private */
-        PRIVATE;
+		/**
+		 * Gets corresponding int identifier
+		 * 
+		 * @return int value
+		 */
+		public int getIntValue() {
+			if (name().equals("INTERFACE")) {
+				return 1;
+			}
+			if (name().equals("ENUM")) {
+				return 2;
+			}
+			if (name().equals("CLASS")) {
+				return 3;
+			}
+			return 0;
+		}
 
-        /**
-         * Gets corresponding int identifier
-         * 
-         * @return int value
-         */
-        public int getIntValue() {
-            if (name().equals("PUBLIC")) {
-                return 0;
-            }
-            if (name().equals("PRIVATE")) {
-                return 1;
-            }
-            return -1;
-        }
-        
-        /**
-         * @return string value
-         */
-        public String getStringValue() {
-            return name().toLowerCase();
-        }
-    }
+		/**
+		 * @return string value
+		 */
+		public String getStringValue() {
+			return name().toLowerCase();
+		}
+	}
 
-    /**
-     * @return the idxDir
-     */
-    public NRTCachingDirectory getIdxDir() {
-        return idxDir;
-    }
+	/**
+	 * Enum for hardcoding of type modifier case
+	 * 
+	 * @author Asya Vorobyova
+	 */
+	public enum TypeVisibility {
+		/** public */
+		PUBLIC,
+		/** private */
+		PRIVATE;
 
-    /**
-     * Performs index setup and initial cleanup.
-     */
-    public TypeScriptIndexer() {
-        this.indexPath = Activator.getDefault().getStateLocation().append("index").toFile();
-        if (!this.indexPath.exists()) {
-            this.indexPath.mkdirs();
-        }
+		/**
+		 * Gets corresponding int identifier
+		 * 
+		 * @return int value
+		 */
+		public int getIntValue() {
+			if (name().equals("PUBLIC")) {
+				return 0;
+			}
+			if (name().equals("PRIVATE")) {
+				return 1;
+			}
+			return -1;
+		}
 
-        try {
-            idxDir = new NRTCachingDirectory(FSDirectory.open(indexPath), IDX_MAX_MERGED_SIZE, IDX_MAX_CACHED_SIZE);
-            try {
-                IndexReader ireader = IndexReader.open(idxDir, false);
-                try {
-                    for (int i = 0; i < ireader.numDocs(); i++) {
-                        Document doc = ireader.document(i);
-                        if (!ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(doc.get("file"))).exists()) {
-                            ireader.deleteDocument(i);
-                        }
-                    }
-                } finally {
-                    ireader.close();
-                }
-            } catch (IndexNotFoundException e) {
-                // ignore this exception
-            }
-            Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_35);
-            IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_35, analyzer);
-            config.setMergeScheduler(idxDir.getMergeScheduler());
-            iwriter = new IndexWriter(idxDir, config);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+		/**
+		 * @return string value
+		 */
+		public String getStringValue() {
+			return name().toLowerCase();
+		}
+	}
 
-    }
+	/**
+	 * Performs index setup and initial cleanup.
+	 */
+	public TypeScriptIndexer() {
+		File indexPath = Activator.getDefault().getStateLocation().append("idx_" + IDX_VERSION).toFile();
+		if (!indexPath.exists()) {
+			indexPath.getParentFile().mkdirs();
+		}
 
-    /**
-     * Removes all instances from index related to given file.
-     * 
-     * @param path
-     *            file path
-     */
-    public synchronized void removeFromIndex(String path) {
-        try {
-            iwriter.deleteDocuments(new Term("file", path));
-        } catch (IOException e) {
-            Activator.error(e);
-        }
-    }
+		if (this.idxDB != null) {
+			this.idxDB.close();
+		}
+		this.idxDB = DBMaker.newFileDB(indexPath).closeOnJvmShutdown().make();
+		this.idxTypes = idxDB.getTreeSet("types");
+		final HashSet<String> files = new HashSet<>();
 
-    /**
-     * Indexes TS file by path.
-     * 
-     * @param path
-     *            file path
-     */
-    public void indexFile(String path) {
-        IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(path));
-        String project = file.getProject().getName();
+		for (Tuple4<String, String, String, IndexInfo> t : this.idxTypes) {
+			files.add(t.a);
+		}
 
-        removeFromIndex(path);
-        try {
-            JSONArray model = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getScriptModel(file);
-            if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-            	indexModelLegacy(project, file, path, model);
-            } else {
-            	indexModel(project, file, path, model);
-            }
-            iwriter.commit();
-        } catch (Exception e) {
-            Activator.error(e);
-        }
-    }
+		for (String file : files) {
+			if (!ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(file)).exists()) {
+				removeFromIndex(file);
+			}
+		}
+	}
 
-    
-    /**
-     * Adds document to lucene index.
-     * 
-     * @param name
-     *            name
-     * @param project
-     *            project
-     * @param file
-     *            file
-     * @param type
-     *            type
-     * @param visibility
-     *            visibility
-     * @param offset
-     *            offset
-     * @param modificationStamp
-     *            modification stamp
-     */
-    private void addDocumentToIndex(String name, String project, String file, int type, int visibility, int offset,
-            long modificationStamp) throws IOException {
-        Document doc = new Document();
-        doc.add(new Field("name", name, Field.Store.YES, Field.Index.ANALYZED));
-        doc.add(new Field("terms", getTerms(name), Field.Store.YES, Field.Index.ANALYZED));
-        doc.add(new Field("file", file, Field.Store.YES, Field.Index.NOT_ANALYZED));
-        doc.add(new Field("project", project, Field.Store.YES, Field.Index.NOT_ANALYZED));
-        doc.add(new NumericField("score", Field.Store.YES, true).setIntValue(getScore(type, visibility)));
-        doc.add(new NumericField("offset", Field.Store.YES, false).setIntValue(offset));
-        doc.add(new NumericField("type", Field.Store.YES, false).setIntValue(type));
-        doc.add(new NumericField("visibility", Field.Store.YES, false).setIntValue(visibility));
-        doc.add(new NumericField("file_stamp", Field.Store.YES, false).setLongValue(modificationStamp));
-        iwriter.addDocument(doc);
-    }
+	/**
+	 * Removes all instances from index related to given file.
+	 * 
+	 * @param path
+	 *            file path
+	 */
+	public synchronized void removeFromIndex(final String path) {
+		Iterator<Tuple4<String, String, String, IndexInfo>> iterator = idxTypes.iterator();
+		while (iterator.hasNext()) {
+			Fun.Tuple4<String, String, String, IndexInfo> t = iterator.next();
+			if (path.equals(t.a)) {
+				iterator.remove();
+			}
+		}
+		idxDB.commit();
+	}
 
-    /**
-     * @param type
-     *            entry type (0 - interface, 1 - enum, 2 - class)
-     * @param visibility
-     *            visibility (0 - public, 1 - private)
-     * @return score for search by type and visibility
-     */
-    private int getScore(int type, int visibility) {
-        return type * 10 + visibility;
-    }
+	/**
+	 * Indexes TS file by path.
+	 * 
+	 * @param path
+	 *            file path
+	 */
+	public void indexFile(String path) {
+		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(path));
+		String project = file.getProject().getName();
+		removeFromIndex(path);
+		try {
+			JSONArray model = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getScriptModel(file);
+			if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+				indexModelLegacy(project, file, path, model);
+			} else {
+				// JSONObject syntaxTree =
+				// TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getSyntaxTree(file);
+				// if (syntaxTree != null) {
+				// HashMap<String, Set<String>> baseTypes = new HashMap<>();
+				// indexModelTree(syntaxTree.getJSONArray("statements"), "", baseTypes);
+				//
+				// indexModelFromSyntax(project, file, path, "", baseTypes, model);
+				// } else {
+					indexModel(project, file, path, model);
+				// }
+			}
+			idxDB.commit();
+		} catch (Exception e) {
+			Activator.error(e);
+		}
+	}
 
-    /**
-     * @param name
-     *            name
-     * @return transformed name to string separated by whitespace for index terms
-     */
-    private String getTerms(String name) {
-        ArrayList<String> res = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < name.length(); i++) {
-            char ch = name.charAt(i);
-            if (Character.isSpaceChar(ch) || ch == '.' || ch == '_') {
-                if (sb.length() > 0) {
-                    res.add(sb.toString());
-                    sb = new StringBuilder();
-                }
-            } else if (Character.isUpperCase(ch)) {
-                if (sb.length() > 0) {
-                    res.add(sb.toString());
-                    sb = new StringBuilder();
-                }
-                sb.append(ch);
-            } else {
-                sb.append(ch);
-            }
-        }
-        if (sb.length() > 0) {
-            res.add(sb.toString());
-        }
-        return Joiner.on(' ').join(res);
-    }
+	/**
+	 * Adds document to index.
+	 * 
+	 * @param name
+	 *            name
+	 * @param project
+	 *            project
+	 * @param file
+	 *            file
+	 * @param type
+	 *            type
+	 * @param visibility
+	 *            visibility
+	 * @param offset
+	 *            offset
+	 * @param modificationStamp
+	 *            modification stamp
+	 */
+	private void addDocumentToIndex(String qname, String name, String project, String file, int type, int visibility,
+			int offset, Set<String> baseTypes, long modificationStamp) throws IOException {
+		IndexInfo info = new IndexInfo();
+		info.setName(name);
+		info.setFile(file);
+		info.setProject(project);
+		info.setOffset(offset);
+		info.setType(type);
+		info.setVisibility(visibility);
+		info.getParents().addAll(baseTypes);
+		info.setModificationStamp(modificationStamp);
+		idxTypes.add(Fun.t4(file, qname, "", info));
+	}
 
-    /**
-     * @param path
-     *            path to file
-     * @param modificationStamp
-     *            modification stamp to check
-     * @return <code>true</code> if file need reindex
-     */
-    public boolean checkFile(String path, long modificationStamp) {
-        try {
-            IndexReader ireader = IndexReader.open(idxDir, true);
-            try {
-                TermDocs docs = ireader.termDocs(new Term("file", path));
-                try {
-                    if (docs.next()) {
-                        Document doc = ireader.document(docs.doc());
-                        String stamp = doc.get("file_stamp");
+	/**
+	 * @param path
+	 *            path to file
+	 * @param modificationStamp
+	 *            modification stamp to check
+	 * @return <code>true</code> if file need reindex
+	 */
+	public boolean checkFile(final String path, final long modificationStamp) {
+		return !Iterables.tryFind(idxTypes,
+				new com.google.common.base.Predicate<Fun.Tuple4<String, String, String, IndexInfo>>() {
+					@Override
+					public boolean apply(Tuple4<String, String, String, IndexInfo> t) {
+						return path.equals(t.a) && t.d.getModificationStamp() == modificationStamp;
+					}
+				}).isPresent();
+	}
 
-                        if (modificationStamp == Long.parseLong(stamp)) {
-                            return false;
-                        }
-                    }
-                } finally {
-                    docs.close();
-                }
-            } finally {
-                ireader.close();
-            }
-        } catch (IndexNotFoundException e) {
-            // ignore exception
-        } catch (IOException e) {
-            Activator.error(e);
-        }
-        return true;
-    }
+	/**
+	 * Closes indexes.
+	 */
+	public void close() {
+		idxDB.commit();
+		idxDB.compact();
+		idxDB.close();
+	}
 
-    /**
-     * Closes lucene indexes.
-     */
-    public void close() {
-        try {
-            iwriter.close(true);
-            idxDir.close();
-        } catch (IOException e) {
-            Activator.error(e);
-        }
-    }
-    
-    /**
-     * Flushes changes on disk.
-     */
-    public void flush() {
-        try {
-            iwriter.commit();
-        } catch (IOException e) {
-            Activator.error(e);
-        }
-    }
-    
-    private void indexModelLegacy(String project, IFile file, String path, JSONArray model) throws JSONException, IOException {
-        for (int i = 0; i < model.length(); i++) {
-            JSONObject obj = model.getJSONObject(i);
-            String name = obj.getString("name");
-            String kind = obj.getString("kind");
-            String modifier = obj.getString("kindModifiers");
-            int offset = obj.getInt("minChar");
+	/**
+	 * Flushes changes on disk.
+	 */
+	public void flush() {
+		idxDB.commit();
+	}
 
-            if ("module".equals(obj.getString("containerKind"))) {
-                name = obj.getString("containerName") + "." + name;
-            }
-            switch (kind) {
-            case "interface":
-                addDocumentToIndex(name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
-                        file.getModificationStamp());
-                break;
-            case "enum":
-                addDocumentToIndex(name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
-                        file.getModificationStamp());
-                break;
-            case "class":
-                addDocumentToIndex(
-                        name,
-                        project,
-                        path,
-                        DocumentKind.CLASS.getIntValue(),
-                        "private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
-                                .getIntValue(), offset, file.getModificationStamp());
-                break;
-            default:
-                break;
-            }
-        }
-    }
+	private void indexModelLegacy(String project, IFile file, String path, JSONArray model) throws JSONException,
+			IOException {
+		String qname = "";
+		for (int i = 0; i < model.length(); i++) {
+			JSONObject obj = model.getJSONObject(i);
+			String name = obj.getString("name");
+			String kind = obj.getString("kind");
+			String modifier = obj.getString("kindModifiers");
+			int offset = obj.getInt("minChar");
+			qname = name;
+			if ("module".equals(obj.getString("containerKind"))) {
+				qname = obj.getString("containerName") + "." + name;
+			}
+			switch (kind) {
+			case "interface":
+				addDocumentToIndex(qname, name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
+						EMPTY_BASE_TYPES, file.getModificationStamp());
+				break;
+			case "enum":
+				addDocumentToIndex(qname, name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
+						EMPTY_BASE_TYPES, file.getModificationStamp());
+				break;
+			case "class":
+				addDocumentToIndex(
+						qname,
+						name,
+						project,
+						path,
+						DocumentKind.CLASS.getIntValue(),
+						"private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
+								.getIntValue(), offset, EMPTY_BASE_TYPES, file.getModificationStamp());
+				break;
+			default:
+				break;
+			}
+		}
+	}
 
-    private void indexModel(String project, IFile file, String path, JSONArray model) throws JSONException, IOException {
-        for (int i = 0; i < model.length(); i++) {
-            JSONObject obj = model.getJSONObject(i);
-            String name = obj.getString("text");
-            String kind = obj.getString("kind");
-            String modifier = obj.getString("kindModifiers");
-            int offset = obj.getJSONArray("spans").getJSONObject(0).getInt("start");
+	private void indexModel(String project, IFile file, String path, JSONArray model) throws JSONException, IOException {
+		for (int i = 0; i < model.length(); i++) {
+			JSONObject obj = model.getJSONObject(i);
+			String name = obj.getString("text");
+			String kind = obj.getString("kind");
+			String modifier = obj.getString("kindModifiers");
+			int offset = obj.getJSONArray("spans").getJSONObject(0).getInt("start");
 
-//            if ("module".equals(obj.getString("containerKind"))) {
-//                name = obj.getString("containerName") + "." + name;
-//            }
-            switch (kind) {
-            case "interface":
-                addDocumentToIndex(name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
-                        file.getModificationStamp());
-                break;
-            case "enum":
-                addDocumentToIndex(name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
-                        file.getModificationStamp());
-                break;
-            case "class":
-                addDocumentToIndex(
-                        name,
-                        project,
-                        path,
-                        DocumentKind.CLASS.getIntValue(),
-                        "private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
-                                .getIntValue(), offset, file.getModificationStamp());
-                break;
-            default:
-                break;
-            }
-            
-            if (obj.has("childItems") && !obj.isNull("childItems")) {
-            	indexModel(project, file, path, obj.getJSONArray("childItems"));
-            }
-        }
-    }
+			switch (kind) {
+			case "interface":
+				addDocumentToIndex(name, name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
+						EMPTY_BASE_TYPES, file.getModificationStamp());
+				break;
+			case "enum":
+				addDocumentToIndex(name, name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
+						EMPTY_BASE_TYPES, file.getModificationStamp());
+				break;
+			case "class":
+				addDocumentToIndex(
+						name,
+						name,
+						project,
+						path,
+						DocumentKind.CLASS.getIntValue(),
+						"private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
+								.getIntValue(), offset, EMPTY_BASE_TYPES, file.getModificationStamp());
+				break;
+			default:
+				break;
+			}
+
+			if (obj.has("childItems") && !obj.isNull("childItems")) {
+				indexModel(project, file, path, obj.getJSONArray("childItems"));
+			}
+		}
+	}
+
+	private void indexModelFromSyntax(String project, IFile file, String path, String qname,
+			HashMap<String, Set<String>> baseTypes, JSONArray model) throws JSONException, IOException {
+		// JSONArray imports = tree.getJSONArray("imports");
+		for (int i = 0; i < model.length(); i++) {
+			JSONObject obj = model.getJSONObject(i);
+			String name = obj.getString("text");
+			qname = name;
+			String kind = obj.getString("kind");
+			String modifier = obj.getString("kindModifiers");
+			int offset = obj.getJSONArray("spans").getJSONObject(0).getInt("start");
+			switch (kind) {
+			case "interface":
+				addDocumentToIndex(qname, name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
+						baseTypes.get(qname) != null ? baseTypes.get(qname) : EMPTY_BASE_TYPES,
+						file.getModificationStamp());
+				break;
+			case "enum":
+				addDocumentToIndex(qname, name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
+						baseTypes.get(qname) != null ? baseTypes.get(qname) : EMPTY_BASE_TYPES,
+						file.getModificationStamp());
+				break;
+			case "class":
+				addDocumentToIndex(
+						qname,
+						name,
+						project,
+						path,
+						DocumentKind.CLASS.getIntValue(),
+						"private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
+								.getIntValue(), offset, baseTypes.get(qname) != null ? baseTypes.get(qname)
+								: EMPTY_BASE_TYPES,
+						file.getModificationStamp());
+				break;
+			default:
+				break;
+			}
+
+			if (obj.has("childItems") && !obj.isNull("childItems")) {
+				indexModelFromSyntax(project, file, path, qname, baseTypes, obj.getJSONArray("childItems"));
+			}
+		}
+	}
+
+	private void indexModelTree(JSONArray statements, String name, HashMap<String, Set<String>> baseTypes)
+			throws JSONException {
+		for (int i = 0; i < statements.length(); i++) {
+			JSONObject obj = statements.getJSONObject(i);
+			if (obj.has("name")) {
+				String n = obj.getJSONObject("name").getString("text");
+				name = name.isEmpty() ? (name + n) : (name + "." + n);
+				// System.out.println(name);
+			}
+			if (obj.has("baseTypes")) {
+				baseTypes.put(name, getBaseTypes(obj.getJSONArray("baseTypes")));
+			}
+			if (obj.has("body")) {
+				JSONObject body = obj.getJSONObject("body");
+				if (body.has("statements")) {
+					indexModelTree(body.getJSONArray("statements"), name, baseTypes);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @param jsonArray
+	 * @return
+	 * @throws JSONException
+	 */
+	private Set<String> getBaseTypes(JSONArray types) throws JSONException {
+		Set<String> baseTypes = new HashSet<>();
+		for (int i = 0; i < types.length(); i++) {
+			JSONObject obj = types.getJSONObject(i);
+			if (obj.has("typeName")) {
+				JSONObject tname = obj.getJSONObject("typeName");
+				if (tname.has("left") && tname.has("right")) {
+					baseTypes.add(tname.getJSONObject("left").getString("text") + "."
+							+ tname.getJSONObject("right").getString("text"));
+				} else if (tname.has("text")) {
+					baseTypes.add(tname.getString("text"));
+				}
+			}
+		}
+		return baseTypes;
+	}
 }
