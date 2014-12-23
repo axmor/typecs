@@ -136,7 +136,7 @@ public class TypeScriptHierarchyUI {
                 for (int i = 0; i < children.length(); i++) {
                     JSONObject child = (JSONObject) children.get(i);
                     Position childPos = TypeScriptEditorUtils.getPosition(child);
-                    if (offset > childPos.offset) {
+                    if (offset >= childPos.offset) {
                         isChildItem = true;
                         break;
                     }
