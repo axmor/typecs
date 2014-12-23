@@ -115,8 +115,9 @@ public class TreeRoot {
                     int segmentsCount = fileName.split("/").length;
                     currentFile = null;
                     for (int j = 0; j < projectFiles.length; j++) {
-                        if (projectFiles[j].getFullPath().segmentCount() < segmentsCount)
+                        if (projectFiles[j].getFullPath().segmentCount() < segmentsCount) {
                             continue;
+                        }
                         if (projectFiles[j].getFullPath()
                                 .removeFirstSegments(projectFiles[j].getFullPath().segmentCount() - segmentsCount)
                                 .toString().equals(fileName)) {
