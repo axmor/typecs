@@ -157,6 +157,10 @@ if (args.serv) {
             log.debug('bridge.getSignature: ' + o.file + ', pos: ' + o.params);
             socket.end(JSON.stringify({ 'model' : tss.getSignatureAtPosition(o.file, o.params)}));
             break;    
+          case 'getSignatureHelpItems':
+        	log.debug('bridge.getSignatureHelpItems: ' + o.file + ', pos: ' + o.params);
+            socket.end(JSON.stringify({ 'model' : tss.getSignatureHelpItems(o.file, o.params)}));
+            break;
           case 'getTypeDefinition':                            
             log.debug('bridge.getTypeDefinition: ' + o.file + ', param: ' + o.params);
             socket.end(JSON.stringify({ 'model' : tss.getDefinitionAtPosition(o.file, o.params) }));

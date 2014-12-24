@@ -24,7 +24,9 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
+import org.eclipse.jface.text.contentassist.ContextInformation;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
@@ -43,6 +45,7 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.editor.Activator;
+import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 import com.axmor.eclipse.typescript.editor.TypeScriptUIImages;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptImageKeys;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
@@ -62,6 +65,7 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 	private TypeScriptAPI api;
 	/** Working file. */
 	private IFile file;
+	private IContextInformationValidator fValidator;
 
 	/**
 	 * @param api
@@ -387,7 +391,41 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 
 	@Override
 	public IContextInformation[] computeContextInformation(ITextViewer viewer, int offset) {
-		return null;
+	    api.updateFileContent(file, viewer.getDocument().get());
+        JSONObject info = api.getSignatureHelpItems(file, offset);        
+        
+        if (info != null && info.has("items")) {
+            try {
+                List<IContextInformation> contexts = new ArrayList<IContextInformation>();
+                JSONArray items = info.getJSONArray("items");
+                for (int j = 0; j < items.length(); j++) {
+                    StringBuffer sb = new StringBuffer();
+                    JSONArray parameters = items.getJSONObject(j).getJSONArray("parameters");
+                    for (int i = 0; i < parameters.length(); i++) {
+                        if (i > 0) {
+                            sb.append(", ");                         
+                        }
+                        StringBuffer paramSB = new StringBuffer();                        
+                        JSONObject param = parameters.getJSONObject(i);
+                        JSONArray parts = param.getJSONArray("displayParts");
+                        for (int k = 0; k < parts.length(); k++) {
+                            String text = parts.getJSONObject(k).getString("text");                            
+                            paramSB.append(text);
+                        }
+                        sb.append(paramSB.toString());                        
+                    }
+                    JSONObject span = info.getJSONObject("applicableSpan");
+                    Position position = new Position(span.getInt("start"), span.getInt("length"));
+                    contexts.add(new TypeScriptContextInformation(sb.toString(), sb.toString(), position));
+                }              
+                
+                return contexts.toArray(new IContextInformation[contexts.size()]);
+            } catch (JSONException e) {
+                // ignore
+            }
+        }
+        return null;
+	    
 	}
 
 	@Override
@@ -407,7 +445,10 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 
 	@Override
 	public IContextInformationValidator getContextInformationValidator() {
-		return null;
+	    if (fValidator == null) {
+	        fValidator = new TypeScriptContextInformationValidator(); 
+	    }	        
+	    return fValidator;
 	}
 
 	@Override
