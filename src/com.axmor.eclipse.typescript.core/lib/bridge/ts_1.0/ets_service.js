@@ -41,6 +41,10 @@ exports.getSignatureAtPosition = function(file, params) {
   return ts.getSignatureAtPosition(file, params);
 }
 
+exports.getSignatureHelpItems = function(file, params) {
+  return null;
+}
+
 exports.getDefinitionAtPosition = function(file, params) {
   return ts.getDefinitionAtPosition(file, params);
 }
