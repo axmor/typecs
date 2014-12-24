@@ -127,4 +127,13 @@ public interface TypeScriptAPI extends IDisposable {
      * @return array of references in this file
      */
     JSONArray getOccurrencesAtPosition(IFile file, int position);
+
+    /**
+     * @param file
+     *            for to search
+     * @param position
+     *            absolute offset in file
+     * @return help signature of method under this position
+     */
+    JSONObject getSignatureHelpItems(IFile file, int position);
 }
