@@ -24,6 +24,8 @@ import org.eclipse.jface.text.information.IInformationProvider;
 import org.eclipse.jface.text.information.InformationPresenter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
+import org.eclipse.jface.text.quickassist.IQuickAssistAssistant;
+import org.eclipse.jface.text.quickassist.QuickAssistAssistant;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.source.DefaultAnnotationHover;
 import org.eclipse.jface.text.source.IAnnotationHover;
@@ -49,6 +51,11 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
      * A content assistant for code completion
      */
     private ContentAssistant assistant;
+    
+    /**
+    * A quick fix assistant
+    */
+   private QuickAssistAssistant quickAssistant;
 
     /**
      * A current file
@@ -209,6 +216,24 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
     	}       
 
         return assistant;
+    }
+    
+    @Override
+    public IQuickAssistAssistant getQuickAssistAssistant(ISourceViewer sourceViewer) {
+        if (editor != null && quickAssistant == null) {
+            QuickAssistAssistant assistant= new QuickAssistAssistant();
+            assistant.setQuickAssistProcessor(new TypeScriptAssistProcessor(editor.getApi(), file));
+            assistant.setInformationControlCreator(new IInformationControlCreator() {
+                @Override
+                public IInformationControl createInformationControl(Shell parent) {
+                    return new DefaultInformationControl(parent, true);
+                }
+            });
+
+            return assistant;
+        }       
+
+        return quickAssistant;
     }
 
     @Override
