@@ -146,6 +146,12 @@
            defaultHandler="com.axmor.eclipse.typescript.editor.handlers.CallHierarchyHandler" 
            id="com.axmor.eclipse.typescript.navigate.call.hierarchy" />
            
+      <command 
+           name="Quick Rename" 
+           description="Quick rename in file"
+           categoryId="com.axmor.eclipse.typescript.category.navigate" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.QuickRenameHandler" 
+           id="com.axmor.eclipse.typescript.assist.renameInFile" />     
 	  <command 
       	name="Toogle Mark Occurrences"
       	description="Toogle Mark Occurrences"
@@ -212,6 +218,11 @@
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.navigate.show.outline"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+      <key
+           sequence="M1+2 R"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.assist.renameInFile"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>      
 	  <key
             sequence="CTRL+ALT+H"
             contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
