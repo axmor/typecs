@@ -26,10 +26,12 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
-import org.eclipse.jface.text.contentassist.ContextInformation;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
+import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
+import org.eclipse.jface.text.quickassist.IQuickAssistProcessor;
+import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.templates.Template;
 import org.eclipse.jface.text.templates.TemplateCompletionProcessor;
 import org.eclipse.jface.text.templates.TemplateContext;
@@ -45,11 +47,11 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.editor.Activator;
-import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 import com.axmor.eclipse.typescript.editor.TypeScriptUIImages;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptImageKeys;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
 import com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplateAccess;
+import com.axmor.eclipse.typescript.editor.rename.QuickRenameAssistProposal;
 import com.google.common.base.Throwables;
 
 /**
@@ -58,7 +60,7 @@ import com.google.common.base.Throwables;
  * @author Asya Vorobyova
  */
 @SuppressWarnings("restriction")
-public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
+public class TypeScriptAssistProcessor extends TemplateCompletionProcessor implements IQuickAssistProcessor {
 	private static String fgCSSStyles;
 
 	/** TypeScript API. */
@@ -502,5 +504,22 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor {
 		}
 		return css;
 	}
+
+    @Override
+    public boolean canAssist(IQuickAssistInvocationContext context) {
+        return true;
+    }
+
+    @Override
+    public boolean canFix(Annotation annotation) {
+        return true;
+    }
+
+    @Override
+    public ICompletionProposal[] computeQuickAssistProposals(IQuickAssistInvocationContext context) {
+        List<ICompletionProposal> result = new ArrayList<ICompletionProposal>();
+        result.add(new QuickRenameAssistProposal(api, file));
+        return result.toArray(new ICompletionProposal[result.size()]);
+    }
 
 }
