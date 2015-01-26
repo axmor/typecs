@@ -3,3 +3,5 @@
 .*\.orig
 .*/\.checkstyle
 tools/axmor.keystore
+syntax: glob
+src\com.axmor.eclipse.typescript.editor\.settings\org.eclipse.jdt.ui.prefs
