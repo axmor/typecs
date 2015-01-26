@@ -418,42 +418,74 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	@Override
 	public void processDocument(IFile file, IDocument doc) {
 		api.updateFileContent(file, doc.get());
-		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
-		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration())
+				.setFile(file);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration())
+				.setEditor(this);
 		if (contentOutlinePage != null) {
 			JSONArray model = api.getScriptModel(file);
 			contentOutlinePage.refresh(model);
 			ArrayList<Position> positions = getPositions(model);
 			updateFoldingStructure(positions);
-
 			try {
-				JSONArray diagnostics = api.getSemanticDiagnostics(file);
-				if (diagnostics != null) {
-					file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-					for (int i = 0; i < diagnostics.length(); i++) {
-						JSONObject diagnostic = diagnostics.getJSONObject(i);
-						IMarker marker = file.createMarker(MARKER_TYPE);
-						String message = "";
-						if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-							message = diagnostic.getString("diagnosticCode");
-							if (diagnostic.has("arguments")) {
-								JSONArray arguments = diagnostic.getJSONArray("arguments");
-								for (int j = 0; j < arguments.length(); j++) {
-									message = message.replaceAll("\\{" + j + "\\}",
-											Matcher.quoteReplacement(arguments.getString(j)));
+				for (IResource resource : file.getProject().members()) {
+					if ((resource instanceof IFile)
+							&& (TypeScriptResources.isTypeScriptFile(resource
+									.getName()))) {
+						IFile currentFile = (IFile) resource;
+						try {
+							JSONArray diagnostics = api
+									.getSemanticDiagnostics(currentFile);
+							if (diagnostics != null) {
+								currentFile.deleteMarkers(MARKER_TYPE, true,
+										IResource.DEPTH_INFINITE);
+								for (int i = 0; i < diagnostics.length(); i++) {
+									JSONObject diagnostic = diagnostics
+											.getJSONObject(i);
+									IMarker marker = currentFile
+											.createMarker(MARKER_TYPE);
+									String message = "";
+									if (TypeScriptUtils
+											.isTypeScriptLegacyVersion()) {
+										message = diagnostic
+												.getString("diagnosticCode");
+										if (diagnostic.has("arguments")) {
+											JSONArray arguments = diagnostic
+													.getJSONArray("arguments");
+											for (int j = 0; j < arguments
+													.length(); j++) {
+												message = message
+														.replaceAll(
+																"\\{" + j
+																		+ "\\}",
+																Matcher.quoteReplacement(arguments
+																		.getString(j)));
+											}
+										}
+									} else {
+										message = diagnostic.getString("messageText");
+									}
+									marker.setAttribute(IMarker.MESSAGE,
+											message);
+									marker.setAttribute(IMarker.SEVERITY,
+											IMarker.SEVERITY_ERROR);
+
+									marker.setAttribute(IMarker.CHAR_START,
+											diagnostic.getInt("start"));
+									marker.setAttribute(
+											IMarker.CHAR_END,
+											diagnostic.getInt("start")
+													+ diagnostic
+															.getInt("length"));
 								}
 							}
-						} else {
-							message = diagnostic.getString("messageText");
+						} catch (JSONException | CoreException e) {
+							e.printStackTrace();
 						}
-						marker.setAttribute(IMarker.MESSAGE, message);
-						marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-
-						marker.setAttribute(IMarker.CHAR_START, diagnostic.getInt("start"));
-						marker.setAttribute(IMarker.CHAR_END, diagnostic.getInt("start") + diagnostic.getInt("length"));
 					}
 				}
-			} catch (JSONException | CoreException e) {
+			} catch (CoreException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
