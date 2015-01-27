@@ -104,7 +104,7 @@ public class RenameProcessor extends RefactoringProcessor {
                     mapEdits.put(ifile, change.getEdit());
                 }
                 mapEdits.get(ifile).addChild(
-                        new ReplaceEdit(obj.getInt("minChar"), info.getOldName().length(), info.getNewName()));
+                		new ReplaceEdit(obj.getJSONObject("textSpan").getInt("start"), info.getOldName().length(), info.getNewName()));
             }
         } catch (JSONException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
