@@ -23,4 +23,8 @@ public class TypeScriptDocumentProvider extends FileDocumentProvider {
 		}
 		return document;
 	}
+	
+	public IDocument addDocument(Object element) throws CoreException {
+	    return this.createDocument(element);
+	}
 }

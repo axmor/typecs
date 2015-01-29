@@ -11,8 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.FindReplaceDocumentAdapter;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.part.FileEditorInput;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -21,9 +27,10 @@ import us.monoid.json.JSONObject;
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptUtils;
+import com.axmor.eclipse.typescript.editor.TypeScriptDocumentProvider;
+import com.axmor.eclipse.typescript.editor.TypeScriptEditor;
 import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 import com.axmor.eclipse.typescript.editor.TypeScriptUIImages;
-import com.google.common.base.Throwables;
 
 /**
  * @author kudrin
@@ -32,28 +39,34 @@ import com.google.common.base.Throwables;
 public class TreeRoot {
     
     private TreeRoot[] childItems = null;
-    private String name = null;    
+    private String name = null;
+    private String kind = null;
     private Image image;
     private int offset;
     private TypeScriptAPI api;
+    private TypeScriptEditor editor;
     private IFile file;
     private int callOffset;
     private int callLength;
+    private String identifier;
+    private TreeRoot parent;
+    private boolean isRecursive;
     
-    public TreeRoot(TypeScriptAPI api, JSONObject obj, int callOffset, int callLength, IFile currentFile) {
+    public TreeRoot(TypeScriptEditor editor, TypeScriptAPI api, JSONObject obj, int offset, int callOffset, 
+            int callLength, IFile currentFile, TreeRoot parent) {
         this.name = getText(obj);
-        this.image = createImage(obj);
+        this.kind = getKind(obj);        
         this.file = currentFile;
         this.api = api;
+        this.editor = editor;
+        this.offset = offset;
         this.callOffset = callOffset;
         this.callLength = callLength;
-        try {
-            Position position = TypeScriptEditorUtils.getPosition(obj);
-            this.offset = position.offset;
-            this.childItems = createChildren();
-        } catch (JSONException e) {
-            Activator.error(e);
-        }
+        this.identifier = this.file.getName() + "_" + this.kind + "_" + this.name + "_" + this.offset;
+        this.parent = parent;
+        this.isRecursive = isRecursive();
+        this.image = createImage(obj, this.isRecursive);
+        this.childItems = this.isRecursive ? new TreeRoot[0] : createChildren();        
     }
     
     public TreeRoot[] getChildren() {
@@ -84,8 +97,31 @@ public class TreeRoot {
         return this.file;
     }
     
+    public String getIdentifier() {
+        return this.identifier;
+    }
+    
+    public TreeRoot getParent() {
+        return this.parent;
+    }
+    
+    public boolean getRecursive() {
+        return this.isRecursive;
+    }
+    
     public boolean hasChildren() {
         return childItems != null && childItems.length > 0;
+    }
+    
+    private boolean isRecursive() {
+        TreeRoot current = getParent();
+        while (current != null) {
+            if (current.getIdentifier().equals(identifier)) {
+                return true;
+            }
+            current = current.getParent();
+        }
+        return false;
     }
     
     private String getText(JSONObject obj) {
@@ -101,29 +137,46 @@ public class TreeRoot {
         }        
     }
     
+    private String getKind(JSONObject obj) {
+        try {
+            return obj.getString("kind");
+        } catch (JSONException e) {
+            Activator.error(e);
+            return "";
+        }        
+    }
+    
+    private Image createImage(JSONObject element, boolean isRecursive) {
+        JSONObject obj = (JSONObject) element;
+        TypeScriptUIImages imagesFactory = new TypeScriptUIImages();
+        return imagesFactory.getImageForModelObject(obj, isRecursive);
+    }
+    
     private TreeRoot[] createChildren() {
         JSONArray references = api.getReferencesAtPosition(file, offset);
         IFile currentFile = null;
-        List<TreeRoot> roots = new ArrayList<TreeRoot>();
-        for (int i = 0; i < references.length(); i++) {
-            try {
+        List<TreeRoot> roots = new ArrayList<TreeRoot>();                
+        try {            
+            for (int i = 0; i < references.length(); i++) {
                 if (references.get(i) instanceof JSONObject) {
                     JSONObject obj = (JSONObject) references.get(i);
                     String fileName = obj.getString("fileName");
                     currentFile = file.getProject().getFile(fileName);
                     Position position = TypeScriptEditorUtils.getPosition(obj);
-                    JSONArray model = api.getScriptModel(currentFile);                    
+                    JSONArray model = api.getScriptModel(currentFile);
                     for (int j = 0; j < model.length(); j++) {
                         if (model.get(j) instanceof JSONObject) {
                             JSONObject item = (JSONObject) model.get(j);
-                            roots.addAll(fetchChildren(item.getJSONArray("childItems"), position.offset, position.length, currentFile));                         
+                            roots.addAll(fetchChildren(item.getJSONArray("childItems"), position.offset,
+                                    position.length, currentFile));                         
                         }
                     }
                 }
-            } catch (JSONException e) {                
-                throw Throwables.propagate(e);
             }
-        }         
+        } catch (JSONException e) {
+            Activator.error(e);
+        }
+                 
         return roots.toArray(new TreeRoot[roots.size()]);
     }
     
@@ -133,25 +186,32 @@ public class TreeRoot {
             try {
                 JSONObject obj = (JSONObject) childs.get(i);
                 Position itemPosition = TypeScriptEditorUtils.getPosition(obj);
-                if (offset > itemPosition.offset && offset < itemPosition.offset + itemPosition.length ) {
+                if (offset > itemPosition.offset && offset < itemPosition.offset + itemPosition.length && 
+                        !obj.getString("text").equals("<global>") &&
+                        !(obj.getString("text").equals(name) && obj.getString("kind").equals(kind))) {
                     if (obj.getJSONArray("childItems").length() > 0) {
                         fetchChildren(obj.getJSONArray("childItems"), offset, length, currentFile);
                     }
                     else {
-                        newRoots.add(new TreeRoot(api, obj, offset, length, currentFile));
+                        TypeScriptDocumentProvider dp = (TypeScriptDocumentProvider) editor.getDocumentProvider();
+                        IDocument document = dp.addDocument(new FileEditorInput(currentFile));
+                        FindReplaceDocumentAdapter findReplaceDocumentAdapter = 
+                                new FindReplaceDocumentAdapter(document);
+                        IRegion region;
+                        try {
+                            region = findReplaceDocumentAdapter.find(itemPosition.offset, obj.getString("text"), true, 
+                                    true, true, false);                            
+                            newRoots.add(new TreeRoot(editor, api, obj, region.getOffset(), offset, length, 
+                                    currentFile, this));                            
+                        } catch (BadLocationException e) {
+                            Activator.error(e);
+                        }                        
                     }                    
                 }
-            } catch (JSONException e) {
+            } catch (JSONException | CoreException e) {
                 Activator.error(e);
             }
         }
         return newRoots;
-    }
-    
-    private Image createImage(JSONObject element) {
-        JSONObject obj = (JSONObject) element;
-        TypeScriptUIImages imagesFactory = new TypeScriptUIImages();
-        return imagesFactory.getImageForModelObject(obj);
-    }     
-
+    }  
 }
