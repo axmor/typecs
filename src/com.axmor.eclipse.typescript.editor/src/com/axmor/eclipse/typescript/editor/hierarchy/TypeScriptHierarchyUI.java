@@ -68,7 +68,7 @@ public class TypeScriptHierarchyUI {
             }                
             viewPart = (CallHierarchyViewPart)page.showView(CallHierarchyViewPart.ID_CALL_HIERARCHY, secondaryId, 
                     IWorkbenchPage.VIEW_ACTIVATE);
-            viewPart.setInputElements(createRoot(api, file, references));
+            viewPart.setInputElements(createRoot(editor, api, file, references));
             return viewPart;
         } catch (CoreException e) {
             Activator.error(e);
@@ -96,26 +96,38 @@ public class TypeScriptHierarchyUI {
         return null;
     }
     
-    private static  TreeRoot[] createRoot(TypeScriptAPI api, IFile file, JSONArray references) {
+    private static TreeRoot[] createRoot(TypeScriptEditor editor, TypeScriptAPI api, IFile file, 
+            JSONArray references) {
         IFile currentFile = null;
         for (int i = 0; i < references.length(); i++) {
             try {
                 if (references.get(i) instanceof JSONObject) {
                     JSONObject obj = (JSONObject) references.get(i);
+                    if (!obj.getBoolean("isWriteAccess")) {
+                        continue;
+                    }
                     String fileName = obj.getString("fileName");
                     currentFile = file.getProject().getFile(fileName);                   
                     Position position = TypeScriptEditorUtils.getPosition(obj);
-                    JSONArray model = api.getScriptModel(currentFile);                    
-                    for (int j = 0; j < model.length(); j++) {
-                        if (model.get(j) instanceof JSONObject) {
-                            JSONObject item = (JSONObject) model.get(j);
-                            JSONObject root = findInitCall(item, position.offset);
-                            if (root != null) {
-                                Position callPos = TypeScriptEditorUtils.getPosition(obj);
-                                return new TreeRoot[] {new TreeRoot(api, root, callPos.offset, callPos.length, currentFile)};
+                    JSONArray def = api.getTypeDefinition(currentFile, position.offset);                    
+                    if (def.length() > 0) {
+                        JSONObject defObj = (JSONObject) def.get(0);
+                        Position defPosition = TypeScriptEditorUtils.getPosition(defObj);
+                        JSONArray model = api.getScriptModel(currentFile);
+                        for (int j = 0; j < model.length(); j++) {
+                            if (model.get(j) instanceof JSONObject) {
+                                JSONObject item = (JSONObject) model.get(j);
+                                JSONObject root = findInitCall(item, defPosition.offset);
+                                if (root != null) {                                    
+                                    return new TreeRoot[] {new TreeRoot(editor, api, root, position.offset, 
+                                            position.offset, position.length, currentFile, null)};
+                                }
                             }
-                        }
+                        }                        
                     }
+                    else {
+                        break;
+                    }                    
                 }
             } catch (JSONException e) {                
                 Activator.error(e);
@@ -129,28 +141,10 @@ public class TypeScriptHierarchyUI {
         JSONObject result = null;
         try {
             itemPosition = TypeScriptEditorUtils.getPosition(item);
-            if (item.getString("kind").equals("class") && offset > itemPosition.offset && offset < (itemPosition.offset
-                    + itemPosition.length)) {
-                JSONArray children = item.getJSONArray("childItems");
-                boolean isChildItem = false;
-                for (int i = 0; i < children.length(); i++) {
-                    JSONObject child = (JSONObject) children.get(i);
-                    Position childPos = TypeScriptEditorUtils.getPosition(child);
-                    if (offset >= childPos.offset) {
-                        isChildItem = true;
-                        break;
-                    }
-                }
-                if (!isChildItem) {
-                    result = item;
-                    result = TypeScriptEditorUtils.updatePosition(result, offset, itemPosition.length - (offset - 
-                            itemPosition.offset));
-                    return result;
-                }
-            }
             if (itemPosition.offset == offset) {
-                result = item;
-            }            
+                result = item;                
+                return result;
+            }
             else {
                 JSONArray children = item.getJSONArray("childItems");
                 for (int i = 0; i < children.length(); i++) {
@@ -160,7 +154,7 @@ public class TypeScriptHierarchyUI {
                         break;
                     }
                 }
-            }                        
+            }            
         } catch (JSONException e) {
             Activator.error(e);
         }

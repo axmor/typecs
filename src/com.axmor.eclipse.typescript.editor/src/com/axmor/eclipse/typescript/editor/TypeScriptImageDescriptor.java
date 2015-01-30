@@ -34,6 +34,9 @@ public class TypeScriptImageDescriptor extends CompositeImageDescriptor {
     //
     // /** Flag to render the synchronized adornment. */
     // public final static int SYNCHRONIZED= 0x004;
+    
+    /** Flag to render the error adornment. */
+    public static final int RECURSIVE = 0x004;
 
     /** Flag to render the static adornment. */
     public static final int STATIC = 0x008;
@@ -45,7 +48,7 @@ public class TypeScriptImageDescriptor extends CompositeImageDescriptor {
     public static final int WARNING = 0x020;
 
     /** Flag to render the error adornment. */
-    public static final int ERROR = 0x040;
+    public static final int ERROR = 0x040; 
 
     /** Flag to render the 'override' adornment. */
     public static final int OVERRIDES = 0x080;
@@ -197,6 +200,9 @@ public class TypeScriptImageDescriptor extends CompositeImageDescriptor {
         }
         if ((flags & STATIC) != 0) {
             addTopRightImage(TypeScriptUIImages.getImageDescriptor(TypeScriptImageKeys.IMG_STATIC), pos);
+        }
+        if ((flags & RECURSIVE) != 0) {
+            addTopRightImage(TypeScriptUIImages.getImageDescriptor(TypeScriptImageKeys.IMG_RECURSIVE), pos);
         }
     }
     

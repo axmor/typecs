@@ -41,7 +41,6 @@ public class CallHierarchyHandler extends AbstractHandler {
         IFile file = ((FileEditorInput) editor.getEditorInput()).getFile();
         TypeScriptAPI api = editor.getApi();
         JSONArray references = api.getReferencesAtPosition(file, start);        
-        
         TypeScriptHierarchyUI.openView(editor, file, references);
         return null;
     }   
