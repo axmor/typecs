@@ -43,6 +43,7 @@ public class TreeRoot {
     private String kind = null;
     private Image image;
     private int offset;
+    private int callLine;
     private TypeScriptAPI api;
     private TypeScriptEditor editor;
     private IFile file;
@@ -52,7 +53,7 @@ public class TreeRoot {
     private TreeRoot parent;
     private boolean isRecursive;
     
-    public TreeRoot(TypeScriptEditor editor, TypeScriptAPI api, JSONObject obj, int offset, int callOffset, 
+    public TreeRoot(TypeScriptEditor editor, TypeScriptAPI api, JSONObject obj, int offset, int callLine, int callOffset, 
             int callLength, IFile currentFile, TreeRoot parent) {
         this.name = getText(obj);
         this.kind = getKind(obj);        
@@ -60,6 +61,7 @@ public class TreeRoot {
         this.api = api;
         this.editor = editor;
         this.offset = offset;
+        this.callLine  = callLine;
         this.callOffset = callOffset;
         this.callLength = callLength;
         this.identifier = this.file.getName() + "_" + this.kind + "_" + this.name + "_" + this.offset;
@@ -83,6 +85,10 @@ public class TreeRoot {
     
     public int getOffset() {
         return this.offset;
+    }
+    
+    public int getLine() {
+        return this.callLine;
     }
     
     public int getCallOffset() {
@@ -187,21 +193,24 @@ public class TreeRoot {
                 JSONObject obj = (JSONObject) childs.get(i);
                 Position itemPosition = TypeScriptEditorUtils.getPosition(obj);
                 if (offset > itemPosition.offset && offset < itemPosition.offset + itemPosition.length && 
-                        !obj.getString("text").equals("<global>") &&
                         !(obj.getString("text").equals(name) && obj.getString("kind").equals(kind))) {
                     if (obj.getJSONArray("childItems").length() > 0) {
                         fetchChildren(obj.getJSONArray("childItems"), offset, length, currentFile);
                     }
                     else {
                         TypeScriptDocumentProvider dp = (TypeScriptDocumentProvider) editor.getDocumentProvider();
-                        IDocument document = dp.addDocument(new FileEditorInput(currentFile));
+                        if (dp == null) {
+                            return newRoots;
+                        }                        
+                        IDocument document = dp.addDocument(new FileEditorInput(currentFile));                        
                         FindReplaceDocumentAdapter findReplaceDocumentAdapter = 
                                 new FindReplaceDocumentAdapter(document);
                         IRegion region;
                         try {
+                            int line = document.getLineOfOffset(offset) + 1;
                             region = findReplaceDocumentAdapter.find(itemPosition.offset, obj.getString("text"), true, 
                                     true, true, false);                            
-                            newRoots.add(new TreeRoot(editor, api, obj, region.getOffset(), offset, length, 
+                            newRoots.add(new TreeRoot(editor, api, obj, region.getOffset(), line, offset, length, 
                                     currentFile, this));                            
                         } catch (BadLocationException e) {
                             Activator.error(e);
