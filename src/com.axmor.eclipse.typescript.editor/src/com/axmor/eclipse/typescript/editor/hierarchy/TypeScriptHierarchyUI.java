@@ -13,10 +13,14 @@ import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.texteditor.IDocumentProvider;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -24,6 +28,7 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
+import com.axmor.eclipse.typescript.editor.TypeScriptDocumentProvider;
 import com.axmor.eclipse.typescript.editor.TypeScriptEditor;
 import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
 
@@ -118,8 +123,12 @@ public class TypeScriptHierarchyUI {
                             if (model.get(j) instanceof JSONObject) {
                                 JSONObject item = (JSONObject) model.get(j);
                                 JSONObject root = findInitCall(item, defPosition.offset);
-                                if (root != null) {                                    
-                                    return new TreeRoot[] {new TreeRoot(editor, api, root, position.offset, 
+                                IDocumentProvider dp = editor.getDocumentProvider();
+                                if (root != null && dp instanceof TypeScriptDocumentProvider) {
+                                    TypeScriptDocumentProvider provider = (TypeScriptDocumentProvider) dp;                                    
+                                    IDocument document = provider.addDocument(new FileEditorInput(currentFile));
+                                    int line = document.getLineOfOffset(position.offset) + 1;
+                                    return new TreeRoot[] {new TreeRoot(editor, api, root, position.offset, line, 
                                             position.offset, position.length, currentFile, null)};
                                 }
                             }
@@ -129,7 +138,7 @@ public class TypeScriptHierarchyUI {
                         break;
                     }                    
                 }
-            } catch (JSONException e) {                
+            } catch (JSONException | BadLocationException | CoreException e) {                
                 Activator.error(e);
             }
         }
