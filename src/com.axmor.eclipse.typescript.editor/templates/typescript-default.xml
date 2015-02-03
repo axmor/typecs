@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>>
+
+<template name="for" description="%Templates.for_array" id="com.axmor.eclipse.typescript.editor.preferences.for_array" context="typeScript" enabled="true" autoinsert="false">for (var ${index} = 0; ${index} &lt; ${array}.length; ${index}++) {
+        ${line_selection}${cursor}
+}</template>
+
+<template name="for" description="%Templates.for_temp" id="com.axmor.eclipse.typescript.editor.preferences.for_temp" context="typeScript" enabled="true" autoinsert="false">for (var ${index} = 0; ${index} &lt; ${array}.length; ${index}++) {
+        var ${array_element} = ${array}[${index}];
+        ${cursor}
+}</template>
+
+<template name="forin" description="%Templates.for_iterable" id="com.axmor.eclipse.typescript.editor.preferences.for_iterable" context="typeScript" enabled="true" autoinsert="false">for (var ${iterable_element} in ${iterable}) {
+        ${cursor}
+}</template>
+
+<template name="do" description="%Templates.do" id="com.axmor.eclipse.typescript.editor.preferences.do" context="typeScript" enabled="true" autoinsert="false">do {
+        ${line_selection}${cursor}
+} while (${condition});</template>
+
+<template name="switch" description="%Templates.switch" id="com.axmor.eclipse.typescript.editor.preferences.switch" context="typeScript" enabled="true" autoinsert="false">switch (${key}) {
+        case ${value}:
+                ${cursor}
+                break;
+
+        default:
+                break;
+}</template>
+
+<template name="if" description="%Templates.if" id="com.axmor.eclipse.typescript.editor.preferences.if" context="typeScript" enabled="true" autoinsert="false">if (${condition}) {
+        ${line_selection}${cursor}
+}</template>
+
+<template name="ifelse" description="%Templates.ifelse" id="com.axmor.eclipse.typescript.editor.preferences.ifelse" context="typeScript" enabled="true" autoinsert="false">if (${condition}) {
+        ${cursor}
+} else {
+        
+}</template>
+
+<template name="elseif" description="%Templates.elseif" id="com.axmor.eclipse.typescript.editor.preferences.elseif" context="typeScript" enabled="true" autoinsert="false">else if (${condition}) {
+        ${cursor}
+}</template>
+
+<template name="else" description="%Templates.else" id="com.axmor.eclipse.typescript.editor.preferences.else" context="typeScript" enabled="true" autoinsert="false">else {
+        ${cursor}
+}</template>
+
+<template name="try" description="%Templates.try" id="com.axmor.eclipse.typescript.editor.preferences.try" context="typeScript" enabled="true" autoinsert="false">try {
+        ${line_selection}${cursor}
+} catch (e) {
+        // ${todo}: handle exception
+}</template>
+
+<template name="catch" description="%Templates.catch" id="com.axmor.eclipse.typescript.editor.preferences.catch" context="typeScript" enabled="true" autoinsert="false">catch (e) {
+        ${cursor}// ${todo}: handle exception
+}</template>
+
+<template name="function" description="%Templates.public_method" id="com.axmor.eclipse.typescript.editor.preferences.public_method" context="typeScript" enabled="true" autoinsert="false">function ${name}(${}) {
+        ${cursor}
+}</template>
+
+<template name="function" description="%Templates.anonymous_public_method" id="com.axmor.eclipse.typescript.editor.preferences.anonymous_public_method" context="typeScript" enabled="true" autoinsert="false">function (${}) {
+        ${cursor}
+}</template>
+
+<template name="new" description="%Templates.new" id="com.axmor.eclipse.typescript.editor.preferences.new" context="typeScript" enabled="true" autoinsert="false">var ${name} = new ${type}(${arguments});</template>
+
+</templates>

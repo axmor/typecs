@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: TypEcs Core Plugin
 Bundle-SymbolicName: com.axmor.eclipse.typescript.core;singleton:=true
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 3.0.0.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.core.Activator
 Bundle-Vendor: Axmor Software Inc.
 Eclipse-BundleShape: dir
@@ -11,12 +11,12 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.resources,
  org.eclipse.core.filesystem,
  org.eclipse.ui.console,
- org.apache.lucene.core;bundle-version="3.5.0",
  org.eclipse.ui.forms
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/guava-16.0.jar,
  lib/resty-0.3.2.jar,
+ lib/mapdb-1.0.6.jar,
  .
 Export-Package: com.axmor.eclipse.typescript.core,
  com.axmor.eclipse.typescript.core.i18n,

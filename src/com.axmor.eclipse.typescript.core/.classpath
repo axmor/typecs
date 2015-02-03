@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry exported="true" kind="lib" path="lib/guava-16.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/mapdb-1.0.6.jar" sourcepath="C:/Users/Konstantin/.sourceattacher/mapdb-1.0.6-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/guava-16.0.jar" sourcepath="C:/Users/Konstantin/.sourceattacher/guava-16.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/resty-0.3.2.jar" sourcepath="C:/Users/kos/.m2/repository/us/monoid/web/resty/0.3.2/resty-0.3.2-sources.jar"/>
-	<classpathentry kind="src" path="src/"/>
-	<classpathentry kind="output" path="target/classes"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="output" path="bin"/>
 </classpath>

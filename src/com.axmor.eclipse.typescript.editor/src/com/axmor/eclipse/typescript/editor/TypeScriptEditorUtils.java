@@ -8,7 +8,6 @@
 package com.axmor.eclipse.typescript.editor;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,13 +28,13 @@ import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
 
-import com.axmor.eclipse.typescript.core.TypeScriptUtils;
-import com.google.common.base.Throwables;
-import com.ibm.icu.text.UTF16;
-
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
+
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
+import com.google.common.base.Throwables;
+import com.ibm.icu.text.UTF16;
 
 /**
  * Class containing helpful utilities for editing purposes
@@ -212,4 +211,24 @@ public final class TypeScriptEditorUtils {
 			throw new JSONException("Object: " + json + " - does not contains position");
 		}
 	}
+    
+    public static JSONObject updatePosition(JSONObject json, int offset, int length) throws JSONException {
+        if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
+            json.put("minChar", offset);
+            json.put("limChar", offset + length);
+            return json;
+        } else {
+            JSONObject span = new JSONObject().put("start", offset).put("length", length);
+            if (json.has("spans")) {                
+                JSONArray spans = new JSONArray();
+                spans.put(span);
+                return json.put("spans", spans);
+            } else if (json.has("textSpan")) {
+                return json.put("textSpan", span);
+            } else if (json.has("span")) {
+                return json.put("span", span);                
+            }
+            throw new JSONException("Object: " + json + " - does not contains position");
+        }
+    }
 }

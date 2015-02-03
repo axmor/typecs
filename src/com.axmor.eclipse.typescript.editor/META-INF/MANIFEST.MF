@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: TypEcs Editor Plugin
 Bundle-SymbolicName: com.axmor.eclipse.typescript.editor; singleton:=true
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 3.0.0.qualifier
 Bundle-Activator: com.axmor.eclipse.typescript.editor.Activator
 Bundle-Vendor: Axmor Software Inc.
 Require-Bundle: org.eclipse.ui,
@@ -21,6 +21,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.pde.ui,
  org.eclipse.core.filesystem,
  org.eclipse.swt,
- org.eclipse.ui.console
+ org.eclipse.ui.workbench.texteditor,
+ org.eclipse.ui.console,
+ org.eclipse.jdt.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy

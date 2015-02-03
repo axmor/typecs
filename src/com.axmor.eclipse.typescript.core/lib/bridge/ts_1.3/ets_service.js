@@ -35,7 +35,8 @@ exports.getCompletionEntryDetails = function(file, position, entryName) {
 }
 
 exports.getSignatureAtPosition = function(file, params) {
-  return ts.getSignatureAtPosition(file, params);
+//  return ts.getSignatureHelpItems(file, params);
+  return ts.getQuickInfoAtPosition(file, params);
 }
 
 exports.getDefinitionAtPosition = function(file, params) {
@@ -56,4 +57,9 @@ exports.getOccurrencesAtPosition = function (file, position) {
 
 exports.getSemanticDiagnostics = function (file) {
   return ts.getSemanticDiagnostics(file);
+}
+
+exports.getSyntaxTree = function (file) {
+  var t = ts.getSyntaxTree(file);
+  return {statements: t.statements, imports: t.referencedFiles};
 }

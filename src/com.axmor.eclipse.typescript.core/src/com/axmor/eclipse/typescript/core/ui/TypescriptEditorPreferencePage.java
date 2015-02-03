@@ -51,6 +51,8 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
     private Button braceNewLineFunction;
     /** braceNewLineBlock field. */
     private Button braceNewLineBlock;
+    /** insertCloseBrackets field. */
+    private Button insertCloseBrackets;
 
     @Override
     public void init(IWorkbench workbench) {
@@ -91,6 +93,8 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
                 null, false, 1);
         braceNewLineBlock = SWTFactory.createCheckButton(formatting, "Place open brace on new line for control blocks",
                 null, false, 1);
+        insertCloseBrackets = SWTFactory.createCheckButton(formatting, "Automatically append closing characters", null,
+                true, 1);
 
         loadSettings();
         return composite;
@@ -114,6 +118,7 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
         insertSpaceParenthesis.setSelection(settings.isInsertSpaceAfterNonemptyParenthesis());
         braceNewLineFunction.setSelection(settings.isPlaceOpenBraceFunctions());
         braceNewLineBlock.setSelection(settings.isPlaceOpenBraceControlBlocks());
+        insertCloseBrackets.setSelection(settings.isInsertCloseBrackets());
     }
 
     @Override
@@ -132,12 +137,14 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
         settings.setInsertSpaceAfterNonemptyParenthesis(insertSpaceParenthesis.getSelection());
         settings.setPlaceOpenBraceFunctions(braceNewLineFunction.getSelection());
         settings.setPlaceOpenBraceControlBlocks(braceNewLineBlock.getSelection());
+        settings.setInsertCloseBrackets(insertCloseBrackets.getSelection());
         settings.save();
         return true;
     }
 
     @Override
     protected void performDefaults() {
+        TypeScriptEditorSettings.setToDefault();
         loadSettings();
         super.performDefaults();
     }

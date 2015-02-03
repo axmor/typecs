@@ -75,12 +75,14 @@ public class TypeScriptUIImages {
         declareRegistryImage(TypeScriptImageKeys.IMG_METHOD_PUBLIC, ICONS_PATH + "methpub_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_PACKAGE, ICONS_PATH + "package_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_STATIC, ICONS_PATH + "static_co.gif");
+        declareRegistryImage(TypeScriptImageKeys.IMG_RECURSIVE, ICONS_PATH + "recursive_co.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_SEARCH_REF_OBJ, ICONS_PATH + "search_ref_obj.gif");
 
         declareRegistryImage(TypeScriptImageKeys.IMG_DTS_FILE, "$nl$/icons/typescript_def_file.png");
 
         declareRegistryImage(TypeScriptImageKeys.IMG_TOGGLE_OCCURRENCE, "$nl$/icons/full/etool16/mark_occurrences.png");
-}
+		declareRegistryImage(TypeScriptImageKeys.IMG_TEMPLATE_PROPOSAL, ICONS_PATH + "template_obj.png");
+	}
 
     /**
      * Declare an Image in the registry table.
@@ -152,6 +154,10 @@ public class TypeScriptUIImages {
      */
     public static ImageDescriptor getImageDescriptor(String key) {
         return getImageRegistry().getDescriptor(key);
+    }    
+    
+    public Image getImageForModelObject(JSONObject obj) {
+        return getImageForModelObject(obj, false);
     }
 
     /**
@@ -160,7 +166,7 @@ public class TypeScriptUIImages {
      * @param obj the model object
      * @return the corresponding image
      */
-    public Image getImageForModelObject(JSONObject obj) {
+    public Image getImageForModelObject(JSONObject obj, boolean isRecursive) {
         try {
             int flags = 0;
             Entity entity = new Entity("", 0);
@@ -225,6 +231,10 @@ public class TypeScriptUIImages {
             } else if (kind.equals(TypeScriptModelKinds.Kinds.FUNCTION.toString())) {
                 entity.useKindModifiers(parts, flags, TypeScriptImageKeys.IMG_METHOD_DEFAULT,
                         TypeScriptImageKeys.IMG_METHOD_PRIVATE, TypeScriptImageKeys.IMG_METHOD_PUBLIC);
+            }
+            if (isRecursive) {
+                flags = flags | TypeScriptImageDescriptor.RECURSIVE;
+                entity.flags = flags;
             }
             if (entity.flags == 0) {
                 return TypeScriptUIImages.getImage(entity.key);

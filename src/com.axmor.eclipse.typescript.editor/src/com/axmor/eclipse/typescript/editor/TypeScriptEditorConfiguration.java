@@ -7,10 +7,14 @@ import java.util.Map;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.text.AbstractInformationControlManager;
+import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy;
+import org.eclipse.jface.text.DefaultInformationControl;
+import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.IInformationControl;
 import org.eclipse.jface.text.IInformationControlCreator;
+import org.eclipse.jface.text.ITextHover;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
@@ -30,6 +34,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 
 import com.axmor.eclipse.typescript.editor.contentassist.TypeScriptAssistProcessor;
+import com.axmor.eclipse.typescript.editor.hover.TypeScriptTextHover;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptPartitionScanner;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptSyntaxScanner;
 
@@ -154,7 +159,8 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
      */
     private IInformationControlCreator getOutlinePresenterControlCreator(ISourceViewer sourceViewer) {
         return new IInformationControlCreator() {
-            public IInformationControl createInformationControl(Shell parent) {
+            @Override
+			public IInformationControl createInformationControl(Shell parent) {
                 int shellStyle = SWT.RESIZE;
                 TypeScriptQuickOutlineDialog dialog = new TypeScriptQuickOutlineDialog(parent, shellStyle, editor);
                 return dialog;
@@ -194,6 +200,12 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
             assistant.enableAutoInsert(true);
             assistant.enableColoredLabels(true);
             assistant.setShowEmptyList(true);
+			assistant.setInformationControlCreator(new IInformationControlCreator() {
+				@Override
+				public IInformationControl createInformationControl(Shell parent) {
+					return new DefaultInformationControl(parent, true);
+				}
+			});
     	}       
 
         return assistant;
@@ -220,6 +232,17 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
         return targets;
     }
     
+	@Override
+	public ITextHover getTextHover(ISourceViewer sourceViewer, String contentType) {
+		return new TypeScriptTextHover(sourceViewer);
+	}
+	
+	@Override
+	public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer, String contentType) {
+	    return TypeScriptPartitionScanner.TS_COMMENT.equals(contentType) ? new IAutoEditStrategy[] { 
+	        new DefaultIndentLineAutoEditStrategy() } : new IAutoEditStrategy[] { new TypeScriptAutoIndentStrategy() };
+	    }
+
     /**
 	 * Preference colors have changed.  
 	 * Update the default tokens of the scanners.

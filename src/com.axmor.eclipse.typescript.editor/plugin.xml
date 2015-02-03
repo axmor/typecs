@@ -40,7 +40,7 @@
            activate="true"
            class="com.axmor.eclipse.typescript.editor.TypeScriptElementHyperlinkDetector"
 	       description="A hyperlink detector for Type Script source code elements"
-    	   id="com.axmor.eclipse.typescript.AntElementHyperlinkDetector"
+    	   id="com.axmor.eclipse.typescript.TypeScriptElementHyperlinkDetector"
 	       name="TypeScript Element"
     	   targetId="com.axmor.eclipse.typescript.sourceFiles">
       </hyperlinkDetector>
@@ -140,6 +140,13 @@
            id="com.axmor.eclipse.typescript.edit.add_def" />
            
 	  <command 
+           name="Open Call Hierarchy" 
+           description="Open call hierarchy"
+           categoryId="com.axmor.eclipse.typescript.category.navigate" 
+           defaultHandler="com.axmor.eclipse.typescript.editor.handlers.CallHierarchyHandler" 
+           id="com.axmor.eclipse.typescript.navigate.call.hierarchy" />
+           
+	  <command 
       	name="Toogle Mark Occurrences"
       	description="Toogle Mark Occurrences"
       	categoryId="org.eclipse.jdt.ui.category.source"
@@ -199,7 +206,18 @@
       		sequence="M1+M3+O" 
 			contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
 			commandId="com.axmor.eclipse.typescript.toggleMarkOccurrences"
-			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />  	    	            
+			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration" />
+	  <key
+           sequence="M1+O"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.navigate.show.outline"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+	  <key
+            sequence="CTRL+ALT+H"
+            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+            commandId="com.axmor.eclipse.typescript.navigate.call.hierarchy"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
+	  <!-- COMMAND+ALT+H is "Hide Others" on carbon, so don't overwrite it -->
     </extension>
 	      
     <extension point="org.eclipse.compare.contentViewers">
@@ -303,6 +321,16 @@
                 </visibleWhen>
                 </command>
                 <command
+                    commandId="com.axmor.eclipse.typescript.navigate.call.hierarchy" 
+                    label="Open Call Hierarchy"
+                    style="toggle">
+                <visibleWhen checkEnabled="true">
+                    <with variable="activeEditor">
+                        <instanceof value="com.axmor.eclipse.typescript.editor.TypeScriptEditor"/>
+                    </with>
+                </visibleWhen>
+                </command>
+                <command
                     commandId="com.axmor.eclipse.typescript.navigate.show.outline" 
                     label="Quick Outline"
                     style="toggle">
@@ -321,6 +349,12 @@
           id="com.axmor.eclipse.typescript.editor.preferences.TypescriptSyntaxColoringPage"
           category="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
           name="Syntax Coloring">
+    </page>
+    <page
+          class="com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplatePreferencePage"
+          id="com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplatePreferencePage"
+          category="com.axmor.eclipse.typescript.core.ui.TypescriptEditorPreferencePage"
+          name="Templates">
     </page>
 	</extension>
 	
@@ -343,7 +377,7 @@
   				label="Toggle TypeScript Mark Occurrences" 
   				retarget="true" 
   				tooltip="Toggle TypeScript Mark Occurrences" />
-  		</actionSet>
+  		</actionSet>  		
   	</extension>
   	
   	<extension point="org.eclipse.ui.actionSetPartAssociations">
@@ -430,4 +464,26 @@
       icon="icons/typescript_file.png"
       label="TypeScript Console" />
   </extension>
+   <extension point="org.eclipse.ui.editors.templates">
+      <contextType
+            name="typeScript"
+            class="com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplateContextType"
+            id="typeScript">
+      </contextType>   
+      <include
+      		file="templates/typescript-default.xml"
+      		translations="$nl$/templates/typescript-default.properties">
+      </include>
+   </extension>
+   
+   <extension point="org.eclipse.ui.views">
+      <view
+            name="Call Hierarchy"
+            class="com.axmor.eclipse.typescript.editor.hierarchy.CallHierarchyViewPart"
+            icon="$nl$/icons/full/call_hierarchy.gif"
+            allowMultiple="true"
+            id="com.axmor.eclipse.typescript.editor.hierarchy.view">
+      </view>
+   </extension>
+   
 </plugin>

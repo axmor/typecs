@@ -24,6 +24,34 @@ var tss = require('./ts_' + args.version + '/ets_service.js');
 //log.info(tss.getFormattingEditsForDocument('module2.ts', 0, 500, { "ConvertTabsToSpaces":true, "IndentSize":4, "InsertSpaceAfterCommaDelimiter":true, "InsertSpaceAfterFunctionKeywordForAnonymousFunctions":false, "InsertSpaceAfterKeywordsInControlFlowStatements":true, "InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis":false, "InsertSpaceAfterSemicolonInForStatements":true, "InsertSpaceBeforeAndAfterBinaryOperators":true, "NewLineCharacter":"\r\n", "PlaceOpenBraceOnNewLineForControlBlocks":false,"PlaceOpenBraceOnNewLineForFunctions":false,"TabSize":4}));
 //tss.getScriptLexicalStructure('module2.ts');
 //tss.setFileContent('module2.ts', 'class 1TestM {}');
+//log.debug(tss.getSignatureAtPosition('module2.ts', 107));
+/*
+log.debug(JSON.stringify({ 'model' : tss.getSyntaxTree('module2.ts') }, 
+              	function(key, value) {
+              		//log.debug(key);
+              		//log.debug(value);
+  					//if (key == '_sourceUnit') return null;
+  					//if (key == 'syntaxTree') return null;
+  					if (key == 'members') {
+  						return undefined;
+  					}
+  					if (value && (key == 'parent' || key == 'name')) {
+						if (key == 'name' && value) {
+							return {text: value.text ? value.text : "", filename: value.filename};
+						}
+						if (key == 'parent' && value) {
+							if (value.name) {
+	  							return {name: value.name.text, filename: value.filename};
+	  						} else {
+	  							return {filename: value.filename};
+	  						}
+						}
+						return value;
+  					}
+  					return value;
+				})
+);
+*/
 /*
 log.error(tsc.compile('module2.ts', 
     {
@@ -124,7 +152,7 @@ if (args.serv) {
             break;    
           case 'getSignature':                            
             log.debug('bridge.getSignature: ' + o.file + ', pos: ' + o.params);
-            socket.end(JSON.stringify(tss.getSignatureAtPosition(o.file, o.params)));
+            socket.end(JSON.stringify({ 'model' : tss.getSignatureAtPosition(o.file, o.params)}));
             break;    
           case 'getTypeDefinition':                            
             log.debug('bridge.getTypeDefinition: ' + o.file + ', param: ' + o.params);
@@ -154,6 +182,30 @@ if (args.serv) {
   					return value;
 				}
 			  ));
+              break;
+          case 'getSyntaxTree':
+              log.debug('bridge.getSyntaxTree: ' + o.file);
+              socket.end(JSON.stringify({ 'model' : tss.getSyntaxTree(o.file) }, 
+              	function(key, value) {
+  					if (key == 'members') {
+  						return undefined;
+  					}
+  					if (value && (key == 'parent' || key == 'name')) {
+						if (key == 'name' && value) {
+							return {text: value.text ? value.text : "", filename: value.filename};
+						}
+						if (key == 'parent' && value) {
+							if (value.name) {
+	  							return {name: value.name.text, filename: value.filename};
+	  						} else {
+	  							return {filename: value.filename};
+	  						}
+						}
+						return value;
+  					}
+  					return value;
+				})
+			  );
               break;
           default:
             socket.end(JSON.stringify({ 'version' : args.version }));

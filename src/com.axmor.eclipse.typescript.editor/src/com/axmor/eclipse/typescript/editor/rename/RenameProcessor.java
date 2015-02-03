@@ -34,6 +34,7 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
+import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.editor.Activator;
 
 /**
@@ -87,6 +88,7 @@ public class RenameProcessor extends RefactoringProcessor {
 
     @Override
     public Change createChange(IProgressMonitor pm) throws CoreException {
+    	boolean isOldTsVersion = TypeScriptUtils.getTypeScriptVersion().equals("1.0");
         IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(info.getPath()));
         TypeScriptAPI api = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject());
         JSONArray json = api.getReferencesAtPosition(file, info.getPosition());
@@ -104,7 +106,9 @@ public class RenameProcessor extends RefactoringProcessor {
                     mapEdits.put(ifile, change.getEdit());
                 }
                 mapEdits.get(ifile).addChild(
-                        new ReplaceEdit(obj.getInt("minChar"), info.getOldName().length(), info.getNewName()));
+                		isOldTsVersion ?
+                		new ReplaceEdit(obj.getInt("minChar"), info.getOldName().length(), info.getNewName()) :
+                		new ReplaceEdit(obj.getJSONObject("textSpan").getInt("start"), info.getOldName().length(), info.getNewName()));
             }
         } catch (JSONException e) {
             throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));

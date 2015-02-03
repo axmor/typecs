@@ -127,4 +127,9 @@ public interface TypeScriptAPI extends IDisposable {
      * @return array of references in this file
      */
     JSONArray getOccurrencesAtPosition(IFile file, int position);
+
+	/**
+	 * Return syntax tree of file
+	 */
+	JSONObject getSyntaxTree(IFile file);
 }

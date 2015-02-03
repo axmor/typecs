@@ -21,6 +21,7 @@ import org.eclipse.jface.text.IInformationControl;
 import org.eclipse.jface.text.IInformationControlCreator;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.Position;
+import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
 import org.eclipse.jface.text.source.IAnnotationModel;
@@ -64,6 +65,7 @@ import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
+import com.axmor.eclipse.typescript.editor.compare.TypeScriptBracketInserter;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJobCanceler;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
@@ -138,6 +140,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 * Selection changed listener for the outline view.
 	 */
 	private ISelectionChangedListener selectionChangedListener = new ISelectionChangedListener() {
+		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
 			selectionSetFromOutline = false;
 			doSelectionChanged(event);
@@ -214,15 +217,27 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 	private ITextSelection fForcedMarkOccurrencesSelection;
 	
+	private TypeScriptBracketInserter fBracketInserter;
+	
 	private IPropertyChangeListener propertyChangedListener = new IPropertyChangeListener() {
+		@Override
 		public void propertyChange(PropertyChangeEvent event) {
 			TypeScriptEditorConfiguration sourceViewerConfiguration= (TypeScriptEditorConfiguration)getSourceViewerConfiguration();
 	        if (sourceViewerConfiguration != null) {
 	        	sourceViewerConfiguration.adaptToPreferenceChange(event);
 	        	getViewer().invalidateTextPresentation();
-	        }
+	        }	        
 		}
 	};
+	
+	private IPropertyChangeListener propertyBracketsChangedListener = new IPropertyChangeListener() {
+        @Override
+        public void propertyChange(PropertyChangeEvent event) {            
+            if (event.getProperty().equals("insertCloseBrackets")) {
+                fBracketInserter.setInsertCloseBrackets((boolean) event.getNewValue());
+            }
+        }
+    };
 
 	/**
 	 * A constructor
@@ -247,6 +262,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);		
 		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(propertyChangedListener);
+		com.axmor.eclipse.typescript.core.Activator.getDefault().getPreferenceStore()
+		    .addPropertyChangeListener(propertyBracketsChangedListener);
 	}
 
 	@Override
@@ -401,42 +418,74 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	@Override
 	public void processDocument(IFile file, IDocument doc) {
 		api.updateFileContent(file, doc.get());
-		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setFile(file);
-		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration())
+				.setFile(file);
+		((TypeScriptEditorConfiguration) getSourceViewerConfiguration())
+				.setEditor(this);
 		if (contentOutlinePage != null) {
 			JSONArray model = api.getScriptModel(file);
 			contentOutlinePage.refresh(model);
 			ArrayList<Position> positions = getPositions(model);
 			updateFoldingStructure(positions);
-
 			try {
-				JSONArray diagnostics = api.getSemanticDiagnostics(file);
-				if (diagnostics != null) {
-					file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-					for (int i = 0; i < diagnostics.length(); i++) {
-						JSONObject diagnostic = diagnostics.getJSONObject(i);
-						IMarker marker = file.createMarker(MARKER_TYPE);
-						String message = "";
-						if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-							message = diagnostic.getString("diagnosticCode");
-							if (diagnostic.has("arguments")) {
-								JSONArray arguments = diagnostic.getJSONArray("arguments");
-								for (int j = 0; j < arguments.length(); j++) {
-									message = message.replaceAll("\\{" + j + "\\}",
-											Matcher.quoteReplacement(arguments.getString(j)));
+				for (IResource resource : file.getProject().members()) {
+					if ((resource instanceof IFile)
+							&& (TypeScriptResources.isTypeScriptFile(resource
+									.getName()))) {
+						IFile currentFile = (IFile) resource;
+						try {
+							JSONArray diagnostics = api
+									.getSemanticDiagnostics(currentFile);
+							if (diagnostics != null) {
+								currentFile.deleteMarkers(MARKER_TYPE, true,
+										IResource.DEPTH_INFINITE);
+								for (int i = 0; i < diagnostics.length(); i++) {
+									JSONObject diagnostic = diagnostics
+											.getJSONObject(i);
+									IMarker marker = currentFile
+											.createMarker(MARKER_TYPE);
+									String message = "";
+									if (TypeScriptUtils
+											.isTypeScriptLegacyVersion()) {
+										message = diagnostic
+												.getString("diagnosticCode");
+										if (diagnostic.has("arguments")) {
+											JSONArray arguments = diagnostic
+													.getJSONArray("arguments");
+											for (int j = 0; j < arguments
+													.length(); j++) {
+												message = message
+														.replaceAll(
+																"\\{" + j
+																		+ "\\}",
+																Matcher.quoteReplacement(arguments
+																		.getString(j)));
+											}
+										}
+									} else {
+										message = diagnostic.getString("messageText");
+									}
+									marker.setAttribute(IMarker.MESSAGE,
+											message);
+									marker.setAttribute(IMarker.SEVERITY,
+											IMarker.SEVERITY_ERROR);
+
+									marker.setAttribute(IMarker.CHAR_START,
+											diagnostic.getInt("start"));
+									marker.setAttribute(
+											IMarker.CHAR_END,
+											diagnostic.getInt("start")
+													+ diagnostic
+															.getInt("length"));
 								}
 							}
-						} else {
-							message = diagnostic.getString("messageText");
+						} catch (JSONException | CoreException e) {
+							e.printStackTrace();
 						}
-						marker.setAttribute(IMarker.MESSAGE, message);
-						marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-
-						marker.setAttribute(IMarker.CHAR_START, diagnostic.getInt("start"));
-						marker.setAttribute(IMarker.CHAR_END, diagnostic.getInt("start") + diagnostic.getInt("length"));
 					}
 				}
-			} catch (JSONException | CoreException e) {
+			} catch (CoreException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -533,6 +582,12 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 		editorSelectionChangedListener = new EditorSelectionChangedListener();
 		editorSelectionChangedListener.install(getSelectionProvider());
+		
+		fBracketInserter = new TypeScriptBracketInserter();
+		fBracketInserter.setInsertCloseBrackets(com.axmor.eclipse.typescript.core.Activator.getDefault()
+		        .getPreferenceStore().getBoolean("insertCloseBrackets"));
+		viewer.prependVerifyKeyListener(fBracketInserter);
+		fBracketInserter.setViewer(viewer);
 	}
 
 	@Override
@@ -542,7 +597,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 	@Override
 	protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
-		ISourceViewer viewer = new TypeScriptProjectionViewer(parent, ruler, getOverviewRuler(),
+		ISourceViewer viewer = new TypeScriptProjectionViewer(this, parent, ruler, getOverviewRuler(),
 				isOverviewRulerVisible(), styles);
 
 		// ensure decoration support has been created and configured.
@@ -643,6 +698,10 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 			getPreferenceStore().removePropertyChangeListener(propertyChangedListener);
 			propertyChangedListener = null;
 		}
+		
+		if (fBracketInserter != null) {
+		    ((TextViewer) fBracketInserter.getViewer()).removeVerifyKeyListener(fBracketInserter);
+        }
 		super.dispose();
 	}
 

@@ -114,7 +114,15 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public JSONObject getSignature(IFile file, int position) {
         checkBridge();
-        return bridge.invokeBridgeMethod("getSignature", file, String.valueOf(position));
+		JSONObject object = bridge.invokeBridgeMethod("getSignature", file, String.valueOf(position));
+		try {
+			if (!object.isNull("model")) {
+				return object.getJSONObject("model");
+			}
+			return new JSONObject();
+		} catch (JSONException e) {
+			throw Throwables.propagate(e);
+		}
     }
 
     @Override
@@ -215,7 +223,10 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             params.put("settings", settings);
 
             JSONObject res = bridge.invokeBridgeMethod("getFormattingCode", file, params);
-            return res.getJSONArray("model");
+            if (!res.isNull("model")) {
+                return res.getJSONArray("model");
+            }
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
@@ -229,7 +240,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
             }
-            return null;
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
@@ -249,7 +260,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
             }
-            return null;
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
@@ -263,13 +274,27 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
             }
-            return null;
+            return new JSONArray();
         } catch (JSONException e) {
             throw Throwables.propagate(e);
         }
     }
 
     @Override
+	public JSONObject getSyntaxTree(IFile file) {
+		checkBridge();
+		JSONObject object = bridge.invokeBridgeMethod("getSyntaxTree", file, (String) null);
+		try {
+			if (!object.isNull("model")) {
+				return object.getJSONObject("model");
+			}
+			return null;
+		} catch (JSONException e) {
+			return null;
+		}
+	}
+
+	@Override
     public void dispose() {
         bridge.stop();
     }

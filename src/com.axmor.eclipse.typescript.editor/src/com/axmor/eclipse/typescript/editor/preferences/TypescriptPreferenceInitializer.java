@@ -44,6 +44,6 @@ public class TypescriptPreferenceInitializer extends AbstractPreferenceInitializ
 		PreferenceConverter.setDefault(prefs, TS_COMMENT, new RGB(63, 127, 25));
 		PreferenceConverter.setDefault(prefs, TS_STRING, new RGB(42, 0, 255));
 		PreferenceConverter.setDefault(prefs, TS_BRACKETS, new RGB(42, 0, 255));
-		prefs.setDefault(TS_BRACKETS + TS_BOLD_SUFFIX, true);
+		prefs.setDefault(TS_BRACKETS + TS_BOLD_SUFFIX, true);		
 	}
 }

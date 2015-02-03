@@ -7,26 +7,21 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.core.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.axmor.eclipse.typescript.core.Activator;
-import com.axmor.eclipse.typescript.core.Activator.TypeDocument;
 
 /**
  * @author Konstantin Zaitcev
  */
-public class IndexerJobTest {
+public class IndexerJobTest extends Assert {
 
     /**
      * Tests index initialization.
      */
     @Test
     public void testIndexInit() {
-        TypeDocument[] searchResults = Activator.getDefault().getSearchResults("**");
-        assertNotNull(searchResults);
-        assertEquals(0, searchResults.length);
+		assertFalse(Activator.getDefault().getSearchResults("**").iterator().hasNext());
     }
 }

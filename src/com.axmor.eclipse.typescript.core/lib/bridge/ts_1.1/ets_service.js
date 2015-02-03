@@ -35,7 +35,7 @@ exports.getCompletionEntryDetails = function(file, position, entryName) {
 }
 
 exports.getSignatureAtPosition = function(file, params) {
-  return ts.getSignatureAtPosition(file, params);
+  return ts.getSignatureHelpItems(file, params);
 }
 
 exports.getDefinitionAtPosition = function(file, params) {
