@@ -10,9 +10,9 @@
 
 # New and Noteworthy
 
-* [v3.0 - New and Noteworthy](3.0 - New and Noteworthy) 
-* [v2.0 - New and Noteworthy](2.0 - New and Noteworthy) 
-* [v1.5 - New and Noteworthy](1.5 - New and Noteworthy) 
+* [v3.0 - New and Noteworthy](wiki/3.0 - New and Noteworthy) 
+* [v2.0 - New and Noteworthy](wiki/2.0 - New and Noteworthy) 
+* [v1.5 - New and Noteworthy](wiki/1.5 - New and Noteworthy) 
 
 # Plugin Features
 
@@ -28,7 +28,7 @@
 * Comment Code
 * Open Declaration
 
-[Features Details](Features)
+[Features Details](wiki/Features)
 
 # Development builds
 [![Build Status](https://drone.io/github.com/axmor/typecs/status.png)](https://drone.io/github.com/axmor/typecs/latest)
