@@ -153,7 +153,10 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             params.put("allowModuleKeywordInExternalModuleReference", false);
             params.put("noImplicitAny", settings.isNoImplicitAny());
             params.put("noLib", false);
-            params.put("codeGenTarget", "ES3".equalsIgnoreCase(settings.getTargetVersion()) ? 0 : 1);
+			params.put(
+					"codeGenTarget",
+					"ES3".equalsIgnoreCase(settings.getTargetVersion()) ? 0 : ("ES6".equalsIgnoreCase(settings
+							.getTargetVersion()) ? 2 : 1));
             if ("default".equalsIgnoreCase(settings.getModule())) {
                 params.put("moduleGenTarget", 0);
             } else if ("commonjs".equalsIgnoreCase(settings.getModule())) {

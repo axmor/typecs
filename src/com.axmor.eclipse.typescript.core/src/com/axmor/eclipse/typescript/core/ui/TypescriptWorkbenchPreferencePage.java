@@ -8,13 +8,11 @@
 
 package com.axmor.eclipse.typescript.core.ui;
 
-import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.axmor.eclipse.typescript.core.Activator;
-import com.axmor.eclipse.typescript.core.i18n.Messages;
 
 /**
  * @author Konstantin Zaitcev
@@ -26,9 +24,7 @@ public class TypescriptWorkbenchPreferencePage extends FieldEditorPreferencePage
         setPreferenceStore(Activator.getDefault().getPreferenceStore());
     }
 
-    @Override
-    protected void createFieldEditors() {
-        addField(new ComboFieldEditor("compiler_version", Messages.TypescriptWorkbenchPreferencePage_compiler_version,
-                new String[][] { { "1.3", "1.3" }, { "1.1", "1.1" }, { "1.0.1", "1.0" }}, getFieldEditorParent()));
-    }
+	@Override
+	protected void createFieldEditors() {
+	}
 }

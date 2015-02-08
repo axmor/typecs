@@ -11,8 +11,8 @@ var activity = false;
 log.debug(args);
 
 // init service
-var tsc = require('./ts_' + args.version + '/ets_io.js');
-var tss = require('./ts_' + args.version + '/ets_service.js');
+var tsc = require('./ts/ets_io.js');
+var tss = require('./ts/ets_service.js');
 
 //tss.getScriptLexicalStructure('module1.ts');
 //tss.setFileContent('module1.ts', 'class TestM {}');
@@ -25,6 +25,7 @@ var tss = require('./ts_' + args.version + '/ets_service.js');
 //tss.getScriptLexicalStructure('module2.ts');
 //tss.setFileContent('module2.ts', 'class 1TestM {}');
 //log.debug(tss.getSignatureAtPosition('module2.ts', 107));
+//log.debug(tss.getVersion());
 /*
 log.debug(JSON.stringify({ 'model' : tss.getSyntaxTree('module2.ts') }, 
               	function(key, value) {
@@ -208,7 +209,7 @@ if (args.serv) {
 			  );
               break;
           default:
-            socket.end(JSON.stringify({ 'version' : args.version }));
+            socket.end(JSON.stringify({ 'version' : tss.getVersion() }));
             break;
         }
       } catch (e) {

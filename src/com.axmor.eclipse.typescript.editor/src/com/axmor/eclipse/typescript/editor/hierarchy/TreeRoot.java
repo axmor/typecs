@@ -26,7 +26,6 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
-import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.editor.TypeScriptDocumentProvider;
 import com.axmor.eclipse.typescript.editor.TypeScriptEditor;
 import com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils;
@@ -132,11 +131,7 @@ public class TreeRoot {
     
     private String getText(JSONObject obj) {
         try {
-            if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-                return obj.getString("name");
-            } else {
-                return obj.getString("text");
-            }
+			return obj.getString("text");
         } catch (JSONException e) {
             Activator.error(e);
             return "";
@@ -153,7 +148,7 @@ public class TreeRoot {
     }
     
     private Image createImage(JSONObject element, boolean isRecursive) {
-        JSONObject obj = (JSONObject) element;
+        JSONObject obj = element;
         TypeScriptUIImages imagesFactory = new TypeScriptUIImages();
         return imagesFactory.getImageForModelObject(obj, isRecursive);
     }

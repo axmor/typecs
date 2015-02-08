@@ -51,6 +51,7 @@ public class TypeScriptPartitionScanner extends RuleBasedPartitionScanner {
 		// Add rule for strings and character constants.
 		rules.add(new SingleLineRule("\"", "\"", Token.UNDEFINED, '\\'));
 		rules.add(new SingleLineRule("'", "'", Token.UNDEFINED, '\\'));
+		rules.add(new SingleLineRule("`", "`", Token.UNDEFINED, '\\'));
 
 		// Add rules for multi-line comments and javadoc.
 		rules.add(new MultiLineRule("/**", "*/", javaDoc, (char) 0, true));

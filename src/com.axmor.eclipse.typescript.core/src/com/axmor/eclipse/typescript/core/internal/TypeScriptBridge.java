@@ -83,9 +83,6 @@ public class TypeScriptBridge implements Runnable {
     /** Communication port. */
     private int port;
 
-    /** Compiler version. */
-    private String version;
-
     /**
      * Create TypeScript bridge.
      * 
@@ -94,7 +91,6 @@ public class TypeScriptBridge implements Runnable {
      */
     public TypeScriptBridge(File baseDirectory) {
         this.baseDirectory = baseDirectory;
-        this.version = TypeScriptUtils.getTypeScriptVersion();
     }
 
     @Override
@@ -106,9 +102,9 @@ public class TypeScriptBridge implements Runnable {
         try {
             File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
             String nodeJSPath = TypeScriptUtils.findNodeJS();
-            ProcessBuilder ps = new ProcessBuilder(nodeJSPath, "bridge.js", "version=" + version, "src="
-                    + baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error")
-                    .directory(new File(bundleFile, LIB_BRIDGE));
+			ProcessBuilder ps = new ProcessBuilder(nodeJSPath, "bridge.js", "src="
+					+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error").directory(new File(
+					bundleFile, LIB_BRIDGE));
 
             p = ps.start();
             String portLine = new BufferedReader(new InputStreamReader(p.getErrorStream())).readLine();
@@ -140,6 +136,12 @@ public class TypeScriptBridge implements Runnable {
             errorStream = console.newMessageStream();
             outStream.println("TS Bridge: port = " + port + ", directory: " + baseDirectory);
 
+			JSONObject versionObject = invokeBridgeMethod("getVersion", null, (String) null);
+			try {
+				outStream.println("TypeScript Version: " + versionObject.getString("version"));
+			} catch (JSONException e) {
+				Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+			}
             // decorate error stream
             errorStream.setActivateOnWrite(true);
             Display.getDefault().syncExec(new Runnable() {
@@ -157,6 +159,7 @@ public class TypeScriptBridge implements Runnable {
             } catch (InterruptedException e) {
                 // ignore exception
             }
+
         }
     }
 
@@ -308,17 +311,10 @@ public class TypeScriptBridge implements Runnable {
     public static String getStdLibPath() {
 		try {
 			File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
-			return new File(bundleFile, LIB_BRIDGE + "/ts_" + TypeScriptUtils.getTypeScriptVersion() + "/lib.d.ts")
+			return new File(bundleFile, LIB_BRIDGE + "/ts/lib.d.ts")
 					.getCanonicalPath();
 		} catch (IOException e) {
 			throw Throwables.propagate(e);
 		}
     }
-    
-    /**
-	 * @return the version
-	 */
-	public String getVersion() {
-		return version;
-	}
 }

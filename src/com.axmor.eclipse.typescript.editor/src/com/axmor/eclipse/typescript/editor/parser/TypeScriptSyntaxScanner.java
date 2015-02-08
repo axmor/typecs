@@ -7,7 +7,16 @@
  *******************************************************************************/ 
 package com.axmor.eclipse.typescript.editor.parser;
 
-import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.*;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_BOLD_SUFFIX;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_BRACKETS;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_COMMENT;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_DEFAULT;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_ITALIC_SUFFIX;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_JAVA_DOC;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_KEYWORD;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_NUMBER;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_REFERENCE;
+import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_STRING;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,6 +81,8 @@ public class TypeScriptSyntaxScanner extends RuleBasedScanner {
 		rules.add(new SingleLineRule("\"", "\"", getToken(TS_STRING), '\\'));
 		// Add a rule for single quotes
 		rules.add(new SingleLineRule("'", "'", getToken(TS_STRING), '\\'));
+		// Add a rule for template string
+		rules.add(new SingleLineRule("`", "`", getToken(TS_STRING), '\\'));
 		
 		//Add rules for brackets highlighting
 		rules.add(new SymbolRule('\u007B', getToken(TS_BRACKETS)));
@@ -88,7 +99,7 @@ public class TypeScriptSyntaxScanner extends RuleBasedScanner {
 		// Add generic whitespace rule.
 		rules.add(new WhitespaceRule(new TypeScriptWhitespaceDetector()));
 
-		setRules((IRule[]) rules.toArray(new IRule[rules.size()]));
+		setRules(rules.toArray(new IRule[rules.size()]));
 		setDefaultReturnToken(getToken(TS_DEFAULT));
 	}
 

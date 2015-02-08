@@ -21,8 +21,6 @@ import org.eclipse.ui.part.IShowInSource;
 import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
-import com.axmor.eclipse.typescript.core.TypeScriptUtils;
-
 import us.monoid.json.JSONArray;
 
 /**
@@ -67,11 +65,7 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
 
         TreeViewer viewer = getTreeViewer();
 
-		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-			viewer.setContentProvider(new TypeScriptOutlineContentProviderLegacy(model));
-		} else {
-			viewer.setContentProvider(new TypeScriptOutlineContentProvider());
-		}
+		viewer.setContentProvider(new TypeScriptOutlineContentProvider());
         viewer.setLabelProvider(new TypeScriptOutlineLabelProvider());
         if (model != null) {
             setViewerInput(model);
@@ -79,7 +73,8 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
 
         // add a listener for page navigation
         viewer.addPostSelectionChangedListener(new ISelectionChangedListener() {
-            public void selectionChanged(SelectionChangedEvent event) {
+            @Override
+			public void selectionChanged(SelectionChangedEvent event) {
                 firePostSelectionChanged(event.getSelection());
             }
         });
@@ -154,7 +149,8 @@ public class TypeScriptContentOutlinePage extends ContentOutlinePage implements 
         	return;
     	}
         getControl().getDisplay().asyncExec(new Runnable() {
-            public void run() {
+            @Override
+			public void run() {
                 Control ctrl = getControl();
                 if (ctrl != null && !ctrl.isDisposed()) {
                     setPageInput(documentModel);

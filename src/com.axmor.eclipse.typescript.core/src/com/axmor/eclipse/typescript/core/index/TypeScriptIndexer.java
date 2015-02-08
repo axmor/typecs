@@ -30,7 +30,6 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
-import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.google.common.collect.Iterables;
 
 /**
@@ -179,20 +178,16 @@ public class TypeScriptIndexer {
 		removeFromIndex(path);
 		try {
 			JSONArray model = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getScriptModel(file);
-			if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-				indexModelLegacy(project, file, path, model);
-			} else {
-				// JSONObject syntaxTree =
-				// TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getSyntaxTree(file);
-				// if (syntaxTree != null) {
-				// HashMap<String, Set<String>> baseTypes = new HashMap<>();
-				// indexModelTree(syntaxTree.getJSONArray("statements"), "", baseTypes);
-				//
-				// indexModelFromSyntax(project, file, path, "", baseTypes, model);
-				// } else {
-					indexModel(project, file, path, model);
-				// }
-			}
+			// JSONObject syntaxTree =
+			// TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getSyntaxTree(file);
+			// if (syntaxTree != null) {
+			// HashMap<String, Set<String>> baseTypes = new HashMap<>();
+			// indexModelTree(syntaxTree.getJSONArray("statements"), "", baseTypes);
+			//
+			// indexModelFromSyntax(project, file, path, "", baseTypes, model);
+			// } else {
+			indexModel(project, file, path, model);
+			// }
 			idxDB.commit();
 		} catch (Exception e) {
 			Activator.error(e);
@@ -262,44 +257,6 @@ public class TypeScriptIndexer {
 	 */
 	public void flush() {
 		idxDB.commit();
-	}
-
-	private void indexModelLegacy(String project, IFile file, String path, JSONArray model) throws JSONException,
-			IOException {
-		String qname = "";
-		for (int i = 0; i < model.length(); i++) {
-			JSONObject obj = model.getJSONObject(i);
-			String name = obj.getString("name");
-			String kind = obj.getString("kind");
-			String modifier = obj.getString("kindModifiers");
-			int offset = obj.getInt("minChar");
-			qname = name;
-			if ("module".equals(obj.getString("containerKind"))) {
-				qname = obj.getString("containerName") + "." + name;
-			}
-			switch (kind) {
-			case "interface":
-				addDocumentToIndex(qname, name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
-						EMPTY_BASE_TYPES, file.getModificationStamp());
-				break;
-			case "enum":
-				addDocumentToIndex(qname, name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
-						EMPTY_BASE_TYPES, file.getModificationStamp());
-				break;
-			case "class":
-				addDocumentToIndex(
-						qname,
-						name,
-						project,
-						path,
-						DocumentKind.CLASS.getIntValue(),
-						"private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
-								.getIntValue(), offset, EMPTY_BASE_TYPES, file.getModificationStamp());
-				break;
-			default:
-				break;
-			}
-		}
 	}
 
 	private void indexModel(String project, IFile file, String path, JSONArray model) throws JSONException, IOException {

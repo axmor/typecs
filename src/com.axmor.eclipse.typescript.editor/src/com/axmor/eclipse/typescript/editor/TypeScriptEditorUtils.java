@@ -32,7 +32,6 @@ import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
-import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.google.common.base.Throwables;
 import com.ibm.icu.text.UTF16;
 
@@ -190,45 +189,33 @@ public final class TypeScriptEditorUtils {
 	}
 
     public static Position getPosition(JSONObject json) throws JSONException {
-		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-			int startPos = json.getInt("minChar");
-			int endPos = json.getInt("limChar");
-			return new Position(startPos, endPos - startPos);
-		} else {
-			if (json.has("spans")) {
-				JSONArray spans = json.getJSONArray("spans");
-				if (spans != null && spans.length() > 0) {
-					JSONObject span = spans.getJSONObject(0);
-					return new Position(span.getInt("start"), span.getInt("length"));
-				}
-			} else if (json.has("textSpan")) {
-				JSONObject span = json.getJSONObject("textSpan");
-				return new Position(span.getInt("start"), span.getInt("length"));
-			} else if (json.has("span")) {
-				JSONObject span = json.getJSONObject("span");
+		if (json.has("spans")) {
+			JSONArray spans = json.getJSONArray("spans");
+			if (spans != null && spans.length() > 0) {
+				JSONObject span = spans.getJSONObject(0);
 				return new Position(span.getInt("start"), span.getInt("length"));
 			}
-			throw new JSONException("Object: " + json + " - does not contains position");
+		} else if (json.has("textSpan")) {
+			JSONObject span = json.getJSONObject("textSpan");
+			return new Position(span.getInt("start"), span.getInt("length"));
+		} else if (json.has("span")) {
+			JSONObject span = json.getJSONObject("span");
+			return new Position(span.getInt("start"), span.getInt("length"));
 		}
+		throw new JSONException("Object: " + json + " - does not contains position");
 	}
     
     public static JSONObject updatePosition(JSONObject json, int offset, int length) throws JSONException {
-        if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-            json.put("minChar", offset);
-            json.put("limChar", offset + length);
-            return json;
-        } else {
-            JSONObject span = new JSONObject().put("start", offset).put("length", length);
-            if (json.has("spans")) {                
-                JSONArray spans = new JSONArray();
-                spans.put(span);
-                return json.put("spans", spans);
-            } else if (json.has("textSpan")) {
-                return json.put("textSpan", span);
-            } else if (json.has("span")) {
-                return json.put("span", span);                
-            }
-            throw new JSONException("Object: " + json + " - does not contains position");
-        }
+		JSONObject span = new JSONObject().put("start", offset).put("length", length);
+		if (json.has("spans")) {
+			JSONArray spans = new JSONArray();
+			spans.put(span);
+			return json.put("spans", spans);
+		} else if (json.has("textSpan")) {
+			return json.put("textSpan", span);
+		} else if (json.has("span")) {
+			return json.put("span", span);
+		}
+		throw new JSONException("Object: " + json + " - does not contains position");
     }
 }

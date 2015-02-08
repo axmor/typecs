@@ -46,8 +46,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import com.axmor.eclipse.typescript.core.TypeScriptUtils;
-
 /**
  * Class that implements a quick outline dialog
  * 
@@ -165,11 +163,7 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
         treeViewer = new TreeViewer(widget);
         namePatternFilter = new QuickOutlineNamePatternFilter();
         treeViewer.addFilter(namePatternFilter);
-		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-	        treeContentProvider = new TypeScriptOutlineContentProviderLegacy(outlinePage.getModel());
-		} else {
-	        treeContentProvider = new TypeScriptOutlineContentProvider();
-		}
+		treeContentProvider = new TypeScriptOutlineContentProvider();
         treeViewer.setContentProvider(treeContentProvider);
         treeLabelProvider = new TypeScriptOutlineLabelProvider();
         treeViewer.setLabelProvider(treeLabelProvider);
@@ -185,20 +179,23 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
         final Tree tree = treeViewer.getTree();
         // Handle key events
         tree.addKeyListener(new KeyListener() {
-            public void keyPressed(KeyEvent e) {
+            @Override
+			public void keyPressed(KeyEvent e) {
                 if (e.character == 0x1B) {
                     // Dispose on ESC key press
                     dispose();
                 }
             }
 
-            public void keyReleased(KeyEvent e) {
+            @Override
+			public void keyReleased(KeyEvent e) {
                 // NO-OP
             }
         });
         // Handle mouse clicks
         tree.addMouseListener(new MouseAdapter() {
-            public void mouseUp(MouseEvent e) {
+            @Override
+			public void mouseUp(MouseEvent e) {
                 handleTreeViewerMouseUp(tree, e);
             }
         });
@@ -206,11 +203,13 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
         tree.addMouseMoveListener(new QuickOutlineMouseMoveListener(treeViewer));
         // Handle widget selection events
         tree.addSelectionListener(new SelectionListener() {
-            public void widgetSelected(SelectionEvent e) {
+            @Override
+			public void widgetSelected(SelectionEvent e) {
                 // NO-OP
             }
 
-            public void widgetDefaultSelected(SelectionEvent e) {
+            @Override
+			public void widgetDefaultSelected(SelectionEvent e) {
                 gotoSelectedElement();
             }
         });
@@ -285,7 +284,8 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
     private void createListenersFilterText() {
         // Handle key events
         filterText.addKeyListener(new KeyListener() {
-            public void keyPressed(KeyEvent e) {
+            @Override
+			public void keyPressed(KeyEvent e) {
                 if (e.keyCode == 0x0D) {
                     // Return key was pressed
                     gotoSelectedElement();
@@ -301,13 +301,15 @@ public class TypeScriptQuickOutlineDialog extends PopupDialog implements IInform
                 }
             }
 
-            public void keyReleased(KeyEvent e) {
+            @Override
+			public void keyReleased(KeyEvent e) {
                 // NO-OP
             }
         });
         // Handle text modify events
         filterText.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
+            @Override
+			public void modifyText(ModifyEvent e) {
                 String text = ((Text) e.widget).getText();
                 int length = text.length();
                 if (length > 0) {

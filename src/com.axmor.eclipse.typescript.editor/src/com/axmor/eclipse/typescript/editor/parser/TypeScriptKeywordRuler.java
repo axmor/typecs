@@ -1,8 +1,8 @@
 package com.axmor.eclipse.typescript.editor.parser;
 
 import java.util.Arrays;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.jface.text.rules.ICharacterScanner;
 import org.eclipse.jface.text.rules.IToken;
@@ -74,7 +74,8 @@ public class TypeScriptKeywordRuler extends WordRule {
         "void", /* VoidKeyword */
         "while", /* WhileKeyword */
         "with", /* WithKeyword */
-        "yield" /* YieldKeyword */
+        "yield", /* YieldKeyword */
+        "type" /* from 1.4 version */
 	}
 	));
 	

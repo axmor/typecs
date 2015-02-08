@@ -5,7 +5,6 @@ import static com.axmor.eclipse.typescript.editor.TypeScriptEditorUtils.getPosit
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -63,7 +62,6 @@ import us.monoid.json.JSONObject;
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
-import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
 import com.axmor.eclipse.typescript.editor.compare.TypeScriptBracketInserter;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
@@ -386,7 +384,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 			String documentPart = sourceViewer.getDocument().get(pos.offset, pos.length);
 
 			// Try to find name because position returns for whole block
-			String name = reference.getString(TypeScriptUtils.isTypeScriptLegacyVersion() ? "name" : "text");
+			String name = reference.getString("text");
 			if (name != null) {
 				int nameoffset = documentPart.indexOf(name);
 				if (nameoffset != -1) {
@@ -429,54 +427,23 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 			updateFoldingStructure(positions);
 			try {
 				for (IResource resource : file.getProject().members()) {
-					if ((resource instanceof IFile)
-							&& (TypeScriptResources.isTypeScriptFile(resource
-									.getName()))) {
+					if ((resource instanceof IFile) && (TypeScriptResources.isTypeScriptFile(resource.getName()))) {
 						IFile currentFile = (IFile) resource;
 						try {
-							JSONArray diagnostics = api
-									.getSemanticDiagnostics(currentFile);
+							JSONArray diagnostics = api.getSemanticDiagnostics(currentFile);
 							if (diagnostics != null) {
-								currentFile.deleteMarkers(MARKER_TYPE, true,
-										IResource.DEPTH_INFINITE);
+								currentFile.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 								for (int i = 0; i < diagnostics.length(); i++) {
-									JSONObject diagnostic = diagnostics
-											.getJSONObject(i);
-									IMarker marker = currentFile
-											.createMarker(MARKER_TYPE);
+									JSONObject diagnostic = diagnostics.getJSONObject(i);
+									IMarker marker = currentFile.createMarker(MARKER_TYPE);
 									String message = "";
-									if (TypeScriptUtils
-											.isTypeScriptLegacyVersion()) {
-										message = diagnostic
-												.getString("diagnosticCode");
-										if (diagnostic.has("arguments")) {
-											JSONArray arguments = diagnostic
-													.getJSONArray("arguments");
-											for (int j = 0; j < arguments
-													.length(); j++) {
-												message = message
-														.replaceAll(
-																"\\{" + j
-																		+ "\\}",
-																Matcher.quoteReplacement(arguments
-																		.getString(j)));
-											}
-										}
-									} else {
-										message = diagnostic.getString("messageText");
-									}
-									marker.setAttribute(IMarker.MESSAGE,
-											message);
-									marker.setAttribute(IMarker.SEVERITY,
-											IMarker.SEVERITY_ERROR);
+									message = diagnostic.getString("messageText");
+									marker.setAttribute(IMarker.MESSAGE, message);
+									marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
 
-									marker.setAttribute(IMarker.CHAR_START,
-											diagnostic.getInt("start"));
-									marker.setAttribute(
-											IMarker.CHAR_END,
-											diagnostic.getInt("start")
-													+ diagnostic
-															.getInt("length"));
+									marker.setAttribute(IMarker.CHAR_START, diagnostic.getInt("start"));
+									marker.setAttribute(IMarker.CHAR_END,
+											diagnostic.getInt("start") + diagnostic.getInt("length"));
 								}
 							}
 						} catch (JSONException | CoreException e) {
@@ -500,28 +467,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 */
 	private ArrayList<Position> getPositions(JSONArray model) {
 		ArrayList<Position> positions = new ArrayList<>();
-		if (TypeScriptUtils.isTypeScriptLegacyVersion()) {
-			for (int i = 0; i < model.length(); i++) {
-				if (!model.isNull(i)) {
-					try {
-						if (model.get(i) instanceof JSONObject) {
-							JSONObject obj = (JSONObject) model.get(i);
-							String kind = obj.getString("kind");
-							if (!kind.isEmpty() && !kind.equals(TypeScriptModelKinds.Kinds.PROPERTY.toString())
-									&& !kind.equals(TypeScriptModelKinds.Kinds.VAR.toString())) {
-								int offset = Integer.parseInt(obj.getString("minChar"));
-								positions
-										.add(new Position(offset, Integer.parseInt(obj.getString("limChar")) - offset));
-							}
-						}
-					} catch (JSONException e) {
-						throw Throwables.propagate(e);
-					}
-				}
-			}
-		} else {
-			addChildPositions(positions, model);
-		}
+		addChildPositions(positions, model);
 		return positions;
 	}
 

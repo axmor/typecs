@@ -112,7 +112,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
 
         // target version
         SWTFactory.createLabel(group2, Messages.ProjectPrefPage_targetVersion, 1);
-        targetVersion = SWTFactory.createCombo(group2, SWT.READ_ONLY, 1, new String[] { "ES5", "ES3" });
+		targetVersion = SWTFactory.createCombo(group2, SWT.READ_ONLY, 1, new String[] { "ES5", "ES3", "ES6" });
 
         declaration = SWTFactory.createCheckButton(group2, Messages.ProjectPrefPage_declaration, null, true, 2);
         removeComments = SWTFactory.createCheckButton(group2, Messages.ProjectPrefPage_removeComments, null, true, 2);
@@ -137,7 +137,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
 
     @Override
     public boolean performOk() {
-        TypeScriptCompilerSettings settings = TypeScriptCompilerSettings.load((IProject) ((IAdaptable) getElement())
+        TypeScriptCompilerSettings settings = TypeScriptCompilerSettings.load((IProject) getElement()
                 .getAdapter(IProject.class));
         settings.setSource(compileSourceResource.getText());
         settings.setTarget(compileTargetResource.getText());
@@ -173,7 +173,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
      * Loads preferences from store to UI.
      */
     private void loadPreferences() {
-        TypeScriptCompilerSettings settings = TypeScriptCompilerSettings.load((IProject) ((IAdaptable) getElement())
+        TypeScriptCompilerSettings settings = TypeScriptCompilerSettings.load((IProject) getElement()
                 .getAdapter(IProject.class));
         compileSourceResource.setText(settings.getSource());
         compileTargetResource.setText(settings.getTarget());
