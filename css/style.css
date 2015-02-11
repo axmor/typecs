@@ -770,3 +770,16 @@ a:hover .pic-search {
   border-radius: 3px;
   padding: 10px 5px;
 }
+
+.support {
+	color: #CCCCCC;
+	position: fixed;
+	right: 130px;
+	top: 30px;
+	line-height: 1.5em;
+	font-size: 0.8em;
+}
+
+.support a {
+	color: #FFFFFF;
+}
