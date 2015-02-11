@@ -1,3 +1,5 @@
+[![Gitter chat](https://badges.gitter.im/axmor/typecs.png)](https://gitter.im/axmor/typecs)
+
 # Installation
 
 0. Required software: Java 7, [Eclipse Kepler 4.3](http://www.eclipse.org/kepler/) or higher, [Node.js](http://nodejs.org/).
