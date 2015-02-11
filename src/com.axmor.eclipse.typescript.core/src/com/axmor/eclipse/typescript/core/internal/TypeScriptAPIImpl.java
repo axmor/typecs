@@ -9,6 +9,7 @@ package com.axmor.eclipse.typescript.core.internal;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IContainer;
@@ -19,7 +20,12 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobFunction;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.progress.UIJob;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -30,6 +36,7 @@ import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
 import com.axmor.eclipse.typescript.core.TypeScriptEditorSettings;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 
 /**
@@ -166,10 +173,12 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             }
 
             String settingsTarget = settings.getTarget();
+			final AtomicReference<IResource> targetResource = new AtomicReference<>();
             boolean outputToFile = settingsTarget != null && settingsTarget.toLowerCase().endsWith(".js");
             if (outputToFile) {
                 params.put("outFileOption", settingsTarget);
                 params.put("outDirOption", "");
+				targetResource.set(file.getProject().getFile(settingsTarget));
             } else {
                 params.put("outFileOption", "");
                 String outDirOption = settingsTarget;
@@ -179,7 +188,11 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
                     IPath relativePath = inputFileDir.getFullPath().makeRelativeTo(sourceDir);
                     outDirOption += "/" + relativePath.toString();
                 }
+				if (Strings.isNullOrEmpty(outDirOption)) {
+					outDirOption = file.getParent().getProjectRelativePath().toString();
+				}
                 params.put("outDirOption", outDirOption);
+				targetResource.set(file.getProject().getFolder(outDirOption));
             }
 
             params.put("mapSourceFiles", settings.isSourceMap());
@@ -192,6 +205,21 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             params.put("codepage", (String) null);
 
             JSONObject res = bridge.invokeBridgeMethod("compile", file, params);
+			if (targetResource.get() != null) {
+				UIJob.create("Refresh target resources", new IJobFunction() {
+
+						@Override
+						public IStatus run(IProgressMonitor monitor) {
+							try {
+								targetResource.get().refreshLocal(IResource.DEPTH_INFINITE, monitor);
+							} catch (CoreException e) {
+							Activator.error(e);
+							return new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
+							}
+						return Status.OK_STATUS;
+						}
+				}).schedule();
+			}
             return res;
         } catch (JSONException e) {
             throw Throwables.propagate(e);

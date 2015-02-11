@@ -56,13 +56,12 @@ public class TypeScriptHierarchyUI {
         return fgInstance;
     }
     
-    public static CallHierarchyViewPart openView(TypeScriptEditor editor, IFile file, 
-            JSONArray references) {
+	public static CallHierarchyViewPart openView(TypeScriptEditor editor, IFile file, JSONArray references) {
         IWorkbenchWindow window = editor.getSite().getWorkbenchWindow();
-        TypeScriptAPI api = editor.getApi();
+		TypeScriptAPI api = editor.getApi();
         IWorkbenchPage page= window.getActivePage();
         try {
-            CallHierarchyViewPart viewPart= getDefault().findCallHierarchyViewPart(page);
+			CallHierarchyViewPart viewPart = getDefault().findCallHierarchyViewPart(page);
             String secondaryId= null;
             if (viewPart == null) {
                 if (page.findViewReference(CallHierarchyViewPart.ID_CALL_HIERARCHY) != null) {
@@ -73,7 +72,7 @@ public class TypeScriptHierarchyUI {
             }                
             viewPart = (CallHierarchyViewPart)page.showView(CallHierarchyViewPart.ID_CALL_HIERARCHY, secondaryId, 
                     IWorkbenchPage.VIEW_ACTIVATE);
-            viewPart.setInputElements(createRoot(editor, api, file, references));
+			viewPart.setInputElements(createRoot(editor, api, file, references));
             return viewPart;
         } catch (CoreException e) {
             Activator.error(e);

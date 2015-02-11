@@ -376,7 +376,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		try {
 
 			Position pos = getPosition(reference);
-			if (pos.offset < 0 || pos.length < 0) {
+			if (pos.offset < 0 || pos.length < 0 || pos.length > sourceViewer.getDocument().getLength()) {
 				return;
 			}
 			textWidget.setRedraw(false);

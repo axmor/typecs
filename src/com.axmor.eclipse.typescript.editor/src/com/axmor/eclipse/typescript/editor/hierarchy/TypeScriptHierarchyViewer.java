@@ -45,7 +45,8 @@ public class TypeScriptHierarchyViewer extends TreeViewer {
         @Override
         public String getText(Object element) {
             TreeRoot obj = (TreeRoot) element;
-            return obj.getName() + " : " + obj.getLine();
+			return obj.getName() + " : " + obj.getLine() + " (" + obj.getFile().getProjectRelativePath().toString()
+					+ ")";
         }
     }
 }
