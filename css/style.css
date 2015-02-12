@@ -773,7 +773,8 @@ a:hover .pic-search {
 
 .support {
 	color: #CCCCCC;
-	position: fixed;
+	position: absolute;
+	z-index: 10000;
 	right: 130px;
 	top: 30px;
 	line-height: 1.5em;
