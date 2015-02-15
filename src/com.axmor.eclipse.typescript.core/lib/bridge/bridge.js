@@ -14,6 +14,7 @@ log.debug(args);
 var tsc = require('./ts/ets_io.js');
 var tss = require('./ts/ets_service.js');
 
+//log.debug(tss.getSemanticDiagnostics('new_file.ts'));
 //tss.getScriptLexicalStructure('module1.ts');
 //tss.setFileContent('module1.ts', 'class TestM {}');
 //tss.getScriptLexicalStructure('module1.ts');
@@ -54,7 +55,7 @@ log.debug(JSON.stringify({ 'model' : tss.getSyntaxTree('module2.ts') },
 );
 */
 /*
-log.error(tsc.compile('module2.ts', 
+log.error(tsc.compile('new_file.ts', 
     {
       "allowAutomaticSemicolonInsertion":true,
       "allowBool":false,

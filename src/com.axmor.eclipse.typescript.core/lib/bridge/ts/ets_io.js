@@ -23,7 +23,7 @@ exports.compile = function(file, _settings) {
   compilerHost.getSourceFile = function(filename, languageVersion, onError) {
     try {
       var fname = filename === "lib.d.ts" ? ("./ts/" + filename) : (args.src + "/" + filename);
-      var text = _fs.readFileSync(fname, "UTF-8");
+      var text = TypeScript.sys.readFile(fname, "UTF-8");
     } catch (e) {
       if (onError) {
         onError(e.message);
