@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.Path;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Fun;
+import org.mapdb.Fun.Tuple2;
 import org.mapdb.Fun.Tuple4;
 
 import us.monoid.json.JSONArray;
@@ -48,6 +49,8 @@ public class TypeScriptIndexer {
 
 	/** File, Name, Parent, Index */
 	public NavigableSet<Fun.Tuple4<String, String, String, IndexInfo>> idxTypes;
+	/** FileName, Filename (Full workspace related filename) where B imports A */
+	public NavigableSet<Fun.Tuple2<String, String>> idxReferences;
 
 	/**
 	 * Enum for hardcoding of document kind case
@@ -136,15 +139,29 @@ public class TypeScriptIndexer {
 		}
 		this.idxDB = DBMaker.newFileDB(indexPath).closeOnJvmShutdown().make();
 		this.idxTypes = idxDB.getTreeSet("types");
-		final HashSet<String> files = new HashSet<>();
+		this.idxReferences = idxDB.getTreeSet("refs");
+
+		final HashSet<String> typesFiles = new HashSet<>();
 
 		for (Tuple4<String, String, String, IndexInfo> t : this.idxTypes) {
-			files.add(t.a);
+			typesFiles.add(t.a);
 		}
 
-		for (String file : files) {
+		for (String file : typesFiles) {
 			if (!ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(file)).exists()) {
-				removeFromIndex(file);
+				removeFromTypesIndex(file);
+			}
+		}
+
+		final HashSet<String> refsFiles = new HashSet<>();
+
+		for (Tuple2<String, String> t : this.idxReferences) {
+			refsFiles.add(t.a);
+		}
+
+		for (String file : refsFiles) {
+			if (!ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(file)).exists()) {
+				removeFromRefsIndex(file);
 			}
 		}
 	}
@@ -155,10 +172,27 @@ public class TypeScriptIndexer {
 	 * @param path
 	 *            file path
 	 */
-	public synchronized void removeFromIndex(final String path) {
+	public synchronized void removeFromTypesIndex(final String path) {
 		Iterator<Tuple4<String, String, String, IndexInfo>> iterator = idxTypes.iterator();
 		while (iterator.hasNext()) {
 			Fun.Tuple4<String, String, String, IndexInfo> t = iterator.next();
+			if (path.equals(t.a)) {
+				iterator.remove();
+			}
+		}
+		idxDB.commit();
+	}
+
+	/**
+	 * Removes all instances from index related to given file.
+	 * 
+	 * @param path
+	 *            file path
+	 */
+	public synchronized void removeFromRefsIndex(final String path) {
+		Iterator<Tuple2<String, String>> iterator = idxReferences.iterator();
+		while (iterator.hasNext()) {
+			Fun.Tuple2<String, String> t = iterator.next();
 			if (path.equals(t.a)) {
 				iterator.remove();
 			}
@@ -175,7 +209,7 @@ public class TypeScriptIndexer {
 	public void indexFile(String path) {
 		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(path));
 		String project = file.getProject().getName();
-		removeFromIndex(path);
+		removeFromTypesIndex(path);
 		try {
 			JSONArray model = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getScriptModel(file);
 			// JSONObject syntaxTree =
@@ -187,10 +221,32 @@ public class TypeScriptIndexer {
 			// indexModelFromSyntax(project, file, path, "", baseTypes, model);
 			// } else {
 			indexModel(project, file, path, model);
+			indexReferences(file);
 			// }
 			idxDB.commit();
 		} catch (Exception e) {
 			Activator.error(e);
+		}
+	}
+
+	/**
+	 * @param file
+	 */
+	private void indexReferences(IFile file) {
+		JSONArray references = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getReferences(file);
+		if (references != null) {
+			for (int i = 0; i < references.length(); i++) {
+				try {
+					JSONObject ref = references.getJSONObject(i);
+					IFile refFile = file.getParent().getFile(new Path(ref.getString("filename")));
+					if (refFile.exists()) {
+						idxReferences.add(new Fun.Tuple2<String, String>(refFile.getFullPath().toString(), file
+								.getFullPath().toString()));
+					}
+				} catch (JSONException e) {
+					Activator.error(e);
+				}
+			}
 		}
 	}
 

@@ -326,6 +326,20 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 	}
 
 	@Override
+	public JSONArray getReferences(IFile file) {
+		checkBridge();
+		JSONObject object = bridge.invokeBridgeMethod("getReferences", file, (String) null);
+		try {
+			if (!object.isNull("model")) {
+				return object.getJSONArray("model");
+			}
+			return null;
+		} catch (JSONException e) {
+			return null;
+		}
+	}
+
+	@Override
     public void dispose() {
         bridge.stop();
     }
@@ -350,4 +364,5 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             initBridge();
         }
     }
+
 }

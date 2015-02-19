@@ -129,4 +129,11 @@ public interface TypeScriptAPI extends IDisposable {
 	 * Return syntax tree of file
 	 */
 	JSONObject getSyntaxTree(IFile file);
+
+	/**
+	 * @param file
+	 *            source file
+	 * @return import that declared in file
+	 */
+	JSONArray getReferences(IFile file);
 }

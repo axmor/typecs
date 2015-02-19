@@ -64,6 +64,10 @@ exports.getSyntaxTree = function (file) {
   return {statements: t.statements, imports: t.referencedFiles};
 }
 
+exports.getReferences = function (file) {
+  return ts.getSourceFile(file).referencedFiles;
+}
+
 exports.getVersion = function () {
   return '1.4.1.0';
 }

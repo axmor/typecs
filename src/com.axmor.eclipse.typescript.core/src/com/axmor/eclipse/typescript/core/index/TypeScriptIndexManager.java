@@ -79,6 +79,10 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
 		});
 	}
 
+	public Iterable<String> getFileUsage(final String filePath) {
+		return Fun.filter(job.getIndexer().idxReferences, filePath);
+	}
+
     @Override
     public void resourceChanged(IResourceChangeEvent event) {
         try {
@@ -89,7 +93,8 @@ public class TypeScriptIndexManager implements IResourceChangeListener {
                     if (resource != null && resource.getType() == IResource.FILE) {
                         if (TypeScriptResources.isTypeScriptFile(resource.getName())) {
                             if (delta.getKind() == IResourceDelta.REMOVED) {
-                                job.getIndexer().removeFromIndex(resource.getFullPath().toString());
+								job.getIndexer().removeFromTypesIndex(resource.getFullPath().toString());
+								job.getIndexer().removeFromRefsIndex(resource.getFullPath().toString());
                             } else {
                                 job.getChangedResources().add(resource.getFullPath().toString());
                             }

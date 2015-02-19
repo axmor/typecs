@@ -12,8 +12,9 @@ import static com.axmor.eclipse.typescript.core.TypeScriptResources.isTypeScript
 import static com.axmor.eclipse.typescript.core.TypeScriptResources.isTypeScriptFile;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Set;
 
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.IFile;
@@ -34,6 +35,7 @@ import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
+import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
 import com.google.common.base.Strings;
@@ -66,14 +68,13 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
         beforeCompileProgress.setWorkRemaining(WORK_BEFORE_COMPILER);
 
         // check if no TS file was modified and incremental build
-        IResourceDelta delta = null; // null when FULL_BUILD or CLEAN_BUILD
+		Set<IFile> toCompile = null; // null when FULL_BUILD or CLEAN_BUILD
         if (kind == INCREMENTAL_BUILD || kind == AUTO_BUILD) {
-            delta = getDelta(getProject());
-            if (!containsTypeScriptFileToCompile(delta)) {
+			toCompile = getFilesToCompile(getDelta(getProject()));
+			if (toCompile.isEmpty()) {
                 return null;
             }
         }
-
         getProject().deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 
         final TypeScriptCompilerSettings settings = TypeScriptCompilerSettings.load(getProject());
@@ -82,80 +83,78 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
             // single file compilation
             compileFile(getProject().getFile(settings.getSource()), settings, monitor);
         } else if (Strings.isNullOrEmpty(settings.getSource()) || getProject().getFolder(settings.getSource()).exists()) {
-            // folder compilation
-            IResource res = Strings.isNullOrEmpty(settings.getSource()) ? getProject() : getProject().getFolder(
-                    settings.getSource());
-
-            TypeScriptSourceFilesCounter tsSourceFilesCounter = new TypeScriptSourceFilesCounter();
-            int filesToCompile = delta != null ? tsSourceFilesCounter.count(delta) : tsSourceFilesCounter.count(res);
+			if (toCompile == null) {
+				// folder compilation
+				IResource res = Strings.isNullOrEmpty(settings.getSource()) ? getProject() : getProject().getFolder(
+						settings.getSource());
+				toCompile = getFilesToCompile(res);
+			}
             beforeCompileProgress.done();
 
-            SubMonitor compilerMonitor = progress.newChild(WORK_IN_COMPILER).setWorkRemaining(filesToCompile);
-
-            final TypescriptResourceCompiler typescriptResourceCompiler = new TypescriptResourceCompiler(settings,
-                    compilerMonitor);
-            IResourceVisitorHelper compilerHelper = new IResourceVisitorHelper(typescriptResourceCompiler);
-            if (delta != null) {
-                compilerHelper.accept(delta);
-            } else {
-                compilerHelper.accept(res);
-            }
+			SubMonitor compilerMonitor = progress.newChild(WORK_IN_COMPILER).setWorkRemaining(toCompile.size());
+			for (IFile iFile : toCompile) {
+				if (compilerMonitor.isCanceled()) {
+					return null;
+				}
+				compileFile(iFile, settings, compilerMonitor.newChild(1));
+			}
         }
         return null;
     }
 
-    private final class TypescriptResourceCompiler implements IResourceVisitor {
-        private final TypeScriptCompilerSettings settings;
-        private final SubMonitor monitor;
+	/**
+	 * @param delta
+	 * @return
+	 * @throws CoreException
+	 */
+	private Set<IFile> getFilesToCompile(IResourceDelta delta) throws CoreException {
+		final Set<IFile> files = new HashSet<>();
+		delta.accept(new IResourceDeltaVisitor() {
+			@Override
+			public boolean visit(IResourceDelta delta) throws CoreException {
+				acceptTypeScriptFileWithDependencies(delta.getResource(), files);
+				return true;
+			}
+		});
+		return files;
+	}
 
-        private TypescriptResourceCompiler(TypeScriptCompilerSettings settings, SubMonitor monitor) {
-            this.settings = settings;
-            this.monitor = monitor;
-        }
+	/**
+	 * @param delta
+	 * @return
+	 * @throws CoreException
+	 */
+	private Set<IFile> getFilesToCompile(IResource res) throws CoreException {
+		final Set<IFile> files = new HashSet<>();
+		res.accept(new IResourceVisitor() {
+			@Override
+			public boolean visit(IResource resource) throws CoreException {
+				acceptTypeScriptFileWithDependencies(resource, files);
+				return true;
+			}
+		});
+		return files;
+	}
 
-        @Override
-        public boolean visit(IResource resource) throws CoreException {
-            if (isTypeScriptFileToCompile(resource)) {
-                compileFile((IFile) resource, settings, monitor.newChild(1));
-            }
-            return true;
-        }
-
-    }
+	private void acceptTypeScriptFileWithDependencies(IResource resource, Set<IFile> files) {
+		if (resource.getType() == IResource.FILE) {
+			if (isTypeScriptFile(resource.getName())) {
+				if (!isTypeScriptDefinitionFile(resource.getName())) {
+					files.add((IFile) resource);
+				}
+				for (String file : Activator.getDefault().getFileUsage(resource.getFullPath().toString())) {
+					IFile iFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(file));
+					if (iFile.exists() && !files.contains(iFile)) {
+						acceptTypeScriptFileWithDependencies(iFile, files);
+					}
+				}
+			}
+		}
+	}
 
     static boolean isTypeScriptFileToCompile(IResource resource) {
         return resource.getType() == IResource.FILE && isTypeScriptFile(resource.getName())
                 && !isTypeScriptDefinitionFile(resource.getName());
-    }
-
-    /**
-     * @param delta
-     *            delta
-     * @return <code>true</code> if delta contains TS files
-     * @throws CoreException
-     */
-    private boolean containsTypeScriptFileToCompile(IResourceDelta delta) throws CoreException {
-        final AtomicBoolean needCompile = new AtomicBoolean(false);
-        if (delta != null) {
-            delta.accept(new IResourceDeltaVisitor() {
-                @Override
-                public boolean visit(IResourceDelta delta) throws CoreException {
-                    if (needCompile.get()) {
-                        // return as quickly as possible
-                        return false;
-                    }
-                    IResource resource = delta.getResource();
-                    if (isTypeScriptFileToCompile(resource)) {
-                        needCompile.set(true);
-                        // return as quickly as possible
-                        // (can't "properly" break out of iteration even with exceptions)
-                        return false;
-                    }
-                    return true;
-                }
-            });
-        }
-        return needCompile.get();
     }
 
     /**

@@ -14,6 +14,7 @@ log.debug(args);
 var tsc = require('./ts/ets_io.js');
 var tss = require('./ts/ets_service.js');
 
+//log.debug(tss.getReferences('B.ts'));
 //log.debug(tss.getSemanticDiagnostics('new_file.ts'));
 //tss.getScriptLexicalStructure('module1.ts');
 //tss.setFileContent('module1.ts', 'class TestM {}');
@@ -180,10 +181,10 @@ if (args.serv) {
               log.debug('bridge.getSemanticDiagnostics: ' + o.file);
               socket.end(JSON.stringify({ 'model' : tss.getSemanticDiagnostics(o.file) }, 
               	function(key, value) {
-  					if (key == 'file') return value.filename;
-  					return value;
-				}
-			  ));
+  	       				if (key == 'file') return value.filename;
+  				      	return value;
+    				    }
+			         ));
               break;
           case 'getSyntaxTree':
               log.debug('bridge.getSyntaxTree: ' + o.file);
@@ -209,6 +210,10 @@ if (args.serv) {
 				})
 			  );
               break;
+          case 'getReferences':                            
+            log.debug('bridge.getReferences: ' + o.file);
+            socket.end(JSON.stringify({'model': tss.getReferences(o.file)}));
+            break;    
           default:
             socket.end(JSON.stringify({ 'version' : tss.getVersion() }));
             break;

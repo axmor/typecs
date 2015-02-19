@@ -76,6 +76,10 @@ public class Activator extends AbstractUIPlugin {
         return imageDescriptorFromPlugin(PLUGIN_ID, path);
     }
 
+	public Iterable<String> getFileUsage(final String filePath) {
+		return indexManager.getFileUsage(filePath);
+	}
+
     /**
      * Gets results for Open Type action
      * 
