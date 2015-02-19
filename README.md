@@ -1,4 +1,4 @@
-[![Gitter chat](https://badges.gitter.im/axmor/typecs.png)](https://gitter.im/axmor/typecs)
+[![Gitter chat](https://badges.gitter.im/axmor/typecs.png)](https://gitter.im/axmor/typecs) [![Build Status](https://drone.io/github.com/axmor/typecs/status.png)](https://drone.io/github.com/axmor/typecs/latest)<a href="http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=1553220" class="drag rich-diff-level-one" title="Drag to your running Eclipse workspace to install TypEcs"><img src="https://marketplace.eclipse.org/sites/all/themes/solstice/public/images/components/drag-drop/installbutton.png"alt="Drag to your running Eclipse workspace to install TypEcs" /></a>
 
 # Installation
 
