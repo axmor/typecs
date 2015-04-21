@@ -13,6 +13,7 @@ import static com.axmor.eclipse.typescript.core.TypeScriptResources.isTypeScript
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -91,6 +92,14 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
 			}
             beforeCompileProgress.done();
 
+			// remove all definition files
+			Iterator<IFile> it = toCompile.iterator();
+			while (it.hasNext()) {
+				if (isTypeScriptDefinitionFile(it.next().getName())) {
+					it.remove();
+				}
+			}
+
 			SubMonitor compilerMonitor = progress.newChild(WORK_IN_COMPILER).setWorkRemaining(toCompile.size());
 			for (IFile iFile : toCompile) {
 				if (compilerMonitor.isCanceled()) {
@@ -139,9 +148,7 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
 	private void acceptTypeScriptFileWithDependencies(IResource resource, Set<IFile> files) {
 		if (resource.getType() == IResource.FILE) {
 			if (isTypeScriptFile(resource.getName())) {
-				if (!isTypeScriptDefinitionFile(resource.getName())) {
-					files.add((IFile) resource);
-				}
+				files.add((IFile) resource);
 				for (String file : Activator.getDefault().getFileUsage(resource.getFullPath().toString())) {
 					IFile iFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(file));
 					if (iFile.exists() && !files.contains(iFile)) {
