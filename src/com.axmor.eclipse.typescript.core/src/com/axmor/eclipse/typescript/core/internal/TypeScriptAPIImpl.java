@@ -23,7 +23,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
 
@@ -191,8 +190,9 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 				if (Strings.isNullOrEmpty(outDirOption)) {
 					outDirOption = file.getParent().getProjectRelativePath().toString();
 				}
+				targetResource.set(Strings.isNullOrEmpty(outDirOption) ? file.getProject() : file.getProject()
+						.getFolder(outDirOption));
                 params.put("outDirOption", outDirOption);
-				targetResource.set(file.getProject().getFolder(outDirOption));
             }
 
             params.put("mapSourceFiles", settings.isSourceMap());
@@ -206,19 +206,18 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
             JSONObject res = bridge.invokeBridgeMethod("compile", file, params);
 			if (targetResource.get() != null) {
-				UIJob.create("Refresh target resources", new IJobFunction() {
-
-						@Override
-						public IStatus run(IProgressMonitor monitor) {
-							try {
-								targetResource.get().refreshLocal(IResource.DEPTH_INFINITE, monitor);
-							} catch (CoreException e) {
+				new UIJob("Refresh target resources") {
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor) {
+						try {
+							targetResource.get().refreshLocal(IResource.DEPTH_INFINITE, monitor);
+						} catch (CoreException e) {
 							Activator.error(e);
 							return new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
-							}
-						return Status.OK_STATUS;
 						}
-				}).schedule();
+						return Status.OK_STATUS;
+					}
+				}.schedule();
 			}
             return res;
         } catch (JSONException e) {
