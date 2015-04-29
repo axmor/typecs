@@ -191,8 +191,8 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 					outDirOption = file.getParent().getProjectRelativePath().toString();
 				}
 				targetResource.set(Strings.isNullOrEmpty(outDirOption) ? file.getProject() : file.getProject()
-						.getFolder(outDirOption));
-                params.put("outDirOption", outDirOption);
+						.findMember(outDirOption));
+				params.put("outDirOption", Strings.isNullOrEmpty(outDirOption) ? "." : outDirOption);
             }
 
             params.put("mapSourceFiles", settings.isSourceMap());

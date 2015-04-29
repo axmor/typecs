@@ -83,10 +83,11 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
         if (settings.isSourceFile()) {
             // single file compilation
             compileFile(getProject().getFile(settings.getSource()), settings, monitor);
-        } else if (Strings.isNullOrEmpty(settings.getSource()) || getProject().getFolder(settings.getSource()).exists()) {
+		} else if (Strings.isNullOrEmpty(settings.getSource())
+				|| getProject().findMember(settings.getSource()).exists()) {
 			if (toCompile == null) {
 				// folder compilation
-				IResource res = Strings.isNullOrEmpty(settings.getSource()) ? getProject() : getProject().getFolder(
+				IResource res = Strings.isNullOrEmpty(settings.getSource()) ? getProject() : getProject().findMember(
 						settings.getSource());
 				toCompile = getFilesToCompile(res);
 			}

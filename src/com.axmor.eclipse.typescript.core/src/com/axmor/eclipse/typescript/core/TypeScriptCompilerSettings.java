@@ -10,6 +10,7 @@ package com.axmor.eclipse.typescript.core;
 import static com.axmor.eclipse.typescript.core.TypeScriptResources.TS_EXT_DOT;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.osgi.service.prefs.BackingStoreException;
@@ -229,7 +230,8 @@ public final class TypeScriptCompilerSettings {
      * @return <code>true</code> if source point to single file
      */
     public boolean isSourceFile() {
-        return !Strings.isNullOrEmpty(source) && project.getFile(source).exists();
+		return !Strings.isNullOrEmpty(source) && project.findMember(source).exists()
+				&& project.findMember(source).getType() == IResource.FILE;
     }
 
     /**
