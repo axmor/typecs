@@ -35,7 +35,6 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
-import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.axmor.eclipse.typescript.editor.contentassist.TypeScriptAssistProcessor;
 import com.axmor.eclipse.typescript.editor.hover.TypeScriptTextHover;
