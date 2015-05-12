@@ -201,5 +201,9 @@ public class TypeScriptSyntaxScanner extends RuleBasedScanner {
 		} else if (index >= 0) {
 			adaptToColorChange(event, getToken(tokenProperties[index]));
 		}
-    }	
+    }
+	
+	public boolean affectsBehavior(PropertyChangeEvent event) {
+        return indexOf(event.getProperty()) >= 0;
+    }
 }

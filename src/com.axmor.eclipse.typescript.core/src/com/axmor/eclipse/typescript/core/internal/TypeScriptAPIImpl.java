@@ -351,6 +351,20 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 			return null;
 		}
 	}
+	
+	@Override
+	public JSONArray getIdentifiers(IFile file) {
+		checkBridge();
+		JSONObject object = bridge.invokeBridgeMethod("getIdentifiers", file, (String) null);
+		try {
+			if (!object.isNull("model")) {
+				return object.getJSONArray("model");
+			}
+			return new JSONArray();
+		} catch (JSONException e) {
+			return null;
+		}
+	}
 
 	@Override
     public void dispose() {

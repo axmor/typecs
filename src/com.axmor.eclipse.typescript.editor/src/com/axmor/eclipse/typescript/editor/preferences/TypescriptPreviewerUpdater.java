@@ -17,8 +17,10 @@ public class TypescriptPreviewerUpdater {
 			 * @see org.eclipse.jface.util.IPropertyChangeListener#propertyChange(org.eclipse.jface.util.PropertyChangeEvent)
 			 */
 			public void propertyChange(PropertyChangeEvent event) {
-				configuration.adaptToPreferenceChange(event);
-				viewer.invalidateTextPresentation();
+			    if (configuration.affectsTextPresentation(event)) {
+			        configuration.adaptToPreferenceChange(event);
+	                viewer.invalidateTextPresentation();
+			    }				
 			}
 		};
 		viewer.getTextWidget().addDisposeListener(new DisposeListener() {

@@ -217,7 +217,11 @@ if (args.serv) {
           case 'getReferences':                            
             log.debug('bridge.getReferences: ' + o.file);
             socket.end(JSON.stringify({'model': tss.getReferences(o.file)}));
-            break;    
+            break; 
+          case 'getIdentifiers':                            
+              log.debug('bridge.getIdentifiers: ' + o.file);
+              socket.end(JSON.stringify({ 'model' : tss.getIdentifiers(o.file) }));
+              break;
           default:
             socket.end(JSON.stringify({ 'version' : tss.getVersion() }));
             break;

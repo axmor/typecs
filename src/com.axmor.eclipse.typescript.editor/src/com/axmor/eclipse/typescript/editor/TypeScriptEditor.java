@@ -63,10 +63,12 @@ import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
+import com.axmor.eclipse.typescript.editor.color.ColorManager;
 import com.axmor.eclipse.typescript.editor.compare.TypeScriptBracketInserter;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJobCanceler;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
+import com.axmor.eclipse.typescript.editor.semantichighlight.TypeScriptSemanticManager;
 import com.google.common.base.Throwables;
 
 /**
@@ -118,6 +120,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	 * The projection annotation model
 	 */
 	private ProjectionAnnotationModel annotationModel;
+	
+	private TypeScriptSemanticManager fSemanticManager;
 
 	/**
 	 * @return the api
@@ -222,7 +226,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		public void propertyChange(PropertyChangeEvent event) {
 			TypeScriptEditorConfiguration sourceViewerConfiguration= (TypeScriptEditorConfiguration)getSourceViewerConfiguration();
 	        if (sourceViewerConfiguration != null) {
-	        	sourceViewerConfiguration.adaptToPreferenceChange(event);
+	        	sourceViewerConfiguration.handlePropertyChangeEvent(event);
 	        	getViewer().invalidateTextPresentation();
 	        }	        
 		}
@@ -261,8 +265,28 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration()).setEditor(this);		
 		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(propertyChangedListener);
 		com.axmor.eclipse.typescript.core.Activator.getDefault().getPreferenceStore()
-		    .addPropertyChangeListener(propertyBracketsChangedListener);
+		    .addPropertyChangeListener(propertyBracketsChangedListener);		
 	}
+	
+	private void installSemanticHighlighting() {
+		if (fSemanticManager == null) {
+			fSemanticManager= new TypeScriptSemanticManager();
+			fSemanticManager.install(this, getSourceViewer(), ColorManager.getDefault(), Activator.getDefault().getPreferenceStore());
+		}
+	}
+	
+	private void uninstallSemanticHighlighting() {
+        if (fSemanticManager != null) {
+            fSemanticManager.uninstall();
+            fSemanticManager = null;
+        }
+    }
+	
+	public void updateSemanticHigliting() {
+        if (fSemanticManager != null) {
+            fSemanticManager.getReconciler().refresh();
+        }
+    }
 
 	@Override
 	public boolean isEditable() {
@@ -419,7 +443,8 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration())
 				.setFile(file);
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration())
-				.setEditor(this);
+				.setEditor(this);	
+		
 		if (contentOutlinePage != null) {
 			JSONArray model = api.getScriptModel(file);
 			contentOutlinePage.refresh(model);
@@ -534,6 +559,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		        .getPreferenceStore().getBoolean("insertCloseBrackets"));
 		viewer.prependVerifyKeyListener(fBracketInserter);
 		fBracketInserter.setViewer(viewer);
+		installSemanticHighlighting();
 	}
 
 	@Override
@@ -543,7 +569,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 	@Override
 	protected ISourceViewer createSourceViewer(Composite parent, IVerticalRuler ruler, int styles) {
-		ISourceViewer viewer = new TypeScriptProjectionViewer(this, parent, ruler, getOverviewRuler(),
+        ISourceViewer viewer = new TypeScriptProjectionViewer(this, parent, ruler, getOverviewRuler(),
 				isOverviewRulerVisible(), styles);
 
 		// ensure decoration support has been created and configured.
@@ -631,6 +657,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 		}
 
 		uninstallOccurrencesFinder();
+		uninstallSemanticHighlighting();
 
 		if (activationListener != null) {
 			Shell shell = getEditorSite().getShell();

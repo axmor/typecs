@@ -23,9 +23,10 @@ import org.eclipse.jface.text.information.IInformationPresenter;
 import org.eclipse.jface.text.information.IInformationProvider;
 import org.eclipse.jface.text.information.InformationPresenter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
-import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.quickassist.IQuickAssistAssistant;
 import org.eclipse.jface.text.quickassist.QuickAssistAssistant;
+import org.eclipse.jface.text.reconciler.IReconciler;
+import org.eclipse.jface.text.reconciler.MonoReconciler;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.source.DefaultAnnotationHover;
 import org.eclipse.jface.text.source.IAnnotationHover;
@@ -34,11 +35,13 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.axmor.eclipse.typescript.editor.contentassist.TypeScriptAssistProcessor;
 import com.axmor.eclipse.typescript.editor.hover.TypeScriptTextHover;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptPartitionScanner;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptSyntaxScanner;
+import com.axmor.eclipse.typescript.editor.semantichighlight.TypeScriptPresentationReconciler;
 
 /**
  * Source viewer configuration for the TypeScript text editor.
@@ -102,7 +105,7 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
 
     @Override
     public IPresentationReconciler getPresentationReconciler(ISourceViewer sourceViewer) {
-        PresentationReconciler reconciler = new PresentationReconciler();
+    	TypeScriptPresentationReconciler reconciler = new TypeScriptPresentationReconciler();
         reconciler.setDocumentPartitioning(IDocumentExtension3.DEFAULT_PARTITIONING);
 
         DefaultDamagerRepairer dr = new DefaultDamagerRepairer(getSyntaxScanner());
@@ -278,4 +281,36 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
 		}
 		syntaxScanner.adaptToPreferenceChange(event);		
 	}
+	
+	/**
+     * Adapts the behavior of the contained components to the change encoded in the given event.
+     */
+    public void handlePropertyChangeEvent(PropertyChangeEvent event) {
+
+        if (syntaxScanner.affectsBehavior(event)) {
+        	syntaxScanner.adaptToPreferenceChange(event);
+        }        
+    }
+    
+    /**
+     * Determines whether the preference change encoded by the given event changes the behavior of
+     * one of its contained components.
+     */
+    public boolean affectsTextPresentation(PropertyChangeEvent event) {
+        return syntaxScanner.affectsBehavior(event);
+
+    }
+    
+    @Override
+    public IReconciler getReconciler(ISourceViewer sourceViewer) {
+        if (editor != null && editor.isEditable()) {
+            TypeScriptReconcilingStrategy strategy = new TypeScriptReconcilingStrategy(sourceViewer, editor);            
+            MonoReconciler reconciler = new MonoReconciler(strategy, false);
+            reconciler.setIsAllowedToModifyDocument(false);
+            reconciler.setDelay(500);
+
+            return reconciler;
+        }
+        return null;
+    }
 }

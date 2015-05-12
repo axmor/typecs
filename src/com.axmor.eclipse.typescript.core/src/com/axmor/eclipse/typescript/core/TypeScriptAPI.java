@@ -136,6 +136,7 @@ public interface TypeScriptAPI extends IDisposable {
 	 * @return import that declared in file
 	 */
 	JSONArray getReferences(IFile file);
+	
     /**
      * @param file
      *            for to search
@@ -144,4 +145,7 @@ public interface TypeScriptAPI extends IDisposable {
      * @return help signature of method under this position
      */
     JSONObject getSignatureHelpItems(IFile file, int position);
+	
+	JSONArray getIdentifiers(IFile file);
+
 }

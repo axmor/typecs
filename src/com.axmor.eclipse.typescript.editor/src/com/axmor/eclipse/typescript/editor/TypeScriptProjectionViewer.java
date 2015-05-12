@@ -7,6 +7,9 @@
  *******************************************************************************/ 
 package com.axmor.eclipse.typescript.editor;
 
+import java.util.ArrayList;
+
+import org.eclipse.jface.text.ITextPresentationListener;
 import org.eclipse.jface.text.information.IInformationPresenter;
 import org.eclipse.jface.text.source.IOverviewRuler;
 import org.eclipse.jface.text.source.IVerticalRuler;
@@ -54,7 +57,7 @@ public class TypeScriptProjectionViewer extends ProjectionViewer {
             boolean showsAnnotationOverview, int styles) {
         super(parent, ruler, overviewRuler, showsAnnotationOverview, styles);
 		this.editor = editor;
-    }
+    }	
     
     @Override
     public void doOperation(int operation) {
@@ -96,7 +99,7 @@ public class TypeScriptProjectionViewer extends ProjectionViewer {
         super.configure(configuration);
         // Configure quick outline operation for the source viewer only if the
         // given source viewer supports it
-        if (configuration instanceof TypeScriptEditorConfiguration) {
+        if (configuration instanceof TypeScriptEditorConfiguration && editor != null) {
             TypeScriptEditorConfiguration sourceConfiguration = (TypeScriptEditorConfiguration) configuration;
             outlinePresenter = sourceConfiguration.getOutlinePresenter(this);
             if (outlinePresenter != null) {
@@ -122,4 +125,21 @@ public class TypeScriptProjectionViewer extends ProjectionViewer {
 	public TypeScriptEditor getEditor() {
 		return editor;
 	}
+
+	/**
+     * Prepends the text presentation listener at the beginning of the viewer's list of text
+     * presentation listeners. If the listener is already registered with the viewer this call moves
+     * the listener to the beginning of the list.
+     *
+     * @param listener the text presentation listener
+     */
+    @SuppressWarnings("unchecked")
+    public void prependTextPresentationListener(ITextPresentationListener listener) {
+        if (fTextPresentationListeners == null) {
+            fTextPresentationListeners = new ArrayList<ITextPresentationListener>();
+        }
+
+        fTextPresentationListeners.remove(listener);
+        fTextPresentationListeners.add(0, listener);
+    }
 }
