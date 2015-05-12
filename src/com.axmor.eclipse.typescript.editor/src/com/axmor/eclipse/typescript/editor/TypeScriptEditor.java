@@ -283,7 +283,7 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
     }
 	
 	public void updateSemanticHigliting() {
-        if (fSemanticManager != null) {
+        if (fSemanticManager != null && fSemanticManager.getReconciler() != null) {
             fSemanticManager.getReconciler().refresh();
         }
     }
