@@ -68,6 +68,10 @@ exports.getReferences = function (file) {
   return ts.getSourceFile(file).referencedFiles;
 }
 
+exports.getSignatureHelpItems = function(file, params) {
+  return ts.getSignatureHelpItems(file, params);
+}
+
 exports.getIdentifiers = function (file) {  
   var nodes = [];  
   var sourceFile = ts.getSourceFile(file);
