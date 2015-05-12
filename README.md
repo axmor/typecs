@@ -30,7 +30,7 @@
 * Comment Code
 * Open Declaration
 
-[Features Details](https://github.com/axmor/typecs/wiki/Features)
+[Features Details](https://github.com/axmor/typecs/wiki/Features-Details)
 
 # Development builds
 [![Build Status](https://drone.io/github.com/axmor/typecs/status.png)](https://drone.io/github.com/axmor/typecs/latest)
