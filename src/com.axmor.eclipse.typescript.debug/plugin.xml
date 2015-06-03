@@ -45,4 +45,10 @@
     <super type="org.eclipse.debug.core.lineBreakpointMarker"/>
     <persistent value="true"/>
   </extension>
+  
+  <extension point="org.eclipse.ui.console.consoleFactories">
+    <consoleFactory
+      class="com.axmor.eclipse.typescript.debug.console.TypescriptConsoleFactory"
+      label="TypeScript Console" />
+  </extension>
 </plugin>
