@@ -3,3 +3,5 @@ target/
 \.checkstyle
 tools/axmor.keystore
 src\com.axmor.eclipse.typescript.editor\.settings\org.eclipse.jdt.ui.prefs
+*.classpath
+*.project
