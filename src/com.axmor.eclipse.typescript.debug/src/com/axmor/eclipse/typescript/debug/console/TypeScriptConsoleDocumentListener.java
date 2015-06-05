@@ -164,7 +164,7 @@ public class TypeScriptConsoleDocumentListener implements IDocumentListener {
             int commandLineLength = getCommandLineLength();
             final String commandLine = doc.get(commandLineOffset, commandLineLength);
             appendText(getDelimeter());
-
+            // The callback will be called when chromium sdk evaluate the command and get result from a debug context.
             final Callback<Object, String> onContentsReceived = new Callback<Object, String>() {
 
                 @Override
@@ -218,12 +218,7 @@ public class TypeScriptConsoleDocumentListener implements IDocumentListener {
             appendInvitation(false);
         } finally {
             stopDisconnected();
-        }
-
-        /*
-         * if (addInitialCommands) { try { doc.replace(doc.getLength(), 0, this.initialCommands +
-         * "\n"); } catch (BadLocationException e) { Activator.error(e); } }
-         */
+        }        
     }
 
     public int getCommandLineOffset() throws BadLocationException {
@@ -246,7 +241,6 @@ public class TypeScriptConsoleDocumentListener implements IDocumentListener {
 
     public void appendInvitation(boolean async) {
         appendText(promptStr); // caret already updated
-        // viewer.setCaretOffset(doc.getLength(), async);
     }
 
 }
