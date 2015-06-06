@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Display;
  * @author Asya Vorobyova
  *
  */
+@SuppressWarnings("restriction")
 public class ImageDescriptorRegistry {
     
     /** Initial map size */
@@ -88,7 +89,8 @@ public class ImageDescriptorRegistry {
      */
     private void hookDisplay() {
         fDisplay.disposeExec(new Runnable() {
-            public void run() {
+            @Override
+			public void run() {
                 dispose();
             }
         });

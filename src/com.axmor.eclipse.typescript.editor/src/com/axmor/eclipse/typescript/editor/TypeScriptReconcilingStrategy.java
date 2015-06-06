@@ -12,13 +12,10 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 public class TypeScriptReconcilingStrategy implements IReconcilingStrategy, IReconcilingStrategyExtension {
     
-    private IProgressMonitor monitor;
     private IDocument document;
-    private ISourceViewer viewer;
     private ITextEditor editor;
     
     public TypeScriptReconcilingStrategy(ISourceViewer viewer, ITextEditor editor) {
-        this.viewer = viewer;
         this.editor = editor;
     }
 
@@ -29,7 +26,6 @@ public class TypeScriptReconcilingStrategy implements IReconcilingStrategy, IRec
 
     @Override
     public void setProgressMonitor(IProgressMonitor monitor) {
-        this.monitor = monitor;
     }
 
     @Override

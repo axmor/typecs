@@ -10,7 +10,6 @@ package com.axmor.eclipse.typescript.core.index;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NavigableSet;
@@ -350,91 +349,5 @@ public class TypeScriptIndexer {
 				indexModel(project, file, path, obj.getJSONArray("childItems"));
 			}
 		}
-	}
-
-	private void indexModelFromSyntax(String project, IFile file, String path, String qname,
-			HashMap<String, Set<String>> baseTypes, JSONArray model) throws JSONException, IOException {
-		// JSONArray imports = tree.getJSONArray("imports");
-		for (int i = 0; i < model.length(); i++) {
-			JSONObject obj = model.getJSONObject(i);
-			String name = obj.getString("text");
-			qname = name;
-			String kind = obj.getString("kind");
-			String modifier = obj.getString("kindModifiers");
-			int offset = obj.getJSONArray("spans").getJSONObject(0).getInt("start");
-			switch (kind) {
-			case "interface":
-				addDocumentToIndex(qname, name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
-						baseTypes.get(qname) != null ? baseTypes.get(qname) : EMPTY_BASE_TYPES,
-						file.getModificationStamp());
-				break;
-			case "enum":
-				addDocumentToIndex(qname, name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
-						baseTypes.get(qname) != null ? baseTypes.get(qname) : EMPTY_BASE_TYPES,
-						file.getModificationStamp());
-				break;
-			case "class":
-				addDocumentToIndex(
-						qname,
-						name,
-						project,
-						path,
-						DocumentKind.CLASS.getIntValue(),
-						"private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
-								.getIntValue(), offset, baseTypes.get(qname) != null ? baseTypes.get(qname)
-								: EMPTY_BASE_TYPES,
-						file.getModificationStamp());
-				break;
-			default:
-				break;
-			}
-
-			if (obj.has("childItems") && !obj.isNull("childItems")) {
-				indexModelFromSyntax(project, file, path, qname, baseTypes, obj.getJSONArray("childItems"));
-			}
-		}
-	}
-
-	private void indexModelTree(JSONArray statements, String name, HashMap<String, Set<String>> baseTypes)
-			throws JSONException {
-		for (int i = 0; i < statements.length(); i++) {
-			JSONObject obj = statements.getJSONObject(i);
-			if (obj.has("name")) {
-				String n = obj.getJSONObject("name").getString("text");
-				name = name.isEmpty() ? (name + n) : (name + "." + n);
-				// System.out.println(name);
-			}
-			if (obj.has("baseTypes")) {
-				baseTypes.put(name, getBaseTypes(obj.getJSONArray("baseTypes")));
-			}
-			if (obj.has("body")) {
-				JSONObject body = obj.getJSONObject("body");
-				if (body.has("statements")) {
-					indexModelTree(body.getJSONArray("statements"), name, baseTypes);
-				}
-			}
-		}
-	}
-
-	/**
-	 * @param jsonArray
-	 * @return
-	 * @throws JSONException
-	 */
-	private Set<String> getBaseTypes(JSONArray types) throws JSONException {
-		Set<String> baseTypes = new HashSet<>();
-		for (int i = 0; i < types.length(); i++) {
-			JSONObject obj = types.getJSONObject(i);
-			if (obj.has("typeName")) {
-				JSONObject tname = obj.getJSONObject("typeName");
-				if (tname.has("left") && tname.has("right")) {
-					baseTypes.add(tname.getJSONObject("left").getString("text") + "."
-							+ tname.getJSONObject("right").getString("text"));
-				} else if (tname.has("text")) {
-					baseTypes.add(tname.getString("text"));
-				}
-			}
-		}
-		return baseTypes;
 	}
 }
