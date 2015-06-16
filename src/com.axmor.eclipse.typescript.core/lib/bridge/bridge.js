@@ -137,9 +137,13 @@ if (args.serv) {
           case 'addFile':
             if (o.file !== 'std-lib/lib.d.ts') {                            
               log.debug('bridge.addFile: ' + o.file);
-              tss.addFile(o.file);
+              tss.addFile(o.file, o.params);
             }
             socket.end(JSON.stringify({ 'status': 0}));
+            break;
+          case 'getScriptFileNames':                            
+            log.debug('bridge.getScriptFileNames ');
+            socket.end(JSON.stringify({ 'names': tss.getScriptFileNames()}));
             break;
           case 'getScriptLexicalStructure':                            
             log.debug('bridge.getScriptLexicalStructure: ' + o.file);

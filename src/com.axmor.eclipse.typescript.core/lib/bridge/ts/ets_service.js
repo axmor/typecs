@@ -18,8 +18,12 @@ exports.setFileContent = function(file, params) {
   tsh.setFileContent(file, params);
 }
 
-exports.addFile = function(file) {
-  tsh.addFile(file);
+exports.addFile = function(file, params) {
+  tsh.addFile(file, params);
+}
+
+exports.getScriptFileNames = function() {
+  return tsh.getScriptFileNames();
 }
 
 exports.getScriptLexicalStructure = function(file) {
