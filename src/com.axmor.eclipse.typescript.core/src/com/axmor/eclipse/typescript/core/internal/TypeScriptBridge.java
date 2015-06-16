@@ -15,6 +15,8 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -30,6 +32,7 @@ import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 
+import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
 
@@ -244,7 +247,19 @@ public class TypeScriptBridge implements Runnable {
             try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
                 JSONObject obj = new JSONObject().put("method", method);
                 if (file != null) {
-                    obj.put("file", file.getProjectRelativePath().toString());
+                	String path = file.getProjectRelativePath().toString();
+                	switch (method) {
+                		case "addFile":
+                			break;
+                		case "compile":
+                			path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
+                		default:
+                			if (!isFileNameExist(file.getProjectRelativePath().toString())) {
+                				invokeBridgeMethod("addFile", file, file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
+                			}                			
+                			break;
+                	}
+                	obj.put("file", path);                	                
                 }
 
                 if (!Strings.isNullOrEmpty(params)) {
@@ -272,6 +287,21 @@ public class TypeScriptBridge implements Runnable {
         } catch (IOException | JSONException e) {
             throw Throwables.propagate(e);
         }
+    }
+    
+    private boolean isFileNameExist(String name) {
+    	JSONObject res = invokeBridgeMethod("getScriptFileNames", null, (String) null, null);
+    	JSONArray existNames;
+    	List<String> list = new ArrayList<String>();
+		try {
+			existNames = res.getJSONArray("names");			
+	    	for(int i = 0; i < existNames.length(); i++){
+	    	    list.add(existNames.getString(i));
+	    	}
+		} catch (JSONException e) {
+			throw Throwables.propagate(e);
+		}
+		return list.contains(name);
     }
 
     /**

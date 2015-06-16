@@ -146,6 +146,12 @@ public interface TypeScriptAPI extends IDisposable {
      */
     JSONObject getSignatureHelpItems(IFile file, int position);
 	
-	JSONArray getIdentifiers(IFile file);
+    /**
+     * @param file
+     *            for to search
+     *            
+     * @return semantic information for the semantic highlighting
+     */
+    JSONArray getIdentifiers(IFile file);;
 
 }

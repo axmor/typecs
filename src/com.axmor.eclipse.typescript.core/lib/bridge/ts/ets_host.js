@@ -25,7 +25,8 @@ exports.init = function(ts) {
   TypeScript = ts;
   files['std-lib/lib.d.ts'] = {
      version: 1,
-     snapshot: TypeScript.ScriptSnapshot.fromString(fs.readFileSync('./ts/lib.d.ts').toString())
+     snapshot: TypeScript.ScriptSnapshot.fromString(fs.readFileSync('./ts/lib.d.ts').toString()),
+     path: ''
   };
 }
 
@@ -63,8 +64,22 @@ exports.getScriptSnapshot = function(fileName) {
   }
   // we added white space to end of content to avoid code completion error
   if (files[fileName].snapshot == null) {
-    files[fileName].snapshot = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ')
+	var content = '';
+	try {
+		content = fs.readFileSync(baseDir + '/' + fileName);
+	} catch (e) {
+		if (e.code !== "ENOENT") {
+			throw e;
+		}
+		else {
+			content = fs.readFileSync(files[fileName].path);
+		}		      
+	}			
+	files[fileName].snapshot = TypeScript.ScriptSnapshot.fromString(content.toString() + ' ');
   }
+  /*if (files[fileName].snapshot == null) {
+	  files[fileName].snapshot = TypeScript.ScriptSnapshot.fromString(fs.readFileSync(baseDir + '/' + fileName).toString() + ' ');
+  }*/
   return files[fileName].snapshot; 
 }//(fileName: string): TypeScript.IScriptSnapshot;
 
@@ -116,7 +131,8 @@ function readDir(base, dir, files) {
 function emptyEntry() {
   return {
     version: 1,
-    snapshot: null
+    snapshot: null,
+    path: ''
   };
 }
 
@@ -143,14 +159,15 @@ exports.setFileContent = function(file, content) {
   }
 }
 
-exports.addFile = function(fileName) {
+exports.addFile = function(fileName, path) {
   log.debug('host.addFile:' + fileName);
   if (files[fileName]) {
     files[fileName].version++;
     files[fileName].snapshot = null;
   } else {
-  files[fileName] = emptyEntry();
-  }
+	files[fileName] = emptyEntry();
+	files[fileName].path = path;
+  }  
 };
 
 exports.log = function(msg) {

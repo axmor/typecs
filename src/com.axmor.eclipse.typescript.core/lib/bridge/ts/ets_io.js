@@ -18,21 +18,8 @@ exports.compile = function(file, _settings) {
     return args.src;
   };
   compilerHost.getDefaultLibFilename = function() {
-    return "lib.d.ts";
+    return "./ts/lib.d.ts";
   }
-  compilerHost.getSourceFile = function(filename, languageVersion, onError) {
-    try {
-      var fname = filename === "lib.d.ts" ? ("./ts/" + filename) : (args.src + "/" + filename);
-      var text = TypeScript.sys.readFile(fname, "UTF-8");
-    } catch (e) {
-      if (onError) {
-        onError(e.message);
-      }
-      text = "";
-    }
-    return text !== undefined ? TypeScript.createSourceFile(filename, text, languageVersion, "0") : undefined;
-  };
-
 
   var program = TypeScript.createProgram([file], settings, compilerHost);
 

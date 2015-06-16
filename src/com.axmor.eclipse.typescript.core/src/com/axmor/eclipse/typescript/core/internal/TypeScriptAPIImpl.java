@@ -292,9 +292,9 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 
     @Override
     public void addFile(IFile file) {
-        checkBridge();
-        bridge.invokeBridgeMethod("addFile", file, (String) null);
-    }
+        checkBridge();        
+        bridge.invokeBridgeMethod("addFile", file, file.getLocation().toFile().getAbsolutePath().replace('\\', '/'));
+    }  
 
     @Override
     public JSONArray getOccurrencesAtPosition(IFile file, int position) {
