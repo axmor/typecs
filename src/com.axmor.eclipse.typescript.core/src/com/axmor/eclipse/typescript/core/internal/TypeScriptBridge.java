@@ -247,19 +247,20 @@ public class TypeScriptBridge implements Runnable {
             try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
                 JSONObject obj = new JSONObject().put("method", method);
                 if (file != null) {
-                	String path = file.getProjectRelativePath().toString();
-                	switch (method) {
-                		case "addFile":
-                			break;
-                		case "compile":
-                			path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
-                		default:
-                			if (!isFileNameExist(file.getProjectRelativePath().toString())) {
-                				invokeBridgeMethod("addFile", file, file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
-                			}                			
-                			break;
-                	}
-                	obj.put("file", path);                	                
+                    String path = file.getProjectRelativePath().toString();
+                    switch (method) {
+                    case "addFile":
+                        break;
+                    case "compile":
+                        path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
+                    default:
+                        if (!isFileNameExist(file.getProjectRelativePath().toString())) {
+                            invokeBridgeMethod("addFile", file,
+                                    file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
+                        }
+                        break;
+                    }
+                    obj.put("file", path);
                 }
 
                 if (!Strings.isNullOrEmpty(params)) {
