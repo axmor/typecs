@@ -17,6 +17,8 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import com.axmor.eclipse.typescript.core.Activator;
@@ -38,6 +40,8 @@ public class RenameCodeHandler extends AbstractHandler {
             return null;
         }
         TypeScriptEditor editor = (TypeScriptEditor) activeEditor;
+        IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+        page.saveEditor(editor, false);
         IDocument document = editor.getDocumentProvider().getDocument(HandlerUtil.getActiveEditorInput(event));
         ITextSelection selection = (ITextSelection) editor.getSelectionProvider().getSelection();
 

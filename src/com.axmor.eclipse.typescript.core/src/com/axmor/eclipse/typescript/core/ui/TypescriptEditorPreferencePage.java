@@ -53,6 +53,8 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
     private Button braceNewLineBlock;
     /** insertCloseBrackets field. */
     private Button insertCloseBrackets;
+    /** insertSemicolons field. */
+    private Button insertSemicolons;
 
     @Override
     public void init(IWorkbench workbench) {
@@ -95,6 +97,8 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
                 null, false, 1);
         insertCloseBrackets = SWTFactory.createCheckButton(formatting, "Automatically append closing characters", null,
                 true, 1);
+        insertSemicolons = SWTFactory.createCheckButton(formatting,
+                "Automatically insert semicolons at currect position", null, true, 1);
 
         loadSettings();
         return composite;
@@ -119,6 +123,7 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
         braceNewLineFunction.setSelection(settings.isPlaceOpenBraceFunctions());
         braceNewLineBlock.setSelection(settings.isPlaceOpenBraceControlBlocks());
         insertCloseBrackets.setSelection(settings.isInsertCloseBrackets());
+        insertSemicolons.setSelection(settings.isInsertSemicolons());
     }
 
     @Override
@@ -138,6 +143,7 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
         settings.setPlaceOpenBraceFunctions(braceNewLineFunction.getSelection());
         settings.setPlaceOpenBraceControlBlocks(braceNewLineBlock.getSelection());
         settings.setInsertCloseBrackets(insertCloseBrackets.getSelection());
+        settings.setInsertSemicolons(insertSemicolons.getSelection());
         settings.save();
         return true;
     }

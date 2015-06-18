@@ -45,6 +45,8 @@ public final class TypeScriptEditorSettings {
     private boolean placeOpenBraceControlBlocks = false;
     /** InsertCloseBrackets. */
     private boolean insertCloseBrackets = true;
+    /** InsertSemicolons. */
+    private boolean insertSemicolons = true;
 
     /**
      * @return the indentSize
@@ -215,6 +217,20 @@ public final class TypeScriptEditorSettings {
     }
     
     /**
+     * @return the insertSemicolons
+     */
+    public boolean isInsertSemicolons() {
+        return insertSemicolons;
+    }
+
+    /**
+     * @param insertSemicolons the insertSemicolons to set
+     */
+    public void setInsertSemicolons(boolean insertSemicolons) {
+        this.insertSemicolons = insertSemicolons;
+    }
+    
+    /**
      * @return the insertCloseBrackets
      */
     public boolean isInsertCloseBrackets() {
@@ -274,7 +290,10 @@ public final class TypeScriptEditorSettings {
         }
         if (store.contains("insertCloseBrackets")) {
             settings.setInsertCloseBrackets(store.getBoolean("insertCloseBrackets"));
-        }        
+        }
+        if (store.contains("insertSemicolons")) {
+            settings.setInsertSemicolons(store.getBoolean("insertSemicolons"));
+        }
         return settings;
     }
     
@@ -296,6 +315,7 @@ public final class TypeScriptEditorSettings {
         store.setValue("placeBraceFunctions", isPlaceOpenBraceFunctions());
         store.setValue("placeBraceBlocks", isPlaceOpenBraceControlBlocks());
         store.setValue("insertCloseBrackets", isInsertCloseBrackets());
+        store.setValue("insertSemicolons", isInsertSemicolons());
     }    
 
     /**
@@ -315,6 +335,7 @@ public final class TypeScriptEditorSettings {
         store.setToDefault("insertSpaceParenthesis");
         store.setToDefault("placeBraceFunctions");
         store.setToDefault("placeBraceBlocks");
-        store.setToDefault("insertCloseBrackets");        
+        store.setToDefault("insertCloseBrackets");
+        store.setToDefault("insertSemicolons");
     }    
 }
