@@ -22,7 +22,7 @@ import static org.eclipse.swt.SWT.TAB;
  */
 public class TypeScriptAutoIndentStrategy extends DefaultIndentLineAutoEditStrategy {
     
-    protected final static char[] BRACKETS= { '{', '}', '(', ')', '[', ']' };
+    protected final static char[] BRACKETS= { '{', '}', '(', ')', '[', ']', '<', '>' };
     
     private DefaultCharacterPairMatcher bracketMatcher = new DefaultCharacterPairMatcher(BRACKETS);
     
