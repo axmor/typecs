@@ -211,7 +211,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             }
 
             params.put("mapSourceFiles", settings.isSourceMap());
-            params.put("mapRoot", settings.getMapRoot());
+            params.put("mapRoot", settings.isSourceMap() ? settings.getMapRoot() : "");
             params.put("sourceRoot", "");
             params.put("generateDeclarationFiles", settings.isGenerateDeclaration());
             params.put("useCaseSensitiveFileResolution", false);
