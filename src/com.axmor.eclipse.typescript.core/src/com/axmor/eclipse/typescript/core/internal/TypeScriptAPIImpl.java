@@ -197,20 +197,21 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
                 String outDirOption = settingsTarget;
                 if (settings.isTargetRelativePathBasedOnSource()) {
                     IContainer inputFileDir = file.getParent();
-                    IPath sourceDir = file.getProject().getFolder(settings.getSource()).getFullPath();
+                    IPath sourceDir = Strings.isNullOrEmpty(settings.getSource()) ? file.getProject().getFullPath()
+                            : file.getProject().getFolder(settings.getSource()).getFullPath();
                     IPath relativePath = inputFileDir.getFullPath().makeRelativeTo(sourceDir);
                     outDirOption += "/" + relativePath.toString();
                 }
 				if (Strings.isNullOrEmpty(outDirOption)) {
 					outDirOption = file.getParent().getProjectRelativePath().toString();
 				}
-				targetResource.set(Strings.isNullOrEmpty(outDirOption) ? file.getProject() : file.getProject()
-						.findMember(outDirOption));
+				targetResource.set(Strings.isNullOrEmpty(settingsTarget) ? file.getProject() : file.getProject()
+						.findMember(settingsTarget));
 				params.put("outDirOption", Strings.isNullOrEmpty(outDirOption) ? "." : outDirOption);
             }
 
             params.put("mapSourceFiles", settings.isSourceMap());
-            params.put("mapRoot", settings.getMapRoot());
+            params.put("mapRoot", settings.isSourceMap() ? settings.getMapRoot() : "");
             params.put("sourceRoot", "");
             params.put("generateDeclarationFiles", settings.isGenerateDeclaration());
             params.put("useCaseSensitiveFileResolution", false);
