@@ -22,7 +22,7 @@ exports.compile = function(file, _settings) {
   }
 
   var program = TypeScript.createProgram([file], settings, compilerHost);
-  var 
+  
   if (program.getCompilerOptions().outDir && program.getCommonSourceDirectory() && 
 		  program.getCompilerOptions().outDir.length > program.getCommonSourceDirectory().length) {
 	  program.getCompilerOptions().outDir = program.getCommonSourceDirectory();
