@@ -23,9 +23,19 @@ exports.compile = function(file, _settings) {
 
   var program = TypeScript.createProgram([file], settings, compilerHost);
   
-  if (program.getCompilerOptions().outDir && program.getCommonSourceDirectory() && 
-		  program.getCompilerOptions().outDir.length > program.getCommonSourceDirectory().length) {
-	  program.getCompilerOptions().outDir = program.getCommonSourceDirectory();
+  if (program.getCompilerOptions().outDir && program.getCommonSourceDirectory()) {
+	  var commonPathComponents = TypeScript.getNormalizedPathComponents(program.getCommonSourceDirectory(), args.src);
+	  var outDirPathComponents = TypeScript.getNormalizedPathComponents(program.getCompilerOptions().outDir, args.src);
+	  var resultPathComponents = [];
+	  commonPathComponents.pop();
+	  for (var i = 0; i < Math.min(commonPathComponents.length, outDirPathComponents.length); i++) {
+          if (commonPathComponents[i] != outDirPathComponents[i]) {
+        	  resultPathComponents = outDirPathComponents;
+              break;
+          }
+          resultPathComponents.push(commonPathComponents[i]);
+      }
+	  program.getCompilerOptions().outDir = TypeScript.getNormalizedPathFromPathComponents(resultPathComponents);
   }
   var bindStart = new Date().getTime();
   var errors = program.getDiagnostics();
