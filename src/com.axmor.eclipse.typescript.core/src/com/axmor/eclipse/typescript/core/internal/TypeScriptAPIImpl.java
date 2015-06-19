@@ -200,7 +200,8 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
                     IPath sourceDir = Strings.isNullOrEmpty(settings.getSource()) ? file.getProject().getFullPath()
                             : file.getProject().getFolder(settings.getSource()).getFullPath();
                     IPath relativePath = inputFileDir.getFullPath().makeRelativeTo(sourceDir);
-                    outDirOption += "/" + relativePath.toString();
+                    outDirOption = Strings.isNullOrEmpty(outDirOption) ? relativePath.toString() : outDirOption + "/"
+                            + relativePath.toString();
                 }
 				if (Strings.isNullOrEmpty(outDirOption)) {
 					outDirOption = file.getParent().getProjectRelativePath().toString();
