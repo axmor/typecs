@@ -267,7 +267,7 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
 	@Override
 	public IAutoEditStrategy[] getAutoEditStrategies(ISourceViewer sourceViewer, String contentType) {
 	    return TypeScriptPartitionScanner.TS_COMMENT.equals(contentType) ? new IAutoEditStrategy[] { 
-	        new DefaultIndentLineAutoEditStrategy() } : new IAutoEditStrategy[] { new TypeScriptAutoIndentStrategy() };
+	        new DefaultIndentLineAutoEditStrategy() } : new IAutoEditStrategy[] { new SmartSemicolonAutoEditStrategy(), new TypeScriptAutoIndentStrategy() };
 	    }
 
     /**

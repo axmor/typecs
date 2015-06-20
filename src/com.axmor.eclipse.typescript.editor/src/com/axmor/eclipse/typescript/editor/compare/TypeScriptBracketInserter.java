@@ -64,10 +64,7 @@ public class TypeScriptBracketInserter implements VerifyKeyListener {
         {
         case ')':
         case '(':
-            return ')';
-        case '>':
-        case '<':
-            return '>';
+            return ')';        
         case '}':
         case '{':
             return '}';
@@ -142,7 +139,7 @@ public class TypeScriptBracketInserter implements VerifyKeyListener {
      *         false otherwise
      */
     private boolean isClosingChar(IDocument doc, int offset, char c) {
-        if (c == '}' || c == ']' || c == '>' || c == ')') {
+        if (c == '}' || c == ']' || c == ')') {
             return true;
         } else {
             return false;            
