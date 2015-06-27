@@ -52,7 +52,6 @@ import com.axmor.eclipse.typescript.editor.parser.TypeScriptImageKeys;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
 import com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplateAccess;
 import com.axmor.eclipse.typescript.editor.rename.QuickRenameAssistProposal;
-import com.google.common.base.Throwables;
 
 /**
  * A content assist processor which computes completions and sets code completion preferences
@@ -83,8 +82,8 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 	@Override
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 		api.updateFileContent(file, viewer.getDocument().get());
-		JSONObject completionList = api.getCompletion(file, offset);
 		try {
+			JSONObject completionList = api.getCompletion(file, offset);
 			TypeScriptUIImages imagesFactory = new TypeScriptUIImages();
 			String replacement = extractPrefix(viewer.getDocument().get(), offset);
 			if (!completionList.has("entries")) {
@@ -112,9 +111,10 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 			return mergeProposals(result.toArray(new ICompletionProposal[result.size()]),
 					determineTemplateProposalsForContext(viewer, offset));
 
-		} catch (JSONException e) {
-			throw Throwables.propagate(e);
+		} catch (Exception e) {
+			Activator.error(e);
 		}
+		return null;
 	}
 
 	private TypeScriptCompletionProposal createCompletionProposal_1_1(String original, String replacement, int offset,
