@@ -1,8 +1,5 @@
 package com.axmor.eclipse.typescript.editor.semantichighlight;
 
-import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_BOLD_SUFFIX;
-import static com.axmor.eclipse.typescript.editor.parser.TypeScriptTokenConstants.TS_ITALIC_SUFFIX;
-
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -45,8 +42,39 @@ public class TypeScriptSemanticHighlightings {
      */
     public static final String LOCAL_VARIABLE = "ts_localVariable";
 
+    /**
+     * A named preference suffix that controls if semantic highlighting is enabled.
+     */
     public static final String SEMANTIC_HIGHLIGHTING_ENABLED_SUFFIX = ".enabled";
+    
+    /**
+     * A named preference suffix that controls a semantic highlighting's color.
+     * <p>
+     * Value is of type <code>String</code>. A RGB color value encoded as a string
+     * using class <code>PreferenceConverter</code>
+     * </p>
+     */
+    public static final String SEMANTIC_HIGHLIGHTING_COLOR_SUFFIX = ".color";
+    
+    /**
+    * A named preference suffix that controls if semantic highlighting has the text attribute bold.
+    * <p>
+    * Value is of type <code>Boolean</code>: <code>true</code> if bold.
+    * </p>
+    */
+    public static final String SEMANTIC_HIGHLIGHTING_BOLD_SUFFIX = ".bold";
+    
+    /**
+     * A named preference suffix that controls if semantic highlighting has the text attribute italic.
+     * <p>
+     * Value is of type <code>Boolean</code>: <code>true</code> if italic.
+     * </p>
+     */
+    public static final String SEMANTIC_HIGHLIGHTING_ITALIC_SUFFIX = ".italic";
 
+    /**
+     * A named preference prefix for semantic highlighting preferences.
+     */
     public static final String EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX = "semanticHighlighting.";
 
     /**
@@ -409,15 +437,18 @@ public class TypeScriptSemanticHighlightings {
     }
 
     public static String getColorPreferenceKey(TypeScriptSemanticHighlighting semanticHighlighting) {
-        return EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + semanticHighlighting.getPreferenceKey();
+        return EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + semanticHighlighting.getPreferenceKey()
+                + SEMANTIC_HIGHLIGHTING_COLOR_SUFFIX;
     }
 
     public static String getBoldPreferenceKey(TypeScriptSemanticHighlighting semanticHighlighting) {
-        return EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + semanticHighlighting.getPreferenceKey() + TS_BOLD_SUFFIX;
+        return EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + semanticHighlighting.getPreferenceKey()
+                + SEMANTIC_HIGHLIGHTING_BOLD_SUFFIX;
     }
 
     public static String getItalicPreferenceKey(TypeScriptSemanticHighlighting semanticHighlighting) {
-        return EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + semanticHighlighting.getPreferenceKey() + TS_ITALIC_SUFFIX;
+        return EDITOR_SEMANTIC_HIGHLIGHTING_PREFIX + semanticHighlighting.getPreferenceKey()
+                + SEMANTIC_HIGHLIGHTING_ITALIC_SUFFIX;
     }
 
     public static String getEnabledPreferenceKey(TypeScriptSemanticHighlighting semanticHighlighting) {
