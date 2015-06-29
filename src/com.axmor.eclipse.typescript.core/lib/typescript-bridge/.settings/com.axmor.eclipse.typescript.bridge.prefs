@@ -1,0 +1,12 @@
+declaration=false
+eclipse.preferences.version=1
+mapRoot=
+module=commonjs
+noImplicitAny=false
+noResolve=false
+removeComments=false
+source=src
+sourceMap=true
+target=js
+targetRelativePathBasedOnSource=false
+targetVersion=ES6
