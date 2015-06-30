@@ -55,6 +55,8 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
     private Button insertCloseBrackets;
     /** insertSemicolons field. */
     private Button insertSemicolons;
+    /** autoFormatOnSave field. */
+    private Button autoFormatOnSave;
 
     @Override
     public void init(IWorkbench workbench) {
@@ -79,6 +81,8 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
         convertTabs = SWTFactory.createCheckButton(editor, "Convert tabs to spaces", null, true, 2);
 
         Group formatting = SWTFactory.createGroup(composite, "Formatting rules", 1, 1, GridData.FILL_HORIZONTAL);
+        autoFormatOnSave = SWTFactory.createCheckButton(formatting, "Format code automatically on save", 
+                null, true, 1);
         insertSpaceComma = SWTFactory
                 .createCheckButton(formatting, "Insert space after comma delimiter", null, true, 1);
         insertSpaceSemicolon = SWTFactory.createCheckButton(formatting,
@@ -114,6 +118,7 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
         tabSize.setText(String.valueOf(settings.getTabSize()));
 
         convertTabs.setSelection(settings.isConvertTabsToSpaces());
+        autoFormatOnSave.setSelection(settings.isAutoFormatOnSave());
         insertSpaceComma.setSelection(settings.isInsertSpaceAfterCommaDelimiter());
         insertSpaceSemicolon.setSelection(settings.isInsertSpaceAfterSemicolon());
         insertSpaceBinary.setSelection(settings.isInsertSpaceBinaryOperators());
@@ -134,6 +139,7 @@ public class TypescriptEditorPreferencePage extends PreferencePage implements IW
         settings.setTabSize(Integer.parseInt(tabSize.getText()));
 
         settings.setConvertTabsToSpaces(convertTabs.getSelection());
+        settings.setAutoFormatOnSave(autoFormatOnSave.getSelection());
         settings.setInsertSpaceAfterCommaDelimiter(insertSpaceComma.getSelection());
         settings.setInsertSpaceAfterSemicolon(insertSpaceSemicolon.getSelection());
         settings.setInsertSpaceBinaryOperators(insertSpaceBinary.getSelection());

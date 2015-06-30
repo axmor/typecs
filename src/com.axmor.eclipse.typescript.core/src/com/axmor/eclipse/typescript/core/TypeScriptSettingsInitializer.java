@@ -27,6 +27,7 @@ public class TypeScriptSettingsInitializer extends AbstractPreferenceInitializer
         store.setDefault("tabSize", 4);
         store.setDefault("newLineChar", "\r\n");
         store.setDefault("convertTabs", true);
+        store.setDefault("autoFormatOnSave", true);
         store.setDefault("insertSpaceComma", true);
         store.setDefault("insertSpaceSemicolon", true);
         store.setDefault("insertSpaceBinary", true);
@@ -36,6 +37,7 @@ public class TypeScriptSettingsInitializer extends AbstractPreferenceInitializer
         store.setDefault("placeBraceFunctions", false);
         store.setDefault("placeBraceBlocks", false);
         store.setDefault("insertCloseBrackets", true);
+        store.setDefault("insertSemicolons", true);
     }
 
 }
