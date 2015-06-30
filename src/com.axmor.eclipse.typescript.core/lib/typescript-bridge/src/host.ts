@@ -17,7 +17,7 @@ class TSFile {
 export class BridgeServiceHost implements ts.LanguageServiceHost {
 	private files: {[name: string]: TSFile} = {'std-lib/lib.d.ts' : {
     	version: 1,
-    	snapshot: _ts.ScriptSnapshot.fromString(fs.readFileSync('../ts/lib.d.ts').toString()),
+    	snapshot: _ts.ScriptSnapshot.fromString(fs.readFileSync(__dirname + '/../ts/lib.d.ts').toString()),
      	path: ''
 	}};
 	
@@ -66,7 +66,11 @@ export class BridgeServiceHost implements ts.LanguageServiceHost {
 				if (e.code !== "ENOENT") {
 					throw e;
 				} else {
-					content = fs.readFileSync(this.files[fileName].path);
+					try {
+						content = fs.readFileSync(this.files[fileName].path);
+				    } catch(e) {
+				    	// ignore
+				    }
 				}		      
 			}			
 			this.files[fileName].snapshot = _ts.ScriptSnapshot.fromString(content.toString() + ' ');

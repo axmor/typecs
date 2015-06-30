@@ -15,10 +15,10 @@ var TSFile = (function () {
 var BridgeServiceHost = (function () {
     function BridgeServiceHost(baseDir) {
         this.files = { 'std-lib/lib.d.ts': {
-            version: 1,
-            snapshot: _ts.ScriptSnapshot.fromString(fs.readFileSync('../ts/lib.d.ts').toString()),
-            path: ''
-        } };
+                version: 1,
+                snapshot: _ts.ScriptSnapshot.fromString(fs.readFileSync(__dirname + '/../ts/lib.d.ts').toString()),
+                path: ''
+            } };
         this.baseDir = '';
         this.baseDir = baseDir;
         if (fs.statSync(baseDir).isDirectory()) {
@@ -59,7 +59,11 @@ var BridgeServiceHost = (function () {
                     throw e;
                 }
                 else {
-                    content = fs.readFileSync(this.files[fileName].path);
+                    try {
+                        content = fs.readFileSync(this.files[fileName].path);
+                    }
+                    catch (e) {
+                    }
                 }
             }
             this.files[fileName].snapshot = _ts.ScriptSnapshot.fromString(content.toString() + ' ');
@@ -143,4 +147,3 @@ var BridgeServiceHost = (function () {
     return BridgeServiceHost;
 })();
 exports.BridgeServiceHost = BridgeServiceHost;
-//# sourceMappingURL=host.js.map

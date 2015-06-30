@@ -7,14 +7,16 @@ var activity = false;
 var service = require('./service');
 var tss = new service.TSService;
 log.debug(tss.getVersion());
-log.debug(tss.getReferences('B.ts'));
-log.debug(tss.getSemanticDiagnostics('A.ts'));
-//tss.getScriptLexicalStructure('module1.ts');
+//log.debug(tss.getReferences('B.ts'));
+//log.debug(tss.getSemanticDiagnostics('A.ts'));
+//log.debug(tss.getScriptFileNames());
+//log.debug(tss.getScriptLexicalStructure('A.ts'));
 //tss.setFileContent('module1.ts', 'class TestM {}');
 //tss.getScriptLexicalStructure('module1.ts');
 //tss.getScriptLexicalStructure('test_ts2.ts');
 //tss.addFile('module1.ts');
-//log.debug(tss.getCompletionsAtPosition('module2.ts', 100));
+//log.debug(tss.getCompletionsAtPosition('A.ts', 100));
+//log.debug(JSON.stringify(tss.getCompletionEntryDetails('two.ts', 78, 'info')));
 //log.debug(tss.getDefinitionAtPosition('module2.ts', 100));
 //log.info(tss.getFormattingEditsForDocument('module2.ts', 0, 500, { "ConvertTabsToSpaces":true, "IndentSize":4, "InsertSpaceAfterCommaDelimiter":true, "InsertSpaceAfterFunctionKeywordForAnonymousFunctions":false, "InsertSpaceAfterKeywordsInControlFlowStatements":true, "InsertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis":false, "InsertSpaceAfterSemicolonInForStatements":true, "InsertSpaceBeforeAndAfterBinaryOperators":true, "NewLineCharacter":"\r\n", "PlaceOpenBraceOnNewLineForControlBlocks":false,"PlaceOpenBraceOnNewLineForFunctions":false,"TabSize":4}));
 //tss.getScriptLexicalStructure('module2.ts');
@@ -48,28 +50,25 @@ log.debug(JSON.stringify({ 'model' : tss.getSyntaxTree('module2.ts') },
                 })
 );
 */
-/*
-log.error(tsc.compile('new_file.ts',
-    {
-      "allowAutomaticSemicolonInsertion":true,
-      "allowBool":false,
-      "allowModuleKeywordInExternalModuleReference":false,
-      "codeGenTarget":1,
-      "gatherDiagnostics":false,
-      "generateDeclarationFiles":false,
-      "mapRoot":"",
-      "mapSourceFiles":true,
-      "moduleGenTarget":0,
-      "noImplicitAny":false,
-      "noLib":false,
-      "noResolve":false,
-      "outDirOption":"target",
-      "outFileOption":"",
-      "propagateEnumConstants":false,
-      "removeComments":false,
-      "sourceRoot":"",
-      "updateTC":false,
-      "useCaseSensitiveFileResolution":false,
-      "watch":false}));
-*/
+log.error(tss.compile('one.ts', {
+    "allowAutomaticSemicolonInsertion": true,
+    "allowBool": false,
+    "allowModuleKeywordInExternalModuleReference": false,
+    "codeGenTarget": 1,
+    "gatherDiagnostics": false,
+    "generateDeclarationFiles": false,
+    "mapRoot": "",
+    "mapSourceFiles": true,
+    "moduleGenTarget": 0,
+    "noImplicitAny": false,
+    "noLib": false,
+    "noResolve": false,
+    "outDirOption": "target",
+    "outFileOption": "",
+    "propagateEnumConstants": false,
+    "removeComments": false,
+    "sourceRoot": "",
+    "updateTC": false,
+    "useCaseSensitiveFileResolution": false,
+    "watch": false }));
 //# sourceMappingURL=test.js.map

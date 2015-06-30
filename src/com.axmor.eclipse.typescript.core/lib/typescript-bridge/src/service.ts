@@ -10,7 +10,7 @@ var _ts: typeof ts = require('../ts/typescriptServices.js')
 import log = require('./log')
 import host = require('./host')
 import args = require('./args')
-var path: typeof path = require('./path.util.js')
+import path = require('./path-util')
 
 export class TSService {
 	host: host.BridgeServiceHost
@@ -138,16 +138,19 @@ export class TSService {
         compilerHost.getCurrentDirectory = function() {
             return args.src;
         }
-        compilerHost.getDefaultLibFileName = function(s) {
-            return "../ts/lib.d.ts";
+
+		compilerHost.getDefaultLibFileName = function(s) {
+            return __dirname + "/../ts/lib.d.ts";
         }
 
         var program: ts.Program = _ts.createProgram([file], settings, compilerHost);
-
-        if (program.getCompilerOptions().outDir && program.getCurrentDirectory()) {
+		/*
+	    if (program.getCompilerOptions().outDir && program.getCurrentDirectory()) {
             var commonPathComponents = path.getNormalizedPathComponents(program.getCurrentDirectory(), args.src);
             var outDirPathComponents = path.getNormalizedPathComponents(program.getCompilerOptions().outDir, args.src);
             var resultPathComponents = [];
+            log.debug(commonPathComponents)
+            log.debug(outDirPathComponents)
             commonPathComponents.pop();
             for (var i = 0; i < Math.min(commonPathComponents.length, outDirPathComponents.length); i++) {
                 if (commonPathComponents[i] != outDirPathComponents[i]) {
@@ -158,38 +161,31 @@ export class TSService {
             }
             program.getCompilerOptions().outDir = path.getNormalizedPathFromPathComponents(resultPathComponents);
         }
-
+		*/
         var bindStart = new Date().getTime();
 
-        var errors: any = [];
+        var _errors: any = [];
 
         var diagnostics = program.getSyntacticDiagnostics();
-        this.reportError(errors, diagnostics);
+        this.reportError(_errors, diagnostics);
         if (diagnostics.length === 0) {
             var diagnostics = program.getGlobalDiagnostics();
-            this.reportError(errors, diagnostics);
+            this.reportError(_errors, diagnostics);
             if (diagnostics.length === 0) {
                 var diagnostics = program.getSemanticDiagnostics();
-                this.reportError(errors, diagnostics);
+                this.reportError(_errors, diagnostics);
             }
         }
 
         var emitOutput = program.emit();
-        this.reportError(errors, emitOutput.diagnostics);
-        if (emitOutput.emitSkipped) {
-            return ts.ExitStatus.DiagnosticsPresent_OutputsSkipped;
-        }
-        if (diagnostics.length > 0 || emitOutput.diagnostics.length > 0) {
-            return ts.ExitStatus.DiagnosticsPresent_OutputsGenerated;
-        }
-
+        this.reportError(_errors, emitOutput.diagnostics);
         return {
-            errors: errors
+            errors: _errors
         }
     }
 
     private reportError(errors: any[], diags: ts.Diagnostic[]) {
-        for (var i = 0; i < errors.length; i++) {
+        for (var i = 0; i < diags.length; i++) {
             var e = diags[i];
             errors.push({
                 file: e.file ? e.file.fileName : "",

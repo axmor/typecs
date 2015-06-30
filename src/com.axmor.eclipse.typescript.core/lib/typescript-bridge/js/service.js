@@ -7,7 +7,6 @@ var _ts = require('../ts/typescriptServices.js');
 var log = require('./log');
 var host = require('./host');
 var args = require('./args');
-var path = require('./path.util.js');
 var TSService = (function () {
     function TSService() {
         log.debug('service.init');
@@ -112,13 +111,16 @@ var TSService = (function () {
             return args.src;
         };
         compilerHost.getDefaultLibFileName = function (s) {
-            return "../ts/lib.d.ts";
+            return __dirname + "/../ts/lib.d.ts";
         };
         var program = _ts.createProgram([file], settings, compilerHost);
+        /*
         if (program.getCompilerOptions().outDir && program.getCurrentDirectory()) {
             var commonPathComponents = path.getNormalizedPathComponents(program.getCurrentDirectory(), args.src);
             var outDirPathComponents = path.getNormalizedPathComponents(program.getCompilerOptions().outDir, args.src);
             var resultPathComponents = [];
+            log.debug(commonPathComponents)
+            log.debug(outDirPathComponents)
             commonPathComponents.pop();
             for (var i = 0; i < Math.min(commonPathComponents.length, outDirPathComponents.length); i++) {
                 if (commonPathComponents[i] != outDirPathComponents[i]) {
@@ -129,32 +131,27 @@ var TSService = (function () {
             }
             program.getCompilerOptions().outDir = path.getNormalizedPathFromPathComponents(resultPathComponents);
         }
+        */
         var bindStart = new Date().getTime();
-        var errors = [];
+        var _errors = [];
         var diagnostics = program.getSyntacticDiagnostics();
-        this.reportError(errors, diagnostics);
+        this.reportError(_errors, diagnostics);
         if (diagnostics.length === 0) {
             var diagnostics = program.getGlobalDiagnostics();
-            this.reportError(errors, diagnostics);
+            this.reportError(_errors, diagnostics);
             if (diagnostics.length === 0) {
                 var diagnostics = program.getSemanticDiagnostics();
-                this.reportError(errors, diagnostics);
+                this.reportError(_errors, diagnostics);
             }
         }
         var emitOutput = program.emit();
-        this.reportError(errors, emitOutput.diagnostics);
-        if (emitOutput.emitSkipped) {
-            return 1 /* DiagnosticsPresent_OutputsSkipped */;
-        }
-        if (diagnostics.length > 0 || emitOutput.diagnostics.length > 0) {
-            return 2 /* DiagnosticsPresent_OutputsGenerated */;
-        }
+        this.reportError(_errors, emitOutput.diagnostics);
         return {
-            errors: errors
+            errors: _errors
         };
     };
     TSService.prototype.reportError = function (errors, diags) {
-        for (var i = 0; i < errors.length; i++) {
+        for (var i = 0; i < diags.length; i++) {
             var e = diags[i];
             errors.push({
                 file: e.file ? e.file.fileName : "",
@@ -190,4 +187,3 @@ var TSService = (function () {
     return TSService;
 })();
 exports.TSService = TSService;
-//# sourceMappingURL=service.js.map

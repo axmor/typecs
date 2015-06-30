@@ -6,10 +6,10 @@ var log = require('./log');
 var activity = false;
 var service = require('./service');
 var net = require('net');
+var tsService = new service.TSService();
 var server = net.createServer({ allowHalfOpen: true }, function (socket) {
     var data = '';
-    var tsService = new service.TSService();
-    //socket.allowHalfOpen = true; 
+    socket.allowHalfOpen = true;
     socket.on('data', function (d) {
         activity = true;
         data += d.toString();
@@ -149,4 +149,3 @@ function inactivityCheck() {
     }
     activity = false;
 }
-//# sourceMappingURL=bridge.js.map

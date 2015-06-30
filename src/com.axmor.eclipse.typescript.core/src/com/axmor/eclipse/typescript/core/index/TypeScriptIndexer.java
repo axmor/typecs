@@ -237,7 +237,7 @@ public class TypeScriptIndexer {
 			for (int i = 0; i < references.length(); i++) {
 				try {
 					JSONObject ref = references.getJSONObject(i);
-					IFile refFile = file.getParent().getFile(new Path(ref.getString("filename")));
+					IFile refFile = file.getParent().getFile(new Path(ref.getString("fileName")));
 					if (refFile.exists()) {
 						idxReferences.add(new Fun.Tuple2<String, String>(refFile.getFullPath().toString(), file
 								.getFullPath().toString()));

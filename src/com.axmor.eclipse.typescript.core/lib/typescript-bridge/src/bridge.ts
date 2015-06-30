@@ -10,12 +10,12 @@ var activity = false
 import service = require('./service')
 
 import net = require('net')
+var tsService : service.TSService = new service.TSService()
 
-var server: net.Server = net.createServer({allowHalfOpen : true}, (socket: net.Socket) => {
+var server: net.Server = net.createServer({allowHalfOpen : true}, (socket: any) => {
     var data = '';
-	var tsService : service.TSService = new service.TSService()
     
-    //socket.allowHalfOpen = true; 
+    socket.allowHalfOpen = true; 
 
     socket.on('data', (d: any) => {
       activity = true;

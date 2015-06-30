@@ -9,4 +9,4 @@ source=src
 sourceMap=true
 target=js
 targetRelativePathBasedOnSource=false
-targetVersion=ES6
+targetVersion=ES5
