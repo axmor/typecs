@@ -147,3 +147,4 @@ var BridgeServiceHost = (function () {
     return BridgeServiceHost;
 })();
 exports.BridgeServiceHost = BridgeServiceHost;
+//# sourceMappingURL=host.js.map

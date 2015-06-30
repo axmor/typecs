@@ -75,3 +75,4 @@ function getNormalizedParts(normalizedSlashedPath, rootLength) {
     }
     return normalized;
 }
+//# sourceMappingURL=path-util.js.map

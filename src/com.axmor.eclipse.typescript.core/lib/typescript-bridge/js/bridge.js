@@ -149,3 +149,4 @@ function inactivityCheck() {
     }
     activity = false;
 }
+//# sourceMappingURL=bridge.js.map
