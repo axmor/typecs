@@ -50,13 +50,19 @@ public class FormatCodeHandler extends AbstractHandler {
             return null;
         }
         IDocument document = editor.getDocumentProvider().getDocument(HandlerUtil.getActiveEditorInput(event));
-        IDocumentExtension4 ex4 = (IDocumentExtension4) document; 
+        formatCode(editor, document);
+        return null;
+    }
+
+    public static void formatCode(TypeScriptEditor editor, IDocument document) {
+        IDocumentExtension4 ex4 = (IDocumentExtension4) document;
         ITextSelection selection = (ITextSelection) editor.getSelectionProvider().getSelection();
         int start = selection.getOffset();
         int end = start + selection.getLength();
         IFile file = ((FileEditorInput) editor.getEditorInput()).getFile();
-        //if selection length equals 0 we will format the document till the end
+        // if selection length equals 0 we will format the document till the end
         if (selection.getLength() == 0) {
+            start = 0;
             end = document.getLength();
         }
         editor.getApi().updateFileContent(file, document.get());
@@ -67,7 +73,7 @@ public class FormatCodeHandler extends AbstractHandler {
             for (int i = 0; i < formatDetails.length(); i++) {
                 JSONObject object = formatDetails.getJSONObject(i);
                 Position position = TypeScriptEditorUtils.getPosition(object);
-                if (position.offset == end)//Ignore space that added by ets_host.js
+                if (position.offset == end)// Ignore space that added by ets_host.js
                     continue;
                 if ((object == null) || (position.offset < start) || (position.offset > end)) {
                     break;
@@ -93,7 +99,5 @@ public class FormatCodeHandler extends AbstractHandler {
         } catch (JSONException | MalformedTreeException | BadLocationException e) {
             throw Throwables.propagate(e);
         }
-        return null;
     }
-
 }

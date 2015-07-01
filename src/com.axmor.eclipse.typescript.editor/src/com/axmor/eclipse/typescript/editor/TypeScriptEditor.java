@@ -10,7 +10,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DefaultInformationControl;
@@ -61,10 +63,12 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
+import com.axmor.eclipse.typescript.core.TypeScriptEditorSettings;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
 import com.axmor.eclipse.typescript.editor.actions.ToggleMarkOccurrencesAction;
 import com.axmor.eclipse.typescript.editor.color.ColorManager;
 import com.axmor.eclipse.typescript.editor.compare.TypeScriptBracketInserter;
+import com.axmor.eclipse.typescript.editor.handlers.FormatCodeHandler;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJob;
 import com.axmor.eclipse.typescript.editor.occurrence.OccurrencesFinderJobCanceler;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
@@ -90,6 +94,10 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 	/** Constant for marker type. */
 	private static final String MARKER_TYPE = "com.axmor.eclipse.typescript.editor.tsDiagnostic";
+	
+	private static final int WORK_SAVE_TOTAL = 100;
+    private static final int WORK_FORMAT_BEFORE_SAVE = 20;
+    private static final int WORK_ON_SAVE = WORK_SAVE_TOTAL - WORK_FORMAT_BEFORE_SAVE;
 
 	/**
 	 * An outline page for the editor's content
@@ -292,6 +300,18 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 	public boolean isEditable() {
 		return getEditorInput().getName().endsWith(TypeScriptResources.TS_STD_LIB) ? false : super.isEditable();
 	}
+	
+    @Override
+    public void doSave(IProgressMonitor progressMonitor) {
+        SubMonitor progress = SubMonitor.convert(progressMonitor, WORK_SAVE_TOTAL);
+        TypeScriptEditorSettings s = TypeScriptEditorSettings.load();
+        if (s.isAutoFormatOnSave()) {
+            IDocument doc = getDocumentProvider().getDocument(getEditorInput());
+            FormatCodeHandler.formatCode(this, doc);
+        }
+        progress.worked(WORK_FORMAT_BEFORE_SAVE);
+        super.doSave(progress.newChild(WORK_ON_SAVE));
+    };
 
 	/**
 	 * Sets a model for outline page

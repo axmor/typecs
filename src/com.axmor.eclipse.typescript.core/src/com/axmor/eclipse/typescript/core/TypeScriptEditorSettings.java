@@ -47,6 +47,8 @@ public final class TypeScriptEditorSettings {
     private boolean insertCloseBrackets = true;
     /** InsertSemicolons. */
     private boolean insertSemicolons = true;
+    /** AutoFormatOnSave. */
+    private boolean autoFormatOnSave = true;
 
     /**
      * @return the indentSize
@@ -243,6 +245,14 @@ public final class TypeScriptEditorSettings {
     public void setInsertCloseBrackets(boolean insertCloseBrackets) {
         this.insertCloseBrackets = insertCloseBrackets;
     }
+    
+    public boolean isAutoFormatOnSave() {
+        return autoFormatOnSave;
+    }
+    
+    public void setAutoFormatOnSave(boolean autoFormatOnSave) {
+        this.autoFormatOnSave = autoFormatOnSave;        
+    }    
 
     /**
      * Loads settings from preferences.
@@ -263,6 +273,9 @@ public final class TypeScriptEditorSettings {
         }
         if (store.contains("convertTabs")) {
             settings.setConvertTabsToSpaces(store.getBoolean("convertTabs"));
+        }
+        if (store.contains("autoFormatOnSave")) {
+            settings.setAutoFormatOnSave(store.getBoolean("autoFormatOnSave"));
         }
         if (store.contains("insertSpaceComma")) {
             settings.setInsertSpaceAfterCommaDelimiter(store.getBoolean("insertSpaceComma"));
@@ -306,6 +319,7 @@ public final class TypeScriptEditorSettings {
         store.setValue("tabSize", getTabSize());
         store.setValue("newLineChar", getNewLineCharacter());
         store.setValue("convertTabs", isConvertTabsToSpaces());
+        store.setValue("autoFormatOnSave", isAutoFormatOnSave());
         store.setValue("insertSpaceComma", isInsertSpaceAfterCommaDelimiter());
         store.setValue("insertSpaceSemicolon", isInsertSpaceAfterSemicolon());
         store.setValue("insertSpaceBinary", isInsertSpaceBinaryOperators());
@@ -327,6 +341,7 @@ public final class TypeScriptEditorSettings {
         store.setToDefault("tabSize");
         store.setToDefault("newLineChar");
         store.setToDefault("convertTabs");
+        store.setToDefault("autoFormatOnSave");
         store.setToDefault("insertSpaceComma");
         store.setToDefault("insertSpaceSemicolon");
         store.setToDefault("insertSpaceBinary");
