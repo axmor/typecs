@@ -7,6 +7,7 @@ var _ts = require('../ts/typescriptServices.js');
 var log = require('./log');
 var host = require('./host');
 var args = require('./args');
+var path = require('./path-util');
 var TSService = (function () {
     function TSService() {
         log.debug('service.init');
@@ -105,15 +106,36 @@ var TSService = (function () {
     };
     TSService.prototype.compile = function (file, _settings) {
         log.debug('service.compile - %s: %j', file, _settings);
-        var settings = this.getCompilationSettings(args.src, _settings);
-        var compilerHost = _ts.createCompilerHost(settings);
-        compilerHost.getCurrentDirectory = function () {
-            return args.src;
-        };
-        compilerHost.getDefaultLibFileName = function (s) {
-            return __dirname + "/../ts/lib.d.ts";
-        };
-        var program = _ts.createProgram([file], settings, compilerHost);
+        var compilerHost;
+        var files;
+        var settings;
+        var _errors = [];
+        if (_settings == undefined) {
+            var rawTsConfig = _ts.readConfigFile(file);
+            var baseDir = path.getDirectoryPath(file);
+            var configParseResult = _ts.parseConfigFile(rawTsConfig, baseDir);
+            if (configParseResult.errors.length > 0) {
+                this.reportError(_errors, configParseResult.errors, file);
+                return {
+                    errors: _errors
+                };
+            }
+            files = configParseResult.fileNames;
+            settings = configParseResult.options;
+            compilerHost = _ts.createCompilerHost(settings);
+        }
+        else {
+            files = [file];
+            settings = this.getCompilationSettings(args.src, _settings);
+            compilerHost = _ts.createCompilerHost(settings);
+            compilerHost.getCurrentDirectory = function () {
+                return args.src;
+            };
+            compilerHost.getDefaultLibFileName = function (s) {
+                return __dirname + "/../ts/lib.d.ts";
+            };
+        }
+        var program = _ts.createProgram(files, settings, compilerHost);
         /*
         if (program.getCompilerOptions().outDir && program.getCurrentDirectory()) {
             var commonPathComponents = path.getNormalizedPathComponents(program.getCurrentDirectory(), args.src);
@@ -133,7 +155,6 @@ var TSService = (function () {
         }
         */
         var bindStart = new Date().getTime();
-        var _errors = [];
         var diagnostics = program.getSyntacticDiagnostics();
         this.reportError(_errors, diagnostics);
         if (diagnostics.length === 0) {
@@ -150,11 +171,11 @@ var TSService = (function () {
             errors: _errors
         };
     };
-    TSService.prototype.reportError = function (errors, diags) {
+    TSService.prototype.reportError = function (errors, diags, _file) {
         for (var i = 0; i < diags.length; i++) {
             var e = diags[i];
             errors.push({
-                file: e.file ? e.file.fileName : "",
+                file: e.file ? e.file.fileName : (_file ? _file : ""),
                 text: e.messageText,
                 severity: e.category,
                 code: e.code,

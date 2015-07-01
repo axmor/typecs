@@ -50,25 +50,29 @@ log.debug(JSON.stringify({ 'model' : tss.getSyntaxTree('module2.ts') },
                 })
 );
 */
-log.error(tss.compile('one.ts', {
-    "allowAutomaticSemicolonInsertion": true,
-    "allowBool": false,
-    "allowModuleKeywordInExternalModuleReference": false,
-    "codeGenTarget": 1,
-    "gatherDiagnostics": false,
-    "generateDeclarationFiles": false,
-    "mapRoot": "",
-    "mapSourceFiles": true,
-    "moduleGenTarget": 0,
-    "noImplicitAny": false,
-    "noLib": false,
-    "noResolve": false,
-    "outDirOption": "target",
-    "outFileOption": "",
-    "propagateEnumConstants": false,
-    "removeComments": false,
-    "sourceRoot": "",
-    "updateTC": false,
-    "useCaseSensitiveFileResolution": false,
-    "watch": false }));
+/*
+log.error(tss.compile('one.ts',
+    {
+      "allowAutomaticSemicolonInsertion":true,
+      "allowBool":false,
+      "allowModuleKeywordInExternalModuleReference":false,
+      "codeGenTarget":1,
+      "gatherDiagnostics":false,
+      "generateDeclarationFiles":false,
+      "mapRoot":"",
+      "mapSourceFiles":true,
+      "moduleGenTarget":0,
+      "noImplicitAny":false,
+      "noLib":false,
+      "noResolve":false,
+      "outDirOption":"target",
+      "outFileOption":"",
+      "propagateEnumConstants":false,
+      "removeComments":false,
+      "sourceRoot":"",
+      "updateTC":false,
+      "useCaseSensitiveFileResolution":false,
+      "watch":false}));
+*/
+log.error(tss.compile('D:/compiler/eclipse-typecs/runtime-kepler/test_single/tsconfig.json', undefined));
 //# sourceMappingURL=test.js.map

@@ -133,17 +133,38 @@ export class TSService {
 
     public compile(file: string, _settings: any): any {
         log.debug('service.compile - %s: %j', file, _settings)
-        var settings = this.getCompilationSettings(args.src, _settings);
-        var compilerHost = _ts.createCompilerHost(settings);
-        compilerHost.getCurrentDirectory = function() {
-            return args.src;
+        var compilerHost
+        var files
+        var settings
+        var _errors: any = []
+        
+        if (_settings == undefined) {
+        	var rawTsConfig = _ts.readConfigFile(file)
+        	var baseDir = path.getDirectoryPath(file)
+        	var configParseResult = _ts.parseConfigFile(rawTsConfig, baseDir)
+			if (configParseResult.errors.length > 0) {
+            	this.reportError(_errors, configParseResult.errors, file)
+				return {
+            		errors: _errors
+        		}
+			}
+            files = configParseResult.fileNames
+            settings = configParseResult.options
+	        compilerHost = _ts.createCompilerHost(settings)
+		} else {
+        	files = [file];
+        	settings = this.getCompilationSettings(args.src, _settings)
+	        compilerHost = _ts.createCompilerHost(settings)
+	        compilerHost.getCurrentDirectory = function() {
+	            return args.src
+	        }
+	
+			compilerHost.getDefaultLibFileName = function(s) {
+	            return __dirname + "/../ts/lib.d.ts"
+	        }
         }
 
-		compilerHost.getDefaultLibFileName = function(s) {
-            return __dirname + "/../ts/lib.d.ts";
-        }
-
-        var program: ts.Program = _ts.createProgram([file], settings, compilerHost);
+        var program: ts.Program = _ts.createProgram(files, settings, compilerHost);
 		/*
 	    if (program.getCompilerOptions().outDir && program.getCurrentDirectory()) {
             var commonPathComponents = path.getNormalizedPathComponents(program.getCurrentDirectory(), args.src);
@@ -164,8 +185,6 @@ export class TSService {
 		*/
         var bindStart = new Date().getTime();
 
-        var _errors: any = [];
-
         var diagnostics = program.getSyntacticDiagnostics();
         this.reportError(_errors, diagnostics);
         if (diagnostics.length === 0) {
@@ -184,11 +203,11 @@ export class TSService {
         }
     }
 
-    private reportError(errors: any[], diags: ts.Diagnostic[]) {
+    private reportError(errors: any[], diags: ts.Diagnostic[], _file? : string) {
         for (var i = 0; i < diags.length; i++) {
             var e = diags[i];
             errors.push({
-                file: e.file ? e.file.fileName : "",
+                file: e.file ? e.file.fileName : (_file ? _file : ""),
                 text: e.messageText,
                 severity: e.category,
                 code: e.code,

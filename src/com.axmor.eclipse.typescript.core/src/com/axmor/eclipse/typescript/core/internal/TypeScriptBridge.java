@@ -103,12 +103,12 @@ public class TypeScriptBridge implements Runnable {
         }
 
         try {
-            File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
+			File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
             String nodeJSPath = TypeScriptUtils.findNodeJS();
-			ProcessBuilder ps = new ProcessBuilder(nodeJSPath, "bridge.js", "src="
-					+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error").directory(new File(
-					bundleFile, LIB_BRIDGE + "/js"));
-
+			ProcessBuilder ps = new ProcessBuilder(nodeJSPath,
+					new File(bundleFile, LIB_BRIDGE + "/js/bridge.js").getCanonicalPath(), "src="
+					+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error");
+			ps.directory(baseDirectory.getCanonicalFile());
             p = ps.start();
             String portLine = new BufferedReader(new InputStreamReader(p.getErrorStream())).readLine();
             if (!portLine.startsWith("@") && !portLine.endsWith("@")) {

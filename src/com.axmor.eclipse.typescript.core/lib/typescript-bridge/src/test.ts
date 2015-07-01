@@ -55,7 +55,7 @@ log.debug(JSON.stringify({ 'model' : tss.getSyntaxTree('module2.ts') },
 				})
 );
 */
-
+/*
 log.error(tss.compile('one.ts', 
     {
       "allowAutomaticSemicolonInsertion":true,
@@ -78,3 +78,5 @@ log.error(tss.compile('one.ts',
       "updateTC":false,
       "useCaseSensitiveFileResolution":false,
       "watch":false}));
+*/
+log.error(tss.compile('D:/compiler/eclipse-typecs/runtime-kepler/test_single/tsconfig.json', undefined));

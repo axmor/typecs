@@ -16,6 +16,10 @@ export function getNormalizedPathFromPathComponents(pathComponents) {
     }
 }
 
+export function getDirectoryPath(path: string) {
+	return path.substr(0, Math.max(getRootLength(path), path.lastIndexOf("/")));
+}
+
 function normalizeSlashes(path: string) {
     return path.replace(/\\/g, "/");
 }
