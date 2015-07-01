@@ -84,14 +84,21 @@ public interface TypeScriptAPI extends IDisposable {
     JSONObject compile(IFile file, TypeScriptCompilerSettings settings);
 
     /**
-     * @param file
-     *            file to format
-     * @param start
-     *            start position where formatting rules will be applied
-     * @param end
-     *            end position where formatting rules will be applied
-     * @return arrays of text edits that should be performed according formatting rules
-     */
+	 * @param file
+	 *            tsconfig file
+	 * @return arrays of errors or empty if compilation was successful
+	 */
+	JSONObject compileTsConfig(IFile file);
+
+	/**
+	 * @param file
+	 *            file to format
+	 * @param start
+	 *            start position where formatting rules will be applied
+	 * @param end
+	 *            end position where formatting rules will be applied
+	 * @return arrays of text edits that should be performed according formatting rules
+	 */
     JSONArray getFormattingCode(IFile file, int start, int end);
 
     /**

@@ -64,7 +64,7 @@ public class TypeScriptBridge implements Runnable {
     private static final int BUFF_SIZE = 1024;
 
     /** Location of bridge libraries in plugin. */
-    private static final String LIB_BRIDGE = "lib/bridge";
+	private static final String LIB_BRIDGE = "lib/typescript-bridge";
 
     /** Lock object for correct multi-thread access. */
     private CountDownLatch lock = new CountDownLatch(1);
@@ -103,12 +103,12 @@ public class TypeScriptBridge implements Runnable {
         }
 
         try {
-            File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
+			File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
             String nodeJSPath = TypeScriptUtils.findNodeJS();
-			ProcessBuilder ps = new ProcessBuilder(nodeJSPath, "bridge.js", "src="
-					+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error").directory(new File(
-					bundleFile, LIB_BRIDGE));
-
+			ProcessBuilder ps = new ProcessBuilder(nodeJSPath,
+					new File(bundleFile, LIB_BRIDGE + "/js/bridge.js").getCanonicalPath(), "src="
+					+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error");
+			ps.directory(baseDirectory.getCanonicalFile());
             p = ps.start();
             String portLine = new BufferedReader(new InputStreamReader(p.getErrorStream())).readLine();
             if (!portLine.startsWith("@") && !portLine.endsWith("@")) {
@@ -254,10 +254,11 @@ public class TypeScriptBridge implements Runnable {
                     case "compile":
                         path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
                     default:
-                        if (!isFileNameExist(file.getProjectRelativePath().toString())) {
-                            invokeBridgeMethod("addFile", file,
-                                    file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
-                        }
+						// we too often invoke this method need find more better solution
+						// if (!isFileNameExist(file.getProjectRelativePath().toString())) {
+						// invokeBridgeMethod("addFile", file,
+						// file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
+						// }
                         break;
                     }
                     obj.put("file", path);
@@ -273,13 +274,13 @@ public class TypeScriptBridge implements Runnable {
                     writer.print(obj.toString());
                     writer.flush();
                     socket.shutdownOutput();
-
+					socket.setSoTimeout(10000);
                     try (InputStreamReader reader = new InputStreamReader(socket.getInputStream(), "UTF-8")) {
                         String str = CharStreams.toString(reader);
                         if ("null".equals(str)) {
                             return EMPTY_JSON_OBJECT;
                         }
-						// System.err.println("[" + method + "]");
+						System.err.println("[" + method + "]");
 						// System.out.println(new JSONObject(str).toString(1));
                         return new JSONObject(str);
                     }

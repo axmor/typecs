@@ -45,7 +45,9 @@ public class TypeScriptModelKinds {
         /** Public modifier. */
         PUBLIC,
         /** Static modifier. */
-        STATIC;
+		STATIC,
+		/** Type. */
+		TYPE;
         
         @Override
         public String toString() {

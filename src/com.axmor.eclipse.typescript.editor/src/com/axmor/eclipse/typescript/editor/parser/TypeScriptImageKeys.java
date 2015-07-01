@@ -57,6 +57,12 @@ public final class TypeScriptImageKeys {
     /** Key for image. */
     public static final String IMG_METHOD_PUBLIC = PLUGIN_ID + "IMG_METHOD_PUBLIC";
     /** Key for image. */
+	public static final String IMG_TYPE_DEFAULT = PLUGIN_ID + "IMG_TYPE_DEFAULT";
+	/** Key for image. */
+	public static final String IMG_TYPE_PRIVATE = PLUGIN_ID + "IMG_TYPE_PRIVATE";
+	/** Key for image. */
+	public static final String IMG_TYPE_PUBLIC = PLUGIN_ID + "IMG_TYPE_PUBLIC";
+	/** Key for image. */
     public static final String IMG_CONSTRUCTOR = PLUGIN_ID + "IMG_CONSTRUCTOR";
     /** Key for image. */
     public static final String IMG_STATIC = PLUGIN_ID + "IMG_STATIC";

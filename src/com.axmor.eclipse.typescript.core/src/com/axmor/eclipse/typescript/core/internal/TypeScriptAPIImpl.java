@@ -8,6 +8,7 @@
 package com.axmor.eclipse.typescript.core.internal;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -22,6 +23,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
@@ -35,8 +37,10 @@ import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.core.TypeScriptCompilerSettings;
 import com.axmor.eclipse.typescript.core.TypeScriptEditorSettings;
 import com.axmor.eclipse.typescript.core.TypeScriptResources;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.io.CharStreams;
 
 /**
  * Implementation for {@link TypeScriptAPI}.
@@ -158,8 +162,47 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             throw Throwables.propagate(e);
         }
     }
-
     @Override
+	public JSONObject compileTsConfig(IFile file) {
+		checkBridge();
+		try {
+			JSONObject tsConfig = new JSONObject(CharStreams.toString(new InputStreamReader(file.getContents(),
+					Charsets.UTF_8)));
+
+			JSONObject res = bridge.invokeBridgeMethod("compile", file, (String) null);
+			if (tsConfig.has("compilerOptions") && tsConfig.getJSONObject("compilerOptions") != null) {
+				JSONObject options = tsConfig.getJSONObject("compilerOptions");
+				final AtomicReference<IResource> outResource = new AtomicReference<>();
+				if (options.has("out") && options.getString("out") != null) {
+					String out = options.getString("out");
+					outResource.set(file.getParent().getFile(new Path(out)));
+				}
+				if (options.has("outDir") && options.getString("outDir") != null) {
+					String out = options.getString("outDir");
+					outResource.set(file.getParent().getFolder(new Path(out)));
+				}
+				if (outResource.get() != null) {
+					new UIJob("Refresh target resources") {
+						@Override
+						public IStatus runInUIThread(IProgressMonitor monitor) {
+							try {
+								outResource.get().refreshLocal(IResource.DEPTH_INFINITE, monitor);
+							} catch (CoreException e) {
+								Activator.error(e);
+								return new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
+							}
+							return Status.OK_STATUS;
+						}
+					}.schedule();
+				}
+			}
+			return res;
+		} catch (Exception e) {
+			throw Throwables.propagate(e);
+		}
+	}
+
+	@Override
     public JSONObject compile(IFile file, TypeScriptCompilerSettings settings) {
         checkBridge();
         try {

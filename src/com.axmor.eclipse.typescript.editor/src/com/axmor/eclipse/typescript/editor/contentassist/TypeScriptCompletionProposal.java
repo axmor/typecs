@@ -147,7 +147,7 @@ public class TypeScriptCompletionProposal implements ICompletionProposal, ICompl
             if (subString.length() <= content.length()) {
                 String start = content.substring(0, subString.length());
                 boolean valid = start.equalsIgnoreCase(subString);
-                if (valid) {
+				if (valid && event != null) {
                     int delta = (event.fText == null ? 0 : event.fText.length()) - event.fLength;
                     int newLength = Math.max(replacementLength + delta, 0);
                     replacementLength = newLength;

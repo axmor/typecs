@@ -68,7 +68,7 @@ public class IndexJob extends Job {
 						if (resource.getType() == IResource.FILE
 								&& TypeScriptResources.isTypeScriptFile(resource.getName())) {
 							String path = resource.getFullPath().toString();
-							if (indexer.checkFile(path, resource.getModificationStamp())) {
+							if (indexer.checkFile(path, resource.getLocation().toFile().lastModified())) {
                                 changedResources.add(path);
                             }
                         }

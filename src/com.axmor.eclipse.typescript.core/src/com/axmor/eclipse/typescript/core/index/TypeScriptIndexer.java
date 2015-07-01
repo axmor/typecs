@@ -23,6 +23,7 @@ import org.mapdb.DBMaker;
 import org.mapdb.Fun;
 import org.mapdb.Fun.Tuple2;
 import org.mapdb.Fun.Tuple4;
+import org.mapdb.HTreeMap;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -30,7 +31,7 @@ import us.monoid.json.JSONObject;
 
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptAPIFactory;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Indexer that uses MapDB engine and TS api.
@@ -40,7 +41,7 @@ import com.google.common.collect.Iterables;
 public class TypeScriptIndexer {
 
 	/** Index version. */
-	private static final int IDX_VERSION = 1;
+	private static final int IDX_VERSION = 2;
 	private static final Set<String> EMPTY_BASE_TYPES = Collections.emptySet();
 
 	/** Index database. */
@@ -50,6 +51,8 @@ public class TypeScriptIndexer {
 	public NavigableSet<Fun.Tuple4<String, String, String, IndexInfo>> idxTypes;
 	/** FileName, Filename (Full workspace related filename) where B imports A */
 	public NavigableSet<Fun.Tuple2<String, String>> idxReferences;
+	/** FileName, ModificationStamp (Full workspace related filename) */
+	public HTreeMap<String, Long> idxFiles;
 
 	/**
 	 * Enum for hardcoding of document kind case
@@ -139,6 +142,7 @@ public class TypeScriptIndexer {
 		this.idxDB = DBMaker.newFileDB(indexPath).closeOnJvmShutdown().make();
 		this.idxTypes = idxDB.getTreeSet("types");
 		this.idxReferences = idxDB.getTreeSet("refs");
+		this.idxFiles = idxDB.getHashMap("files");
 
 		final HashSet<String> typesFiles = new HashSet<>();
 
@@ -163,6 +167,12 @@ public class TypeScriptIndexer {
 				removeFromRefsIndex(file);
 			}
 		}
+		for (String file : ImmutableSet.<String> copyOf(idxFiles.keySet())) {
+			if (!ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(file)).exists()) {
+				idxFiles.remove(file);
+			}
+		}
+		idxDB.commit();
 	}
 
 	/**
@@ -208,6 +218,8 @@ public class TypeScriptIndexer {
 	public void indexFile(String path) {
 		IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(path));
 		String project = file.getProject().getName();
+		idxFiles.put(file.getFullPath().toString(), file.getLocation().toFile().lastModified());
+
 		removeFromTypesIndex(path);
 		try {
 			JSONArray model = TypeScriptAPIFactory.getTypeScriptAPI(file.getProject()).getScriptModel(file);
@@ -237,7 +249,7 @@ public class TypeScriptIndexer {
 			for (int i = 0; i < references.length(); i++) {
 				try {
 					JSONObject ref = references.getJSONObject(i);
-					IFile refFile = file.getParent().getFile(new Path(ref.getString("filename")));
+					IFile refFile = file.getParent().getFile(new Path(ref.getString("fileName")));
 					if (refFile.exists()) {
 						idxReferences.add(new Fun.Tuple2<String, String>(refFile.getFullPath().toString(), file
 								.getFullPath().toString()));
@@ -264,11 +276,9 @@ public class TypeScriptIndexer {
 	 *            visibility
 	 * @param offset
 	 *            offset
-	 * @param modificationStamp
-	 *            modification stamp
 	 */
 	private void addDocumentToIndex(String qname, String name, String project, String file, int type, int visibility,
-			int offset, Set<String> baseTypes, long modificationStamp) throws IOException {
+			int offset, Set<String> baseTypes) throws IOException {
 		IndexInfo info = new IndexInfo();
 		info.setName(name);
 		info.setFile(file);
@@ -277,7 +287,6 @@ public class TypeScriptIndexer {
 		info.setType(type);
 		info.setVisibility(visibility);
 		info.getParents().addAll(baseTypes);
-		info.setModificationStamp(modificationStamp);
 		idxTypes.add(Fun.t4(file, qname, "", info));
 	}
 
@@ -289,13 +298,7 @@ public class TypeScriptIndexer {
 	 * @return <code>true</code> if file need reindex
 	 */
 	public boolean checkFile(final String path, final long modificationStamp) {
-		return !Iterables.tryFind(idxTypes,
-				new com.google.common.base.Predicate<Fun.Tuple4<String, String, String, IndexInfo>>() {
-					@Override
-					public boolean apply(Tuple4<String, String, String, IndexInfo> t) {
-						return path.equals(t.a) && t.d.getModificationStamp() == modificationStamp;
-					}
-				}).isPresent();
+		return !idxFiles.containsKey(path) || idxFiles.get(path) != modificationStamp;
 	}
 
 	/**
@@ -325,11 +328,11 @@ public class TypeScriptIndexer {
 			switch (kind) {
 			case "interface":
 				addDocumentToIndex(name, name, project, path, DocumentKind.INTERFACE.getIntValue(), 0, offset,
-						EMPTY_BASE_TYPES, file.getModificationStamp());
+						EMPTY_BASE_TYPES);
 				break;
 			case "enum":
 				addDocumentToIndex(name, name, project, path, DocumentKind.ENUM.getIntValue(), 0, offset,
-						EMPTY_BASE_TYPES, file.getModificationStamp());
+						EMPTY_BASE_TYPES);
 				break;
 			case "class":
 				addDocumentToIndex(
@@ -339,7 +342,7 @@ public class TypeScriptIndexer {
 						path,
 						DocumentKind.CLASS.getIntValue(),
 						"private".equals(modifier) ? TypeVisibility.PRIVATE.getIntValue() : TypeVisibility.PUBLIC
-								.getIntValue(), offset, EMPTY_BASE_TYPES, file.getModificationStamp());
+								.getIntValue(), offset, EMPTY_BASE_TYPES);
 				break;
 			default:
 				break;
