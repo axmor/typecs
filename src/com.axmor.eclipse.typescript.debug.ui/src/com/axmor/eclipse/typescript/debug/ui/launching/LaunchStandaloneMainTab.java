@@ -86,7 +86,7 @@ public class LaunchStandaloneMainTab extends AbstractLaunchConfigurationTab {
                 IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectTxt.getText().trim());
                 if (project != null && project.isAccessible()) {
                     IResource resource = new TypeScriptElementSelectionDialog(getShell(), "Main File Selection",
-                            "Select a main executable TypeScript file", project).open(fileTxt.getText().trim(), false);
+                            "Select a main executable TypeScript file", project).open(fileTxt.getText().trim(), false, false);
                     if (resource != null) {
                         fileTxt.setText(resource.getProjectRelativePath().toString());
                     }

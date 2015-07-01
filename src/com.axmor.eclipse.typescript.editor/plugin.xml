@@ -160,6 +160,8 @@
    </extension>
 	
     <extension point="org.eclipse.ui.bindings">
+    <!--  win32:  M1=CTRL,    M2=SHIFT, M3=ALT, M4=-
+          carbon: M1=COMMAND, M2=SHIFT, M3=ALT, M4=CTRL -->
       <key
            sequence="M1+/"
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
@@ -184,6 +186,11 @@
            sequence="M1+M2+G"
            contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
            commandId="com.axmor.eclipse.typescript.search.references"
+           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>      
+      <key
+           sequence="M2+M3+R"
+           contextId="com.axmor.eclipse.typescript.editor.TypeScriptEditorScope"
+           commandId="com.axmor.eclipse.typescript.edit.rename"
            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
       <key
            sequence="M1+R"
