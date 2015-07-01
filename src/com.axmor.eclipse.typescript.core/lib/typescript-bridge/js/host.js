@@ -14,11 +14,13 @@ var TSFile = (function () {
 })();
 var BridgeServiceHost = (function () {
     function BridgeServiceHost(baseDir) {
-        this.files = { 'std-lib/lib.d.ts': {
+        this.files = {
+            'std-lib/lib.d.ts': {
                 version: 1,
                 snapshot: _ts.ScriptSnapshot.fromString(fs.readFileSync(__dirname + '/../ts/lib.d.ts').toString()),
                 path: ''
-            } };
+            }
+        };
         this.baseDir = '';
         this.baseDir = baseDir;
         if (fs.statSync(baseDir).isDirectory()) {
@@ -116,13 +118,13 @@ var BridgeServiceHost = (function () {
         }
     };
     BridgeServiceHost.prototype.log = function (s) {
-        log.info(s);
+        //log.info(s);	
     };
     BridgeServiceHost.prototype.trace = function (s) {
-        log.debug(s);
+        //log.debug(s);	
     };
     BridgeServiceHost.prototype.error = function (s) {
-        log.error(s);
+        //log.error(s);	
     };
     BridgeServiceHost.prototype.readDir = function (dir) {
         var _this = this;
