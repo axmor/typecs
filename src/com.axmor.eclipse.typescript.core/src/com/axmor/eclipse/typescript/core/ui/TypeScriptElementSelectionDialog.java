@@ -8,10 +8,12 @@
 package com.axmor.eclipse.typescript.core.ui;
 
 import static com.axmor.eclipse.typescript.core.TypeScriptResources.TS_EXT;
+import static com.axmor.eclipse.typescript.core.TypeScriptResources.JS_EXT;
 
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -67,11 +69,14 @@ public class TypeScriptElementSelectionDialog {
      *            initial path that will be selected on dialog open.
      * @param folderOnly
      *            <code>true</code> if display only folder
+     * @param jsFileOnly
+     *            <code>true</code> if display only .js files
+     *            <code>false</code> if display only .ts files
      * 
      * @return selected project root or resource. If user press <b>cancel</b> it returns
      *         <code>null</code>
      */
-    public IResource open(String path, final boolean folderOnly) {
+    public IResource open(String path, final boolean folderOnly, final boolean jsFileOnly) {
         ElementTreeSelectionDialog dialog = new ElementTreeSelectionDialog(shell, new WorkbenchLabelProvider(),
                 new BaseWorkbenchContentProvider() {
                     @Override
@@ -80,19 +85,30 @@ public class TypeScriptElementSelectionDialog {
                             return new Object[] { project };
                         } else if (element instanceof IContainer) {
                             ArrayList<IResource> childrens = new ArrayList<>();
-
+                            String extension = jsFileOnly ? JS_EXT : TS_EXT;
                             try {
                                 for (IResource resource : ((IContainer) element).members()) {
-                                    if (folderOnly) {
-                                        if (resource.getType() == IResource.FOLDER && !resource.isVirtual()) {
+                                    switch (resource.getType()) {
+                                    case IResource.FOLDER:
+                                        if (!resource.isVirtual()) {
                                             childrens.add(resource);
                                         }
-                                    } else {
-                                        if ((resource.getType() == IResource.FOLDER && !resource.isVirtual())
-                                                || TS_EXT.equalsIgnoreCase(resource.getProjectRelativePath()
+                                        break;
+                                    default:
+                                        if (folderOnly) {
+                                            break;
+                                        } else if (jsFileOnly
+                                                && TS_EXT.equalsIgnoreCase(resource.getProjectRelativePath()
                                                         .getFileExtension())) {
+                                            IFile file = resource.getProject().getFile(
+                                                    resource.getProjectRelativePath().removeFileExtension()
+                                                            .addFileExtension(JS_EXT));
+                                            childrens.add(file);
+                                        } else if (extension.equalsIgnoreCase(resource.getProjectRelativePath()
+                                                .getFileExtension())) {
                                             childrens.add(resource);
                                         }
+                                        break;
                                     }
                                 }
                             } catch (CoreException e) {

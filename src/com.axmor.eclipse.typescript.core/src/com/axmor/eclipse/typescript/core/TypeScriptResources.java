@@ -36,6 +36,9 @@ public final class TypeScriptResources {
 
     /** TypeScript standard library definition folder name. */
     public static final String TS_STD_LIB_FOLDER = "std-lib";
+    
+    /** JavaScript file extension. */
+    public static final String JS_EXT = "js";
 
     /**
      * Hide from initialization.

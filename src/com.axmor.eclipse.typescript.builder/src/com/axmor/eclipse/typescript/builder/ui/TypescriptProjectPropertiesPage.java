@@ -88,13 +88,13 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
         SWTFactory.createLabel(group, Messages.ProjectPrefPage_sourceLabel, 1);
         compileSourceResource = SWTFactory.createSingleText(group, 1);
         createBrowseButton(group, compileSourceResource, Messages.ProjectPrefPage_sourceSelectionTitle,
-                Messages.ProjectPrefPage_sourceSelectionDesc);
+                Messages.ProjectPrefPage_sourceSelectionDesc, false);
 
         // target directory
         SWTFactory.createLabel(group, Messages.ProjectPrefPage_targetLabel, 1);
         compileTargetResource = SWTFactory.createSingleText(group, 1);
         createBrowseButton(group, compileTargetResource, Messages.ProjectPrefPage_targetSelectionTitle,
-                Messages.ProjectPrefPage_targetSelectionDesc);
+                Messages.ProjectPrefPage_targetSelectionDesc, true);
 
         targetRelativePathBasedOnSource = SWTFactory.createCheckButton(group,
                 Messages.ProjectPrefPage_targetRelativePathBasedOnSource, null, true, 3);
@@ -128,7 +128,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
         mapRootLabel = SWTFactory.createLabel(group2, Messages.ProjectPrefPage_mapRootLabel, 2);
         mapRoot = SWTFactory.createSingleText(group2, 1);
         mapRootButton = createBrowseButton(group2, mapRoot, Messages.ProjectPrefPage_rootSelectionTitle,
-                Messages.ProjectPrefPage_rootSelectionDesc);
+                Messages.ProjectPrefPage_rootSelectionDesc, false);
 
         loadPreferences();
         return composite;
@@ -200,7 +200,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
      *            dialog description
      * @return browse button that opens selection dialog
      */
-    private Button createBrowseButton(Composite parent, final Text text, final String title, final String message) {
+    private Button createBrowseButton(Composite parent, final Text text, final String title, final String message, final boolean isTarget) {
         Button button = new Button(parent, SWT.NONE);
         button.setText(Messages.ProjectPrefPage_browseButton);
         final IProject project = (IProject) this.getElement().getAdapter(IProject.class);
@@ -208,7 +208,7 @@ public class TypescriptProjectPropertiesPage extends PropertyPage implements IWo
             @Override
             public void widgetSelected(SelectionEvent e) {
                 IResource resource = new TypeScriptElementSelectionDialog(getShell(), title, message, project)
-                        .open(text.getText(), false);
+                        .open(text.getText(), false, isTarget);
                 if (resource != null) {
                     text.setText(resource.getProjectRelativePath().toString());
                 }
