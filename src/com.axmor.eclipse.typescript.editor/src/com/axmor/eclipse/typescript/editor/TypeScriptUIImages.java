@@ -73,6 +73,9 @@ public class TypeScriptUIImages {
         declareRegistryImage(TypeScriptImageKeys.IMG_METHOD_DEFAULT, ICONS_PATH + "methdef_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_METHOD_PRIVATE, ICONS_PATH + "methpri_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_METHOD_PUBLIC, ICONS_PATH + "methpub_obj.gif");
+		declareRegistryImage(TypeScriptImageKeys.IMG_TYPE_DEFAULT, ICONS_PATH + "typedef_obj.gif");
+		declareRegistryImage(TypeScriptImageKeys.IMG_TYPE_PRIVATE, ICONS_PATH + "typepri_obj.gif");
+		declareRegistryImage(TypeScriptImageKeys.IMG_TYPE_PUBLIC, ICONS_PATH + "typepub_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_PACKAGE, ICONS_PATH + "package_obj.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_STATIC, ICONS_PATH + "static_co.gif");
         declareRegistryImage(TypeScriptImageKeys.IMG_RECURSIVE, ICONS_PATH + "recursive_co.gif");
@@ -231,6 +234,9 @@ public class TypeScriptUIImages {
             } else if (kind.equals(TypeScriptModelKinds.Kinds.FUNCTION.toString())) {
                 entity.useKindModifiers(parts, flags, TypeScriptImageKeys.IMG_METHOD_DEFAULT,
                         TypeScriptImageKeys.IMG_METHOD_PRIVATE, TypeScriptImageKeys.IMG_METHOD_PUBLIC);
+			} else if (kind.equals(TypeScriptModelKinds.Kinds.TYPE.toString())) {
+				entity.useKindModifiers(parts, flags, TypeScriptImageKeys.IMG_TYPE_DEFAULT,
+						TypeScriptImageKeys.IMG_TYPE_PRIVATE, TypeScriptImageKeys.IMG_TYPE_PUBLIC);
             }
             if (isRecursive) {
                 flags = flags | TypeScriptImageDescriptor.RECURSIVE;

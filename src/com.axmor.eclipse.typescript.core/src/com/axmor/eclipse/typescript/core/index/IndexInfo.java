@@ -27,7 +27,6 @@ public class IndexInfo implements Serializable, Comparable<IndexInfo> {
 	private int offset;
 	private int visibility;
 	private int type;
-	private long modificationStamp;
 
 
 	/**
@@ -121,21 +120,6 @@ public class IndexInfo implements Serializable, Comparable<IndexInfo> {
 	}
 
 	/**
-	 * @return the modificationStamp
-	 */
-	public long getModificationStamp() {
-		return modificationStamp;
-	}
-
-	/**
-	 * @param modificationStamp
-	 *            the modificationStamp to set
-	 */
-	public void setModificationStamp(long modificationStamp) {
-		this.modificationStamp = modificationStamp;
-	}
-
-	/**
 	 * type - entry type (0 - interface, 1 - enum, 2 - class) visibility - visibility (0 - public, 1
 	 * - private)
 	 * 
@@ -180,8 +164,7 @@ public class IndexInfo implements Serializable, Comparable<IndexInfo> {
 	@Override
 	public String toString() {
 		return "IndexInfo [qname=" + qname + ", name=" + name + ", file=" + file + ", project=" + project
-				+ ", parents=" + parents + ", offset=" + offset + ", visibility=" + visibility + ", type=" + type
-				+ ", modificationStamp=" + modificationStamp + "]";
+				+ ", parents=" + parents + ", offset=" + offset + ", visibility=" + visibility + ", type=" + type + "]";
 	}
 
 }

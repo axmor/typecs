@@ -49,7 +49,6 @@ import com.axmor.eclipse.typescript.core.TypeScriptAPI;
 import com.axmor.eclipse.typescript.editor.Activator;
 import com.axmor.eclipse.typescript.editor.TypeScriptUIImages;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptImageKeys;
-import com.axmor.eclipse.typescript.editor.parser.TypeScriptModelKinds;
 import com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplateAccess;
 import com.axmor.eclipse.typescript.editor.rename.QuickRenameAssistProposal;
 
@@ -67,6 +66,7 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 	/** Working file. */
 	private IFile file;
 	private IContextInformationValidator fValidator;
+	private String workingCopy;
 
 	/**
 	 * @param api
@@ -81,7 +81,10 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 
 	@Override
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
-		api.updateFileContent(file, viewer.getDocument().get());
+		if (viewer.getDocument().get().equals(workingCopy)) {
+			workingCopy = viewer.getDocument().get();
+			api.updateFileContent(file, workingCopy);
+		}
 		try {
 			JSONObject completionList = api.getCompletion(file, offset);
 			TypeScriptUIImages imagesFactory = new TypeScriptUIImages();
@@ -91,22 +94,22 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 			}
 			JSONArray completions = completionList.getJSONArray("entries");
 			int completionsLength = completions.length();
-			List<ICompletionProposal> result = new ArrayList<ICompletionProposal>(completionsLength);
+			List<ICompletionProposal> result = new ArrayList<ICompletionProposal>();
+			int cnt = 0;
 			for (int i = 0; i < completionsLength; i++) {
-
-				String original = completions.getJSONObject(i).getString("name");
-				if (original.length() < replacement.length())
+				JSONObject completionObject = completions.getJSONObject(i);
+				String original = completionObject.getString("name");
+				if (original.length() < replacement.length() || cnt > 100
+						|| !original.toLowerCase().contains(replacement.toLowerCase())) {
 					continue;
-				String prefix = original.substring(0, replacement.length());
-				if (prefix.equalsIgnoreCase(replacement)) {
-					Image image = imagesFactory.getImageForModelObject(completions.getJSONObject(i));
-					JSONObject details = api.getCompletionDetails(file, offset, original);
-					if (details.has("displayParts")) { // displayParts was introduced in TS 1.3
-						result.add(createCompletionProposal_1_3(original, replacement, offset, image, completions.getJSONObject(i), details));
-					} else {
-						result.add(createCompletionProposal_1_1(original, replacement, offset, image, details));
-					}
 				}
+				cnt++;
+				Image image = imagesFactory.getImageForModelObject(completionObject);
+				JSONObject details = null;
+				if (cnt < 20) { // create details only for 20 first elements
+					details = api.getCompletionDetails(file, offset, original);
+				}
+				result.add(createCompletionProposal(original, replacement, offset, image, completionObject, details));
 			}
 			return mergeProposals(result.toArray(new ICompletionProposal[result.size()]),
 					determineTemplateProposalsForContext(viewer, offset));
@@ -117,40 +120,14 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 		return null;
 	}
 
-	private TypeScriptCompletionProposal createCompletionProposal_1_1(String original, String replacement, int offset,
-			Image image, JSONObject details) throws JSONException {
-		String displayString = original;
-		String context = "";
-		if (details != null && details.has("kind")) {
-			String kind = details.getString("kind");
-			if (!TypeScriptModelKinds.Kinds.PRIMITIVE_TYPE.toString().equals(kind)
-					&& !TypeScriptModelKinds.Kinds.KEYWORD.toString().equals(kind)
-					&& !TypeScriptModelKinds.Kinds.METHOD.toString().equals(kind)
-					&& !TypeScriptModelKinds.Kinds.FUNCTION.toString().equals(kind)) {
-				displayString += " : ";
-			}
-
-			displayString += details.getString("type");
-			String fullSymbolName = details.getString("fullSymbolName");
-			String[] parts = fullSymbolName.split("\\.");
-			if (parts.length > 1) {
-				String parentName = fullSymbolName.substring(0,
-						fullSymbolName.length() - parts[parts.length - 1].length() - 1);
-				context = " - " + parentName;
-			}
-
-			if (TypeScriptModelKinds.Kinds.METHOD.toString().equals(kind)) {
-				original += "()";
-			}
-		}
-		return new TypeScriptCompletionProposal(original, offset - replacement.length(), replacement.length(),
-				original.length(), image, displayString, context, null);
-
-	}
-
-	private TypeScriptCompletionProposal createCompletionProposal_1_3(String original, String replacement, int offset,
+	private TypeScriptCompletionProposal createCompletionProposal(String original, String replacement, int offset,
 			Image image, JSONObject completion, JSONObject details) throws JSONException {
 		
+		if (details == null) {
+			return new TypeScriptCompletionProposal(original, offset - replacement.length(), replacement.length(),
+					original.length(), image, original, "", "");
+		}
+
 		String context = "";
 		String displayString = "";
 		
@@ -233,9 +210,54 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 			} else if ("class".equals(keyWord)) {
 				displayString = map.get("className");
 				context = fullModuleName;
+			} else if ("type".equals(keyWord)) {
+				StringBuilder sb = new StringBuilder();
+				boolean add = false;
+				for (int i = 0; i < parts.length(); i++) {
+					JSONObject jsonObject = parts.getJSONObject(i);
+					if ("aliasName".equals(jsonObject.getString("kind"))) {
+						add = true;
+					}
+					if (add) {
+						sb.append(jsonObject.getString("text"));
+					}
+				}
+				displayString = sb.toString();
+				context = fullModuleName;
 			} else if ("import".equals(keyWord)) {
 				displayString = getFirstValue(parts,"text");
 				context = getAliasDescription(parts);
+			} else if ("const".equals(keyWord) && map.containsKey("enumName")) {
+				displayString = map.get("enumName");
+				context = fullModuleName;
+			} else if ("var".equals(keyWord)) {
+				StringBuilder sb = new StringBuilder();
+				boolean add = false;
+				for (int i = 0; i < parts.length(); i++) {
+					JSONObject jsonObject = parts.getJSONObject(i);
+					if ("localName".equals(jsonObject.getString("kind"))) {
+						add = true;
+					}
+					if (add) {
+						sb.append(jsonObject.getString("text"));
+					}
+				}
+				displayString = sb.toString();
+				context = fullModuleName;
+			} else if ("function".equals(keyWord)) {
+				StringBuilder sb = new StringBuilder();
+				boolean add = false;
+				for (int i = 0; i < parts.length(); i++) {
+					JSONObject jsonObject = parts.getJSONObject(i);
+					if ("functionName".equals(jsonObject.getString("kind"))) {
+						add = true;
+					}
+					if (add) {
+						sb.append(jsonObject.getString("text"));
+					}
+				}
+				displayString = sb.toString();
+				context = fullModuleName;
 			}
 			
 		}

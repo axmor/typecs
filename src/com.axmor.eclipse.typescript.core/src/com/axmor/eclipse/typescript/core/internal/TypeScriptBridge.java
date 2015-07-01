@@ -254,10 +254,11 @@ public class TypeScriptBridge implements Runnable {
                     case "compile":
                         path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
                     default:
-                        if (!isFileNameExist(file.getProjectRelativePath().toString())) {
-                            invokeBridgeMethod("addFile", file,
-                                    file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
-                        }
+						// we too often invoke this method need find more better solution
+						// if (!isFileNameExist(file.getProjectRelativePath().toString())) {
+						// invokeBridgeMethod("addFile", file,
+						// file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
+						// }
                         break;
                     }
                     obj.put("file", path);
@@ -280,7 +281,7 @@ public class TypeScriptBridge implements Runnable {
                             return EMPTY_JSON_OBJECT;
                         }
 						System.err.println("[" + method + "]");
-						System.out.println(new JSONObject(str).toString(1));
+						// System.out.println(new JSONObject(str).toString(1));
                         return new JSONObject(str);
                     }
                 }
