@@ -26,6 +26,7 @@
   </modules>
 
   <!-- To sign plug-ins and features, run: mvn -Pbuild-server -Djarsigner.keystore=<path> -Djarsigner.storepass=*** clean package -->
+  <!-- To set a new release version run: mvn tycho-versions:set-version -DnewVersion=x.x.x-SNAPSHOT -->
   <build>
     <pluginManagement>
       <plugins>
