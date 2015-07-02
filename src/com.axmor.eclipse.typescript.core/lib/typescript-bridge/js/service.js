@@ -79,25 +79,43 @@ var TSService = (function () {
     TSService.prototype.getIdentifiers = function (fileName) {
         log.debug('service.getIdentifiers: %s', fileName);
         var nodes = [];
+        var tNodes = [];
         var sourceFile = this.langService.getSourceFile(fileName);
         var that = this;
-        var getNodes = function (node) {
-            var n = node;
-            _ts.forEachChild(node, function (child) {
-                if (child.kind == 65 /* Identifier */) {
-                    var nodePos = child.getFullWidth(), nodeType = that.langService.getQuickInfoAtPosition(fileName, nodePos);
-                    var node = {
-                        text: child.getText(sourceFile),
-                        length: child.end - nodePos,
-                        offset: nodePos,
-                        type: nodeType ? nodeType.kind : ""
-                    };
-                    nodes.push(n);
+        var getNodes = function (_node) {
+            _ts.forEachChild(_node, function (child) {
+                if (child.kind === 65 /* Identifier */) {
+                    tNodes.push(child);
                 }
                 getNodes(child);
+            }, function (childs) {
+                for (var i = 0; i < childs.length; i++) {
+                    if (childs[i].kind === 65 /* Identifier */) {
+                        tNodes.push(childs[i]);
+                    }
+                    getNodes(childs[i]);
+                }
             });
         };
         getNodes(sourceFile);
+        for (var i = 0; i < tNodes.length; i++) {
+            var child = tNodes[i];
+            //console.log("!" + child.getText(sourceFile) + ": " + child.kind)
+            try {
+                var nodeType = that.langService.getQuickInfoAtPosition(fileName, child.pos + 1);
+                if (nodeType) {
+                    nodes.push({
+                        text: child.getText(sourceFile),
+                        length: child.end - child.pos,
+                        offset: child.pos,
+                        type: nodeType ? nodeType.kind : ""
+                    });
+                }
+            }
+            catch (e) {
+                log.error(e);
+            }
+        }
         return nodes;
     };
     TSService.prototype.getVersion = function () {

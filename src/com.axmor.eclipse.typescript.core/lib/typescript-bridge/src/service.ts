@@ -13,55 +13,55 @@ import args = require('./args')
 import path = require('./path-util')
 
 export class TSService {
-	host: host.BridgeServiceHost
-	langService: ts.LanguageService
-	
-	constructor() {
-		log.debug('service.init')
-		this.host = new host.BridgeServiceHost(args.src);
-		this.langService = _ts.createLanguageService(this.host, _ts.createDocumentRegistry());
-	}
+    host: host.BridgeServiceHost
+    langService: ts.LanguageService
 
-	public setFileContent(fileName: string, content: string): void {
-		log.debug('service.setFileContent: %s', fileName)
-  		this.host.setFileContent(fileName, content)
-	}
+    constructor() {
+        log.debug('service.init')
+        this.host = new host.BridgeServiceHost(args.src);
+        this.langService = _ts.createLanguageService(this.host, _ts.createDocumentRegistry());
+    }
 
-	public addFile(fileName: string, path: string) {
-		log.debug('service.addFile: %s: %s', fileName, path)
-  		this.host.addFile(fileName, path)
-	}
+    public setFileContent(fileName: string, content: string): void {
+        log.debug('service.setFileContent: %s', fileName)
+        this.host.setFileContent(fileName, content)
+    }
 
-	public getScriptFileNames():string[] {
-		log.debug('service.getScriptFileNames')
-  		return this.host.getScriptFileNames()
-	}
+    public addFile(fileName: string, path: string) {
+        log.debug('service.addFile: %s: %s', fileName, path)
+        this.host.addFile(fileName, path)
+    }
 
-	public getScriptLexicalStructure(fileName: string): ts.NavigationBarItem[] {
-		log.debug('service.getScriptLexicalStructure: %s', fileName)
-  		return this.langService.getNavigationBarItems(fileName)
-	}
+    public getScriptFileNames(): string[] {
+        log.debug('service.getScriptFileNames')
+        return this.host.getScriptFileNames()
+    }
 
-	public getCompletionsAtPosition(fileName: string, position: number): ts.CompletionInfo {
-		log.debug('service.getCompletionsAtPosition: %s: %d', fileName, position)
-  		return this.langService.getCompletionsAtPosition(fileName, position)
-	}
+    public getScriptLexicalStructure(fileName: string): ts.NavigationBarItem[] {
+        log.debug('service.getScriptLexicalStructure: %s', fileName)
+        return this.langService.getNavigationBarItems(fileName)
+    }
 
-	public getCompletionEntryDetails(fileName: string, position: number, entryName: string): ts.CompletionEntryDetails {
-		log.debug('service.getCompletionEntryDetails: %s: %d: %s', fileName, position, entryName)
-  		return this.langService.getCompletionEntryDetails(fileName, position, entryName)
-	}
+    public getCompletionsAtPosition(fileName: string, position: number): ts.CompletionInfo {
+        log.debug('service.getCompletionsAtPosition: %s: %d', fileName, position)
+        return this.langService.getCompletionsAtPosition(fileName, position)
+    }
 
-	public getSignatureAtPosition(fileName: string, position: number): ts.QuickInfo {
-		log.debug('service.getSignatureAtPosition: %s: %d', fileName, position)
-		//  return ts.getSignatureHelpItems(file, params);
-		return this.langService.getQuickInfoAtPosition(fileName, position)
-	}
+    public getCompletionEntryDetails(fileName: string, position: number, entryName: string): ts.CompletionEntryDetails {
+        log.debug('service.getCompletionEntryDetails: %s: %d: %s', fileName, position, entryName)
+        return this.langService.getCompletionEntryDetails(fileName, position, entryName)
+    }
 
-	public getDefinitionAtPosition(fileName: string, position: number): ts.DefinitionInfo[] {
-		log.debug('service.getDefinitionAtPosition: %s: %d', fileName, position)
-  		return this.langService.getDefinitionAtPosition(fileName, position)
-	}
+    public getSignatureAtPosition(fileName: string, position: number): ts.QuickInfo {
+        log.debug('service.getSignatureAtPosition: %s: %d', fileName, position)
+        //  return ts.getSignatureHelpItems(file, params);
+        return this.langService.getQuickInfoAtPosition(fileName, position)
+    }
+
+    public getDefinitionAtPosition(fileName: string, position: number): ts.DefinitionInfo[] {
+        log.debug('service.getDefinitionAtPosition: %s: %d', fileName, position)
+        return this.langService.getDefinitionAtPosition(fileName, position)
+    }
 
     public getFormattingEditsForDocument(fileName: string, start: number, end: number, options: ts.FormatCodeOptions): ts.TextChange[] {
         log.debug('service.getFormattingEditsForDocument: %s: [%d, %d] - %j', fileName, start, end, options)
@@ -99,32 +99,51 @@ export class TSService {
         return this.langService.getSignatureHelpItems(fileName, position)
     }
 
-    public getIdentifiers(fileName: string): ts.Node[] {
+    public getIdentifiers(fileName: string): any[] {
         log.debug('service.getIdentifiers: %s', fileName)
-        var nodes: ts.Node[] = [];
-        var sourceFile: ts.SourceFile = this.langService.getSourceFile(fileName);
-        var that = this;
-        var getNodes = function(node: ts.Node) {
-            var n = node;
-            _ts.forEachChild(node, function(child: ts.Node) {
-                if (child.kind == _ts.SyntaxKind.Identifier) {
-                    var nodePos: number = child.getFullWidth(),
-                        nodeType = that.langService.getQuickInfoAtPosition(fileName, nodePos);
-                    var node = {
-                        text: child.getText(sourceFile),
-                        length: child.end - nodePos,
-                        offset: nodePos,
-                        type: nodeType ? nodeType.kind : ""
-                    };
-                    nodes.push(n);
+        var nodes: any[] = []
+        var tNodes: ts.Node[] = []
+        var sourceFile: ts.SourceFile = this.langService.getSourceFile(fileName)
+        var that = this
+        var getNodes = function(_node: ts.Node) {
+            _ts.forEachChild(_node, (child: ts.Node) => {
+                if (child.kind === _ts.SyntaxKind.Identifier) {
+                    tNodes.push(child)
                 }
-                getNodes(child);
-            });
+                getNodes(child)
+            },
+                (childs: ts.Node[]) => {
+                    for (var i = 0; i < childs.length; i++) {
+                        if (childs[i].kind === _ts.SyntaxKind.Identifier) {
+                            tNodes.push(childs[i])
+                        }
+                        getNodes(childs[i])
+                    }
+                })
+        }
+        getNodes(sourceFile)
+
+        for (var i = 0; i < tNodes.length; i++) {
+            var child = tNodes[i]
+            //console.log("!" + child.getText(sourceFile) + ": " + child.kind)
+            try {
+                var nodeType = that.langService.getQuickInfoAtPosition(fileName, child.pos + 1)
+                if (nodeType) {
+                    nodes.push({
+                        text: child.getText(sourceFile),
+                        length: child.end - child.pos,
+                        offset: child.pos,
+                        type: nodeType ? nodeType.kind : ""
+                    });
+                }
+            } catch (e) {
+                log.error(e)
+            }
         }
 
-        getNodes(sourceFile);
         return nodes;
     }
+
 
     public getVersion() {
         log.debug('service.getVersion - %s', _ts.version)
@@ -137,31 +156,31 @@ export class TSService {
         var files
         var settings
         var _errors: any = []
-        
+
         if (_settings == undefined) {
-        	var rawTsConfig = _ts.readConfigFile(file)
-        	var baseDir = path.getDirectoryPath(file)
-        	var configParseResult = _ts.parseConfigFile(rawTsConfig, baseDir)
-			if (configParseResult.errors.length > 0) {
-            	this.reportError(_errors, configParseResult.errors, file)
-				return {
-            		errors: _errors
-        		}
-			}
+            var rawTsConfig = _ts.readConfigFile(file)
+            var baseDir = path.getDirectoryPath(file)
+            var configParseResult = _ts.parseConfigFile(rawTsConfig, baseDir)
+            if (configParseResult.errors.length > 0) {
+                this.reportError(_errors, configParseResult.errors, file)
+                return {
+                    errors: _errors
+                }
+            }
             files = configParseResult.fileNames
             settings = configParseResult.options
-	        compilerHost = _ts.createCompilerHost(settings)
-		} else {
-        	files = [file];
-        	settings = this.getCompilationSettings(args.src, _settings)
-	        compilerHost = _ts.createCompilerHost(settings)
-	        compilerHost.getCurrentDirectory = function() {
-	            return args.src
-	        }
-	
-			compilerHost.getDefaultLibFileName = function(s) {
-	            return __dirname + "/../ts/lib.d.ts"
-	        }
+            compilerHost = _ts.createCompilerHost(settings)
+        } else {
+            files = [file];
+            settings = this.getCompilationSettings(args.src, _settings)
+            compilerHost = _ts.createCompilerHost(settings)
+            compilerHost.getCurrentDirectory = function() {
+                return args.src
+            }
+
+            compilerHost.getDefaultLibFileName = function(s) {
+                return __dirname + "/../ts/lib.d.ts"
+            }
         }
 
         var program: ts.Program = _ts.createProgram(files, settings, compilerHost);
@@ -203,7 +222,7 @@ export class TSService {
         }
     }
 
-    private reportError(errors: any[], diags: ts.Diagnostic[], _file? : string) {
+    private reportError(errors: any[], diags: ts.Diagnostic[], _file?: string) {
         for (var i = 0; i < diags.length; i++) {
             var e = diags[i];
             errors.push({

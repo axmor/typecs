@@ -7,6 +7,7 @@ var activity = false;
 var service = require('./service');
 var tss = new service.TSService;
 log.debug(tss.getVersion());
+log.debug(tss.getIdentifiers("tree.ts"));
 //log.debug(tss.getReferences('B.ts'));
 //log.debug(tss.getSemanticDiagnostics('A.ts'));
 //log.debug(tss.getScriptFileNames());
