@@ -277,12 +277,18 @@ public class TypeScriptBridge implements Runnable {
 					socket.setSoTimeout(10000);
                     try (InputStreamReader reader = new InputStreamReader(socket.getInputStream(), "UTF-8")) {
                         String str = CharStreams.toString(reader);
-                        if ("null".equals(str)) {
+						if ("null".equals(str) || str.trim().isEmpty()) {
                             return EMPTY_JSON_OBJECT;
                         }
 						// System.err.println("[" + method + "]");
 						// System.out.println(new JSONObject(str).toString(1));
+						try {
                         return new JSONObject(str);
+						} catch (JSONException e) {
+							System.err.println("Error in json for method: " + method);
+							Activator.error(e);
+							throw e;
+						}
                     }
                 }
             }

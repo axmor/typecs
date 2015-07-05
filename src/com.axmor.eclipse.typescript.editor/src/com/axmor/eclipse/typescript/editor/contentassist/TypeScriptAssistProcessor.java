@@ -51,6 +51,7 @@ import com.axmor.eclipse.typescript.editor.TypeScriptUIImages;
 import com.axmor.eclipse.typescript.editor.parser.TypeScriptImageKeys;
 import com.axmor.eclipse.typescript.editor.preferences.TypescriptTemplateAccess;
 import com.axmor.eclipse.typescript.editor.rename.QuickRenameAssistProposal;
+import com.google.common.base.Strings;
 
 /**
  * A content assist processor which computes completions and sets code completion preferences
@@ -288,6 +289,19 @@ public class TypeScriptAssistProcessor extends TemplateCompletionProcessor imple
 				doc = sb.toString();
 			}
 		}
+		// fallback
+		if (Strings.isNullOrEmpty(displayString)) {
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < parts.length(); i++) {
+				JSONObject jsonObject = parts.getJSONObject(i);
+				sb.append(jsonObject.getString("text"));
+			}
+			displayString = sb.toString();
+		}
+		if (displayString.contains("\n")) {
+			displayString = displayString.replaceAll("\n", "").replaceAll("\\s+", " ");
+		}
+
 		return new TypeScriptCompletionProposal(original, offset - replacement.length(), replacement.length(),
 				original.length(), image, displayString, prefixContext(context), doc);
 	}
