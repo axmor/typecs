@@ -459,6 +459,9 @@ public class TypeScriptEditor extends TextEditor implements IDocumentProcessor {
 
 	@Override
 	public void processDocument(IFile file, IDocument doc) {
+	    if (getSourceViewerConfiguration() == null) {
+	        return;
+	    }
 		api.updateFileContent(file, doc.get());
 		((TypeScriptEditorConfiguration) getSourceViewerConfiguration())
 				.setFile(file);
