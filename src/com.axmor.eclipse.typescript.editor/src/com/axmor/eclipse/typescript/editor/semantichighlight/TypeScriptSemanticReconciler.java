@@ -208,6 +208,7 @@ public class TypeScriptSemanticReconciler implements ITextInputListener {
      */
     private void addPosition(int offset, int length, Highlighting highlighting) {
         boolean isExisting = false;
+		// System.out.println(offset + ", " + length + ", " + highlighting.getName());
         for (int i = 0, n = fRemovedPositions.size(); i < n; i++) {
             HighlightedPosition position = (HighlightedPosition) fRemovedPositions.get(i);
             if (position == null) {

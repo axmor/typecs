@@ -5,10 +5,10 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.RGB;
 
-import com.axmor.eclipse.typescript.core.Activator;
-
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
+
+import com.axmor.eclipse.typescript.core.Activator;
 
 public class TypeScriptSemanticHighlightings {
 
@@ -122,7 +122,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public RGB getDefaultTextColor() {
-            return new RGB(0, 0, 0);
+			return new RGB(0, 80, 50);
         }
 
         @Override
@@ -137,7 +137,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public boolean isEnabledByDefault() {
-            return false;
+			return true;
         }
     }
 
@@ -181,7 +181,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public RGB getDefaultTextColor() {
-            return new RGB(0, 0, 0);
+			return new RGB(50, 63, 112);
         }
 
         @Override
@@ -196,7 +196,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public boolean isEnabledByDefault() {
-            return false;
+			return true;
         }
     }
 
@@ -240,7 +240,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public RGB getDefaultTextColor() {
-            return new RGB(0, 0, 0);
+			return new RGB(0, 0, 192);
         }
 
         @Override
@@ -255,7 +255,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public boolean isEnabledByDefault() {
-            return false;
+			return true;
         }
     }
 
@@ -347,7 +347,7 @@ public class TypeScriptSemanticHighlightings {
         @Override
         public boolean consumes(JSONObject obj) {
             try {
-                if (obj.get("type").equals("local var")) {
+				if (obj.get("type").equals("local var") || obj.get("type").equals("var")) {
                     return true;
                 }
             } catch (JSONException e) {
@@ -358,7 +358,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public RGB getDefaultTextColor() {
-            return new RGB(0, 0, 0);
+			return new RGB(106, 62, 62);
         }
 
         @Override
@@ -373,7 +373,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public boolean isEnabledByDefault() {
-            return false;
+			return true;
         }
     }
 
@@ -432,7 +432,7 @@ public class TypeScriptSemanticHighlightings {
 
         @Override
         public boolean isEnabledByDefault() {
-            return false;
+			return true;
         }
     }
 

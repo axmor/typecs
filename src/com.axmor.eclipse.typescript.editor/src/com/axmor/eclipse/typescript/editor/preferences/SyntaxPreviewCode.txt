@@ -1,14 +1,21 @@
-/**
- * This is about Greeter.
- */
-class Greeter {
-	/* This comment may span multiple lines. */
-	constructor(public greeting: string) { }
-	// This comment may span only this line
-	greet() {
-		return "<h1>" + this.greeting + "</h1>";
-	}
-};
-var greeter = new Greeter("Hello, world!");
-var str = greeter.greet();
-document.body.innerHTML = str;
+/// <reference path="one.ts"/>
+module module1 {
+    /**
+     * This is about Greeter.
+     */
+    class Greeter implements IGreeter {
+        /* This comment may span multiple lines. */
+        constructor(public greeting: string) { }
+        // This comment may span only this line
+        greet() {
+            return "<h1>" + this.greeting + "</h1>";
+        }
+    };
+    interface IGreeter {
+        greet(): string;
+    }
+    var greeter: IGreeter = new Greeter("Hello, world!");
+    var str = greeter.greet();
+    var num1: number = 123;
+    document.body.innerHTML = str;
+}

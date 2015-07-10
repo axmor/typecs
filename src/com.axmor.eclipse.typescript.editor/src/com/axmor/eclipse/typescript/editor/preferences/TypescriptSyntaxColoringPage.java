@@ -25,7 +25,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentPartitioner;
@@ -200,7 +199,8 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
         /*
          * @see org.eclipse.jface.viewers.IStructuredContentProvider#getElements(java.lang.Object)
          */
-        @SuppressWarnings("rawtypes")
+        @Override
+		@SuppressWarnings("rawtypes")
         public Object[] getElements(Object inputElement) {
             return ((java.util.List) inputElement).toArray();
         }
@@ -208,7 +208,8 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
         /*
          * @see org.eclipse.jface.viewers.IContentProvider#dispose()
          */
-        public void dispose() {
+        @Override
+		public void dispose() {
             fOverlayStore.stop();
         }
 
@@ -217,7 +218,8 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
          * org.eclipse.jface.viewers.IContentProvider#inputChanged(org.eclipse.jface.viewers.Viewer,
          * java.lang.Object, java.lang.Object)
          */
-        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+        @Override
+		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         }
     }
 
@@ -365,17 +367,20 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
         previewer.setLayoutData(gd);
 
         fHighlightingColorListViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-            public void selectionChanged(SelectionChangedEvent event) {
+            @Override
+			public void selectionChanged(SelectionChangedEvent event) {
                 handleSyntaxColorListSelection();
             }
         });
 
         foregroundColorButton.addSelectionListener(new SelectionListener() {
-            public void widgetDefaultSelected(SelectionEvent e) {
+            @Override
+			public void widgetDefaultSelected(SelectionEvent e) {
                 // do nothing
             }
 
-            public void widgetSelected(SelectionEvent e) {
+            @Override
+			public void widgetSelected(SelectionEvent e) {
                 HighlightingColorListItem item = getHighlightingColorListItem();
                 PreferenceConverter.setValue(getOverlayStore(), item.getColorKey(),
                         fSyntaxForegroundColorEditor.getColorValue());
@@ -383,33 +388,39 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
         });
 
         fBoldCheckBox.addSelectionListener(new SelectionListener() {
-            public void widgetDefaultSelected(SelectionEvent e) {
+            @Override
+			public void widgetDefaultSelected(SelectionEvent e) {
                 // do nothing
             }
 
-            public void widgetSelected(SelectionEvent e) {
+            @Override
+			public void widgetSelected(SelectionEvent e) {
                 HighlightingColorListItem item = getHighlightingColorListItem();
                 getOverlayStore().setValue(item.getBoldKey(), fBoldCheckBox.getSelection());
             }
         });
 
         fItalicCheckBox.addSelectionListener(new SelectionListener() {
-            public void widgetDefaultSelected(SelectionEvent e) {
+            @Override
+			public void widgetDefaultSelected(SelectionEvent e) {
                 // do nothing
             }
 
-            public void widgetSelected(SelectionEvent e) {
+            @Override
+			public void widgetSelected(SelectionEvent e) {
                 HighlightingColorListItem item = getHighlightingColorListItem();
                 getOverlayStore().setValue(item.getItalicKey(), fItalicCheckBox.getSelection());
             }
         });
 
         fEnableCheckbox.addSelectionListener(new SelectionListener() {
-            public void widgetDefaultSelected(SelectionEvent e) {
+            @Override
+			public void widgetDefaultSelected(SelectionEvent e) {
                 // do nothing
             }
 
-            public void widgetSelected(SelectionEvent e) {
+            @Override
+			public void widgetSelected(SelectionEvent e) {
                 HighlightingColorListItem item = getHighlightingColorListItem();
                 if (item instanceof SemanticHighlightingColorListItem) {
                     boolean enable = fEnableCheckbox.getSelection();
@@ -548,24 +559,25 @@ public class TypescriptSyntaxColoringPage extends PreferencePage implements IWor
 
     private TypeScriptSemanticManager.HighlightedRange[][] createPreviewerRanges() {
         return new TypeScriptSemanticManager.HighlightedRange[][] {
-                { createHighlightedRange(3, 6, 7, TypeScriptSemanticHighlightings.CLASS) },
-                { createHighlightedRange(5, 20, 8, TypeScriptSemanticHighlightings.CLASS_PROPERTY) },
-                { createHighlightedRange(7, 1, 5, TypeScriptSemanticHighlightings.METHOD) },
-                { createHighlightedRange(8, 22, 8, TypeScriptSemanticHighlightings.CLASS_PROPERTY) },
-                { createHighlightedRange(11, 18, 7, TypeScriptSemanticHighlightings.CLASS) },
-                { createHighlightedRange(12, 18, 5, TypeScriptSemanticHighlightings.METHOD) },
-                { createHighlightedRange(13, 9, 4, TypeScriptSemanticHighlightings.CLASS_PROPERTY) },
-                { createHighlightedRange(13, 14, 9, TypeScriptSemanticHighlightings.CLASS_PROPERTY) } };
+				{ createHighlightedRange(38, 8, TypeScriptSemanticHighlightings.MODULE) },
+				{ createHighlightedRange(108, 8, TypeScriptSemanticHighlightings.CLASS) },
+				{ createHighlightedRange(127, 9, TypeScriptSemanticHighlightings.INTERFACE) },
+				{ createHighlightedRange(219, 9, TypeScriptSemanticHighlightings.CLASS_PROPERTY) },
+				{ createHighlightedRange(344, 8, TypeScriptSemanticHighlightings.CLASS_PROPERTY) },
+				{ createHighlightedRange(397, 9, TypeScriptSemanticHighlightings.INTERFACE) },
+				{ createHighlightedRange(450, 8, TypeScriptSemanticHighlightings.LOCAL_VARIABLE) },
+				{ createHighlightedRange(459, 9, TypeScriptSemanticHighlightings.INTERFACE) },
+				{ createHighlightedRange(474, 8, TypeScriptSemanticHighlightings.CLASS) },
+				{ createHighlightedRange(509, 4, TypeScriptSemanticHighlightings.LOCAL_VARIABLE) },
+				{ createHighlightedRange(515, 8, TypeScriptSemanticHighlightings.LOCAL_VARIABLE) },
+				{ createHighlightedRange(524, 5, TypeScriptSemanticHighlightings.METHOD) },
+				{ createHighlightedRange(541, 5, TypeScriptSemanticHighlightings.LOCAL_VARIABLE) },
+				{ createHighlightedRange(576, 4, TypeScriptSemanticHighlightings.CLASS_PROPERTY) },
+				{ createHighlightedRange(581, 9, TypeScriptSemanticHighlightings.CLASS_PROPERTY) },
+				{ createHighlightedRange(592, 4, TypeScriptSemanticHighlightings.LOCAL_VARIABLE) } };
     }
 
-    private HighlightedRange createHighlightedRange(int line, int column, int length, String key) {
-        try {
-            IDocument document = fPreviewViewer.getDocument();
-            int offset = document.getLineOffset(line) + column;
-            return new HighlightedRange(offset, length, key);
-        } catch (BadLocationException x) {
-            Activator.error(x);
-        }
-        return null;
+	private HighlightedRange createHighlightedRange(int offset, int length, String key) {
+		return new HighlightedRange(offset, length, key);
     }
 }

@@ -285,8 +285,10 @@ public class TypeScriptEditorConfiguration extends TextSourceViewerConfiguration
      * Adapts the behavior of the contained components to the change encoded in the given event.
      */
     public void handlePropertyChangeEvent(PropertyChangeEvent event) {
-
-        if (syntaxScanner.affectsBehavior(event)) {
+		if (syntaxScanner == null) {
+			return; // property change before the editor is fully created
+		}
+		if (syntaxScanner.affectsBehavior(event)) {
         	syntaxScanner.adaptToPreferenceChange(event);
         }        
     }

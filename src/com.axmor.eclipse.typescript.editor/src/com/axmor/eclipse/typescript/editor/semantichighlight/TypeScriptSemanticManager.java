@@ -3,6 +3,7 @@ package com.axmor.eclipse.typescript.editor.semantichighlight;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlighting;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.StringConverter;
@@ -21,6 +22,7 @@ import com.axmor.eclipse.typescript.editor.TypeScriptEditor;
 import com.axmor.eclipse.typescript.editor.TypeScriptEditorConfiguration;
 import com.axmor.eclipse.typescript.editor.color.ColorManager;
 
+@SuppressWarnings("restriction")
 public class TypeScriptSemanticManager implements IPropertyChangeListener {
 
     /**
@@ -30,6 +32,8 @@ public class TypeScriptSemanticManager implements IPropertyChangeListener {
 
         /** Text attribute */
         private TextAttribute fTextAttribute;
+		/** Name. */
+		private String name;
         /** Enabled state */
         private boolean fIsEnabled;
 
@@ -41,9 +45,10 @@ public class TypeScriptSemanticManager implements IPropertyChangeListener {
          * @param isEnabled
          *            the enabled state
          */
-        public Highlighting(TextAttribute textAttribute, boolean isEnabled) {
-            setTextAttribute(textAttribute);
-            setEnabled(isEnabled);
+		public Highlighting(TextAttribute textAttribute, String name, boolean isEnabled) {
+			setTextAttribute(textAttribute);
+			setEnabled(isEnabled);
+			this.name = name;
         }
 
         /**
@@ -54,27 +59,34 @@ public class TypeScriptSemanticManager implements IPropertyChangeListener {
         }
 
         /**
-         * @param textAttribute
-         *            The background to set.
-         */
-        public void setTextAttribute(TextAttribute textAttribute) {
-            fTextAttribute = textAttribute;
-        }
+		 * @param textAttribute
+		 *            The background to set.
+		 */
+		public void setTextAttribute(TextAttribute textAttribute) {
+			fTextAttribute = textAttribute;
+		}
 
-        /**
-         * @return the enabled state
-         */
+		/**
+		 * @return the enabled state
+		 */
         public boolean isEnabled() {
             return fIsEnabled;
         }
 
         /**
-         * @param isEnabled
-         *            the new enabled state
-         */
-        public void setEnabled(boolean isEnabled) {
-            fIsEnabled = isEnabled;
-        }
+		 * @param isEnabled
+		 *            the new enabled state
+		 */
+		public void setEnabled(boolean isEnabled) {
+			fIsEnabled = isEnabled;
+		}
+
+		/**
+		 * @return the name
+		 */
+		public String getName() {
+			return name;
+		}
     }
 
     /**
@@ -218,7 +230,7 @@ public class TypeScriptSemanticManager implements IPropertyChangeListener {
      */
     public static class HighlightedRange extends Region {
         /** The highlighting key as returned by {@link SemanticHighlighting#getPreferenceKey()}. */
-        private String fKey;
+		private String fKey;
 
         /**
          * Initialize with the given offset, length and highlighting key.
@@ -374,7 +386,7 @@ public class TypeScriptSemanticManager implements IPropertyChangeListener {
             boolean isEnabled = fPreferenceStore.getBoolean(TypeScriptSemanticHighlightings
                     .getEnabledPreferenceKey(semanticHighlighting));
             fHighlightings[i] = new Highlighting(new TextAttribute(fColorManager.getColor(PreferenceConverter.getColor(
-                    fPreferenceStore, colorKey)), null, style), isEnabled);
+					fPreferenceStore, colorKey)), null, style), semanticHighlighting.getDisplayName(), isEnabled);
         }
     }
 
