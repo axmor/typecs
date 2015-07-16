@@ -12,6 +12,7 @@
 
 # New and Noteworthy
 
+* [v4.0 - New and Noteworthy](https://github.com/axmor/typecs/wiki/4.0 - New and Noteworthy) 
 * [v3.0 - New and Noteworthy](https://github.com/axmor/typecs/wiki/3.0 - New and Noteworthy) 
 * [v2.0 - New and Noteworthy](https://github.com/axmor/typecs/wiki/2.0 - New and Noteworthy) 
 * [v1.5 - New and Noteworthy](https://github.com/axmor/typecs/wiki/1.5 - New and Noteworthy) 
