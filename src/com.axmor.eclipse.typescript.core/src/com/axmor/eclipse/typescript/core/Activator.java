@@ -190,4 +190,14 @@ public class Activator extends AbstractUIPlugin {
     public static void error(final Exception e) {
         plugin.getLog().log(new Status(Status.ERROR, PLUGIN_ID, e.getMessage(), e));
     }
+
+	/**
+	 * Print error message to Error log.
+	 * 
+	 * @param error
+	 *            message
+	 */
+	public static void error(final String error) {
+		plugin.getLog().log(new Status(Status.ERROR, PLUGIN_ID, error));
+	}
 }

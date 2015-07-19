@@ -23,35 +23,28 @@ var server = net.createServer({ allowHalfOpen: true }, function (socket) {
                     process.exit();
                     break;
                 case 'setFileContent':
-                    log.debug('bridge.setFileContent: ' + o.file);
                     tsService.setFileContent(o.file, o.params);
                     socket.end(JSON.stringify({ 'status': 0 }));
                     break;
                 case 'addFile':
                     if (o.file !== 'std-lib/lib.d.ts') {
-                        log.debug('bridge.addFile: ' + o.file);
                         tsService.addFile(o.file, o.params);
                     }
                     socket.end(JSON.stringify({ 'status': 0 }));
                     break;
                 case 'getScriptFileNames':
-                    log.debug('bridge.getScriptFileNames ');
                     socket.end(JSON.stringify({ 'names': tsService.getScriptFileNames() }));
                     break;
                 case 'getScriptLexicalStructure':
-                    log.debug('bridge.getScriptLexicalStructure: ' + o.file);
                     socket.end(JSON.stringify({ 'model': tsService.getScriptLexicalStructure(o.file) }));
                     break;
                 case 'getCompletions':
-                    log.debug('bridge.getCompletions: ' + o.file + ', pos: ' + o.params);
                     socket.end(JSON.stringify(tsService.getCompletionsAtPosition(o.file, o.params)));
                     break;
                 case 'getCompletionDetails':
-                    log.debug('bridge.getCompletionDetails: ' + o.file + ', param: ' + o.params.position + ' ' + o.params.entryName);
                     socket.end(JSON.stringify(tsService.getCompletionEntryDetails(o.file, o.params.position, o.params.entryName)));
                     break;
                 case 'getSignature':
-                    log.debug('bridge.getSignature: ' + o.file + ', pos: ' + o.params);
                     socket.end(JSON.stringify({ 'model': tsService.getSignatureAtPosition(o.file, o.params) }));
                     break;
                 case 'getSignatureHelpItems':
@@ -59,27 +52,21 @@ var server = net.createServer({ allowHalfOpen: true }, function (socket) {
                     socket.end(JSON.stringify({ 'model': tsService.getSignatureHelpItems(o.file, o.params) }));
                     break;
                 case 'getTypeDefinition':
-                    log.debug('bridge.getTypeDefinition: ' + o.file + ', param: ' + o.params);
                     socket.end(JSON.stringify({ 'model': tsService.getDefinitionAtPosition(o.file, o.params) }));
                     break;
                 case 'getFormattingCode':
-                    log.debug('bridge.getFormattingCode: ' + o.file + ', param: start-' + o.params.start + ', end-' + o.params.end + ', settings - ' + o.params.settings);
                     socket.end(JSON.stringify({ 'model': tsService.getFormattingEditsForDocument(o.file, o.params.start, o.params.end, o.params.settings) }));
                     break;
                 case 'getReferencesAtPosition':
-                    log.debug('bridge.getReferencesAtPosition: ' + o.file + ', param: ' + o.params);
                     socket.end(JSON.stringify({ 'model': tsService.getReferencesAtPosition(o.file, o.params) }));
                     break;
                 case 'getOccurrencesAtPosition':
-                    log.debug('bridge.getOccurrencesAtPosition: ' + o.file + ', param: ' + o.params);
                     socket.end(JSON.stringify({ 'model': tsService.getOccurrencesAtPosition(o.file, o.params) }));
                     break;
                 case 'compile':
-                    log.debug('bridge.compile: ' + o.file + ', param: ' + o.params);
                     socket.end(JSON.stringify(tsService.compile(o.file, o.params)));
                     break;
                 case 'getSemanticDiagnostics':
-                    log.debug('bridge.getSemanticDiagnostics: ' + o.file);
                     socket.end(JSON.stringify({ 'model': tsService.getSemanticDiagnostics(o.file) }, function (key, value) {
                         if (key == 'file')
                             return value.filename;
@@ -87,7 +74,6 @@ var server = net.createServer({ allowHalfOpen: true }, function (socket) {
                     }));
                     break;
                 case 'getSyntaxTree':
-                    log.debug('bridge.getSyntaxTree: ' + o.file);
                     socket.end(JSON.stringify({ 'model': tsService.getSyntaxTree(o.file) }, function (key, value) {
                         if (key == 'members') {
                             return undefined;
@@ -110,11 +96,9 @@ var server = net.createServer({ allowHalfOpen: true }, function (socket) {
                     }));
                     break;
                 case 'getReferences':
-                    log.debug('bridge.getReferences: ' + o.file);
                     socket.end(JSON.stringify({ 'model': tsService.getReferences(o.file) }));
                     break;
                 case 'getIdentifiers':
-                    log.debug('bridge.getIdentifiers: ' + o.file);
                     socket.end(JSON.stringify({ 'model': tsService.getIdentifiers(o.file) }));
                     break;
                 default:

@@ -33,7 +33,7 @@ export class BridgeServiceHost implements ts.LanguageServiceHost {
     }
 
     public getCompilationSettings(): ts.CompilerOptions {
-        log.debug('host.getCompilationSettings');
+        log.trace('host.getCompilationSettings');
         return {
             target: ts.ScriptTarget.ES5,
             module: ts.ModuleKind.None
@@ -41,12 +41,12 @@ export class BridgeServiceHost implements ts.LanguageServiceHost {
     }
 
     public getScriptFileNames(): string[] {
-        log.debug('host.getScriptFileNames')
+        log.trace('host.getScriptFileNames')
         return Object.keys(this.files)
     }
 
     public getScriptVersion(fileName: string): string {
-        log.debug('host.getScriptVersion: %s', fileName)
+        log.trace('host.getScriptVersion: %s', fileName)
         if (this.files[fileName] && this.files[fileName].version) {
             return this.files[fileName].version.toString()
         }
@@ -54,7 +54,7 @@ export class BridgeServiceHost implements ts.LanguageServiceHost {
     }
 
     public getScriptSnapshot(fileName: string): ts.IScriptSnapshot {
-        log.debug('host.getScriptSnapshot: %s', fileName)
+        log.trace('host.getScriptSnapshot: %s', fileName)
         if (this.files[fileName] == null) {
             this.files[fileName] = new TSFile()
         }
@@ -88,7 +88,7 @@ export class BridgeServiceHost implements ts.LanguageServiceHost {
     //getCancellationToken?(): CancellationToken;
 	     	
     public getCurrentDirectory(): string {
-        log.debug('host.getCurrentDirectory(): %s', this.baseDir)
+        log.trace('host.getCurrentDirectory(): %s', this.baseDir)
         return this.baseDir
     }
 
@@ -98,7 +98,7 @@ export class BridgeServiceHost implements ts.LanguageServiceHost {
     }
 
     public setFileContent(file: string, content: string) {
-        log.debug('host.setFileContent: %s: %s', file, content)
+        log.trace('host.setFileContent: %s: %s', file, content)
         // we added white space to end of content to avoid code completion error
         var c = content ? (content + ' ') : ' '
         var snapshot = _ts.ScriptSnapshot.fromString(c)

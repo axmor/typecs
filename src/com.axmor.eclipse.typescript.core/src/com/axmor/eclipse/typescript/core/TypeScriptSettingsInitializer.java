@@ -38,6 +38,7 @@ public class TypeScriptSettingsInitializer extends AbstractPreferenceInitializer
         store.setDefault("placeBraceBlocks", false);
         store.setDefault("insertCloseBrackets", true);
         store.setDefault("insertSemicolons", true);
+		store.setDefault("ts_log_level", "error");
     }
 
 }

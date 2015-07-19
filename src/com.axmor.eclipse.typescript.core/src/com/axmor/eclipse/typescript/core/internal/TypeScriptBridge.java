@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -85,6 +86,8 @@ public class TypeScriptBridge implements Runnable {
 
     /** Communication port. */
     private int port;
+	/** TS Console Log level. */
+	private String logLevel;
 
     /**
      * Create TypeScript bridge.
@@ -94,6 +97,7 @@ public class TypeScriptBridge implements Runnable {
      */
     public TypeScriptBridge(File baseDirectory) {
         this.baseDirectory = baseDirectory;
+        this.logLevel = Activator.getDefault().getPreferenceStore().getString("ts_log_level");
     }
 
     @Override
@@ -107,7 +111,7 @@ public class TypeScriptBridge implements Runnable {
             String nodeJSPath = TypeScriptUtils.findNodeJS();
 			ProcessBuilder ps = new ProcessBuilder(nodeJSPath,
 					new File(bundleFile, LIB_BRIDGE + "/js/bridge.js").getCanonicalPath(), "src="
-					+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=error");
+							+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=" + logLevel);
 			ps.directory(baseDirectory.getCanonicalFile());
             p = ps.start();
             String portLine = new BufferedReader(new InputStreamReader(p.getErrorStream())).readLine();
@@ -283,12 +287,19 @@ public class TypeScriptBridge implements Runnable {
 						// System.err.println("[" + method + "]");
 						// System.out.println(new JSONObject(str).toString(1));
 						try {
-                        return new JSONObject(str);
+							return new JSONObject(str);
 						} catch (JSONException e) {
 							System.err.println("Error in json for method: " + method);
 							Activator.error(e);
 							throw e;
 						}
+					} catch (SocketTimeoutException e) {
+						StringBuilder sb = new StringBuilder("Timeout on method invokation: ");
+						sb.append(method).append(", params: ").append(params);
+						sb.append(", file:").append(file.getFullPath().toString());
+						Activator.error(sb.toString());
+						System.err.println(sb.toString());
+						return EMPTY_JSON_OBJECT;
                     }
                 }
             }
@@ -297,7 +308,8 @@ public class TypeScriptBridge implements Runnable {
         }
     }
     
-    private boolean isFileNameExist(String name) {
+	@SuppressWarnings("unused")
+	private boolean isFileNameExist(String name) {
     	JSONObject res = invokeBridgeMethod("getScriptFileNames", null, (String) null, null);
     	JSONArray existNames;
     	List<String> list = new ArrayList<String>();

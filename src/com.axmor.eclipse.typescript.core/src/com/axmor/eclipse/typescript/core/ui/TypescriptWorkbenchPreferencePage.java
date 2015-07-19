@@ -8,6 +8,7 @@
 
 package com.axmor.eclipse.typescript.core.ui;
 
+import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -26,5 +27,8 @@ public class TypescriptWorkbenchPreferencePage extends FieldEditorPreferencePage
 
 	@Override
 	protected void createFieldEditors() {
+		addField(new ComboFieldEditor("ts_log_level", "TypeScript Console Log Level (A restart is required)",
+				new String[][] { new String[] { "error", "Error" }, new String[] { "Info", "info" },
+						new String[] { "debug", "Debug" } }, getFieldEditorParent()));
 	}
 }

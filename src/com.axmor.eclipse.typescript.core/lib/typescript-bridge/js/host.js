@@ -28,25 +28,25 @@ var BridgeServiceHost = (function () {
         }
     }
     BridgeServiceHost.prototype.getCompilationSettings = function () {
-        log.debug('host.getCompilationSettings');
+        log.trace('host.getCompilationSettings');
         return {
             target: 1 /* ES5 */,
             module: 0 /* None */
         };
     };
     BridgeServiceHost.prototype.getScriptFileNames = function () {
-        log.debug('host.getScriptFileNames');
+        log.trace('host.getScriptFileNames');
         return Object.keys(this.files);
     };
     BridgeServiceHost.prototype.getScriptVersion = function (fileName) {
-        log.debug('host.getScriptVersion: %s', fileName);
+        log.trace('host.getScriptVersion: %s', fileName);
         if (this.files[fileName] && this.files[fileName].version) {
             return this.files[fileName].version.toString();
         }
         return '0';
     };
     BridgeServiceHost.prototype.getScriptSnapshot = function (fileName) {
-        log.debug('host.getScriptSnapshot: %s', fileName);
+        log.trace('host.getScriptSnapshot: %s', fileName);
         if (this.files[fileName] == null) {
             this.files[fileName] = new TSFile();
         }
@@ -78,7 +78,7 @@ var BridgeServiceHost = (function () {
     };
     //getCancellationToken?(): CancellationToken;
     BridgeServiceHost.prototype.getCurrentDirectory = function () {
-        log.debug('host.getCurrentDirectory(): %s', this.baseDir);
+        log.trace('host.getCurrentDirectory(): %s', this.baseDir);
         return this.baseDir;
     };
     BridgeServiceHost.prototype.getDefaultLibFileName = function (options) {
@@ -86,7 +86,7 @@ var BridgeServiceHost = (function () {
         return 'std-lib/lib.d.ts';
     };
     BridgeServiceHost.prototype.setFileContent = function (file, content) {
-        log.debug('host.setFileContent: %s: %s', file, content);
+        log.trace('host.setFileContent: %s: %s', file, content);
         // we added white space to end of content to avoid code completion error
         var c = content ? (content + ' ') : ' ';
         var snapshot = _ts.ScriptSnapshot.fromString(c);

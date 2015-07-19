@@ -256,6 +256,9 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
     }
     
     public static synchronized byte[] digest(byte[] input) {
+    	if (input == null) {
+			return new byte[0];
+    	}
     	return digester.digest(input);
     }
     
@@ -429,7 +432,7 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
         for (CallFrame cframe : ctx.getCallFrames()) {
             frames.add(new TypeScriptStackFrame(thread, cframe, jsMappings));
         }
-        this.frames = (IStackFrame[]) frames.toArray(new IStackFrame[frames.size()]);
+        this.frames = frames.toArray(new IStackFrame[frames.size()]);
 		
 		Collection<? extends Breakpoint> hits = ctx.getBreakpointsHit();
 		if (hits.size() > 0) {

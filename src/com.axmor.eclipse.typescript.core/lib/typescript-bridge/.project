@@ -23,7 +23,7 @@
 		<link>
 			<name>std-lib/lib.d.ts</name>
 			<type>1</type>
-			<location>D:/work/typecs/src/com.axmor.eclipse.typescript.core/lib/bridge/ts/lib.d.ts</location>
+			<location>D:/work/typecs/src/com.axmor.eclipse.typescript.core/lib/typescript-bridge/ts/lib.d.ts</location>
 		</link>
 	</linkedResources>
 </projectDescription>
