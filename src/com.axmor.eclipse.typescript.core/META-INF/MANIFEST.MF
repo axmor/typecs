@@ -17,6 +17,9 @@ Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/guava-16.0.jar,
  lib/resty-0.3.2.jar,
  lib/mapdb-1.0.7.jar,
+ lib/libthrift-0.9.2.jar,
+ lib/slf4j-api-1.5.8.jar,
+ lib/slf4j-simple-1.5.8.jar,
  .
 Export-Package: com.axmor.eclipse.typescript.core,
  com.axmor.eclipse.typescript.core.i18n,
