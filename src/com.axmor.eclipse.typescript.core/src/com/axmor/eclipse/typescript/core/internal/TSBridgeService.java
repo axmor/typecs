@@ -158,7 +158,8 @@ public class TSBridgeService {
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Processor.class.getName());
+		@SuppressWarnings("unused")
+		private static final Logger LOGGER = LoggerFactory.getLogger(Processor.class.getName());
     public Processor(I iface) {
       super(iface, getProcessMap(new HashMap<String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>>()));
     }
@@ -242,7 +243,8 @@ public class TSBridgeService {
 		public void onError(Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TBase msg;
-            invoke_result result = new invoke_result();
+            @SuppressWarnings("unused")
+			invoke_result result = new invoke_result();
             {
               msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
               msg = (org.apache.thrift.TBase)new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
@@ -1208,7 +1210,8 @@ public class TSBridgeService {
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder("invoke_result(");
-      boolean first = true;
+      @SuppressWarnings("unused")
+	boolean first = true;
 
       sb.append("success:");
       if (this.success == null) {

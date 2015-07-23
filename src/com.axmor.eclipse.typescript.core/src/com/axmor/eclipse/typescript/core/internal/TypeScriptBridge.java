@@ -7,21 +7,19 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.core.internal;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransportException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Status;
@@ -40,10 +38,9 @@ import us.monoid.json.JSONObject;
 import com.axmor.eclipse.typescript.core.Activator;
 import com.axmor.eclipse.typescript.core.TypeScriptUtils;
 import com.axmor.eclipse.typescript.core.i18n.Messages;
+import com.axmor.eclipse.typescript.core.internal.TSBridgeService.Client;
 import com.axmor.eclipse.typescript.core.ui.ErrorDialog;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
 
 /**
@@ -89,6 +86,11 @@ public class TypeScriptBridge implements Runnable {
 	/** TS Console Log level. */
 	private String logLevel;
 
+	/** TSBridgeService client. */
+	private Client client;
+
+	private TSocket transport;
+
     /**
      * Create TypeScript bridge.
      * 
@@ -107,20 +109,24 @@ public class TypeScriptBridge implements Runnable {
         }
 
         try {
+			this.port = getPort();
 			File bundleFile = FileLocator.getBundleFile(Activator.getDefault().getBundle());
             String nodeJSPath = TypeScriptUtils.findNodeJS();
 			ProcessBuilder ps = new ProcessBuilder(nodeJSPath,
-					new File(bundleFile, LIB_BRIDGE + "/js/bridge.js").getCanonicalPath(), "src="
-							+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "log=" + logLevel);
+					new File(bundleFile, LIB_BRIDGE + "/js/new_bridge.js").getCanonicalPath(), "src="
+							+ baseDirectory.getAbsolutePath().replace('\\', '/'), "serv=true", "port=" + port,
+					"log=" + logLevel);
 			ps.directory(baseDirectory.getCanonicalFile());
             p = ps.start();
-            String portLine = new BufferedReader(new InputStreamReader(p.getErrorStream())).readLine();
-            if (!portLine.startsWith("@") && !portLine.endsWith("@")) {
-                throw new IOException(Messages.TSBridge_cannotStart + portLine);
-            }
-            port = Integer.parseInt(portLine.substring(1, portLine.length() - 1));
+
+			// String portLine = new BufferedReader(new
+			// InputStreamReader(p.getErrorStream())).readLine();
+			// if (!portLine.startsWith("@") && !portLine.endsWith("@")) {
+			// throw new IOException(Messages.TSBridge_cannotStart + portLine);
+			// }
+			// port = Integer.parseInt(portLine.substring(1, portLine.length() - 1));
             lock.countDown();
-        } catch (IOException e) {
+		} catch (IOException e) {
             lock.countDown();
             Activator.getDefault().getLog()
                     .log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(), e));
@@ -143,7 +149,27 @@ public class TypeScriptBridge implements Runnable {
             errorStream = console.newMessageStream();
             outStream.println("TS Bridge: port = " + port + ", directory: " + baseDirectory);
 
-			JSONObject versionObject = invokeBridgeMethod("getVersion", null, (String) null);
+			transport = new TSocket("localhost", port);
+
+			try {
+				try {
+					transport.open();
+				} catch (TTransportException e) {
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e1) {
+						// ignore exception
+					}
+					transport.open();
+				}
+			} catch (TTransportException e) {
+				Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+			}
+
+			TBinaryProtocol protocol = new TBinaryProtocol(transport, 10000000, 10000000, false, false);
+			client = new TSBridgeService.Client(protocol);
+
+			JSONObject versionObject = invokeBridgeMethod("getVersion", null);
 			try {
 				outStream.println("TypeScript Version: " + versionObject.getString("version"));
 			} catch (JSONException e) {
@@ -176,6 +202,7 @@ public class TypeScriptBridge implements Runnable {
     public synchronized void stop() {
         if (!stopped) {
             stopped = true;
+			transport.close();
             outStream.println("TS bridge closed");
             try {
                 Closeables.close(outStream, true);
@@ -195,122 +222,143 @@ public class TypeScriptBridge implements Runnable {
     }
 
     /**
-     * Invoke method on TS Bridge and return JSONObject from bridge.
-     * 
-     * @param method
-     *            name of method
-     * @param file
-     *            optional file attribute
-     * @param params
-     *            optional additional parameters
-     * @return result in JSON representation
-     */
-    public JSONObject invokeBridgeMethod(String method, IFile file, String params) {
-        return invokeBridgeMethod(method, file, params, null);
-    }
+	 * Invoke method on TS Bridge and return JSONObject from bridge.
+	 * 
+	 * @param method
+	 *            name of method
+	 * @param file
+	 *            optional file attribute
+	 * @param position
+	 *            optional position
+	 * @return result in JSON representation
+	 */
+	public JSONObject invokeBridgeMethod(String method, IFile file) {
+		return invokeBridgeMethod(method, file, 0, null);
+	}
+
+	/**
+	 * Invoke method on TS Bridge and return JSONObject from bridge.
+	 * 
+	 * @param method
+	 *            name of method
+	 * @param file
+	 *            optional file attribute
+	 * @param position
+	 *            optional position
+	 * @return result in JSON representation
+	 */
+	public JSONObject invokeBridgeMethod(String method, IFile file, int position) {
+		return invokeBridgeMethod(method, file, position, null);
+	}
 
     /**
-     * Invoke method on TS Bridge and return JSONObject from bridge.
-     * 
-     * @param method
-     *            name of method
-     * @param file
-     *            optional file attribute
-     * @param params
-     *            optional additional JSON parameters
-     * @return result in JSON representation
-     */
-    public JSONObject invokeBridgeMethod(String method, IFile file, JSONObject params) {
-        return invokeBridgeMethod(method, file, null, params);
-    }
-
-    /**
-     * Invoke method on TS Bridge and return JSONObject from bridge.
-     * 
-     * @param method
-     *            name of method
-     * @param file
-     *            optional file attribute
-     * @param params
-     *            optional additional parameters
-     * @param jsonParams
-     *            JSON parameters
-     * 
-     * @return result in JSON representation
-     */
-    private JSONObject invokeBridgeMethod(String method, IFile file, String params, JSONObject jsonParams) {
+	 * Invoke method on TS Bridge and return JSONObject from bridge.
+	 * 
+	 * @param method
+	 *            name of method
+	 * @param file
+	 *            optional file attribute
+	 * @param position
+	 *            optional position
+	 * @param params
+	 *            optional additional parameters
+	 * @param jsonParams
+	 *            JSON parameters
+	 * 
+	 * @return result in JSON representation
+	 */
+	public synchronized JSONObject invokeBridgeMethod(String method, IFile file, int position, String params) {
         try {
-            try {
-                lock.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                // ignore exception
-            }
+			// try {
+			// lock.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
+			// } catch (InterruptedException e) {
+			// // ignore exception
+			// }
             if (port == 0) {
                 return EMPTY_JSON_OBJECT;
             }
-            try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
-                JSONObject obj = new JSONObject().put("method", method);
-                if (file != null) {
-                    String path = file.getProjectRelativePath().toString();
-                    switch (method) {
-                    case "addFile":
-                        break;
-                    case "compile":
-                        path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
-                    default:
-						// we too often invoke this method need find more better solution
-						// if (!isFileNameExist(file.getProjectRelativePath().toString())) {
-						// invokeBridgeMethod("addFile", file,
-						// file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
-						// }
-                        break;
-                    }
-                    obj.put("file", path);
-                }
+			String path = "";
+			if (file != null) {
+				if ("addFile".equals(method) || "compile".equals(method)) {
+					path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
+				} else {
+					path = file.getProjectRelativePath().toString();
+				}
+			}
+			if (client == null) {
+				return EMPTY_JSON_OBJECT;
+			}
+			String result = client.invoke(method, path, position, params);
+			if ("null".equals(result) || result.trim().isEmpty()) {
+				return EMPTY_JSON_OBJECT;
+			}
+			return new JSONObject(result);
 
-                if (!Strings.isNullOrEmpty(params)) {
-                    obj.put("params", params);
-                } else if (jsonParams != null) {
-                    obj.put("params", jsonParams);
-                }
-
-                try (PrintStream writer = new PrintStream(socket.getOutputStream(), false, "UTF-8")) {
-                    writer.print(obj.toString());
-                    writer.flush();
-                    socket.shutdownOutput();
-					socket.setSoTimeout(10000);
-                    try (InputStreamReader reader = new InputStreamReader(socket.getInputStream(), "UTF-8")) {
-                        String str = CharStreams.toString(reader);
-						if ("null".equals(str) || str.trim().isEmpty()) {
-                            return EMPTY_JSON_OBJECT;
-                        }
-						// System.err.println("[" + method + "]");
-						// System.out.println(new JSONObject(str).toString(1));
-						try {
-							return new JSONObject(str);
-						} catch (JSONException e) {
-							System.err.println("Error in json for method: " + method);
-							Activator.error(e);
-							throw e;
-						}
-					} catch (SocketTimeoutException e) {
-						StringBuilder sb = new StringBuilder("Timeout on method invokation: ");
-						sb.append(method).append(", params: ").append(params);
-						sb.append(", file:").append(file.getFullPath().toString());
-						Activator.error(sb.toString());
-						System.err.println(sb.toString());
-						return EMPTY_JSON_OBJECT;
-                    }
-                }
-            }
-        } catch (IOException | JSONException e) {
+			// try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
+			// JSONObject obj = new JSONObject().put("method", method);
+			// if (file != null) {
+			// String path = file.getProjectRelativePath().toString();
+			// switch (method) {
+			// case "addFile":
+			// break;
+			// case "compile":
+			// path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
+			// default:
+			// // we too often invoke this method need find more better solution
+			// // if (!isFileNameExist(file.getProjectRelativePath().toString())) {
+			// // invokeBridgeMethod("addFile", file,
+			// // file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
+			// // }
+			// break;
+			// }
+			// obj.put("file", path);
+			// }
+			//
+			// if (!Strings.isNullOrEmpty(params)) {
+			// obj.put("params", params);
+			// } else if (jsonParams != null) {
+			// obj.put("params", jsonParams);
+			// }
+			//
+			// try (PrintStream writer = new PrintStream(socket.getOutputStream(), false, "UTF-8"))
+			// {
+			// writer.print(obj.toString());
+			// writer.flush();
+			// socket.shutdownOutput();
+			// socket.setSoTimeout(10000);
+			// try (InputStreamReader reader = new InputStreamReader(socket.getInputStream(),
+			// "UTF-8")) {
+			// String str = CharStreams.toString(reader);
+			// if ("null".equals(str) || str.trim().isEmpty()) {
+			// return EMPTY_JSON_OBJECT;
+			// }
+			// // System.err.println("[" + method + "]");
+			// // System.out.println(new JSONObject(str).toString(1));
+			// try {
+			// return new JSONObject(str);
+			// } catch (JSONException e) {
+			// System.err.println("Error in json for method: " + method);
+			// Activator.error(e);
+			// throw e;
+			// }
+			// } catch (SocketTimeoutException e) {
+			// StringBuilder sb = new StringBuilder("Timeout on method invokation: ");
+			// sb.append(method).append(", params: ").append(params);
+			// sb.append(", file:").append(file.getFullPath().toString());
+			// Activator.error(sb.toString());
+			// System.err.println(sb.toString());
+			// return EMPTY_JSON_OBJECT;
+			// }
+			// }
+			// }
+		} catch (JSONException | TException e) {
             throw Throwables.propagate(e);
         }
     }
     
 	@SuppressWarnings("unused")
 	private boolean isFileNameExist(String name) {
-    	JSONObject res = invokeBridgeMethod("getScriptFileNames", null, (String) null, null);
+		JSONObject res = invokeBridgeMethod("getScriptFileNames", null);
     	JSONArray existNames;
     	List<String> list = new ArrayList<String>();
 		try {
@@ -367,4 +415,10 @@ public class TypeScriptBridge implements Runnable {
 			throw Throwables.propagate(e);
 		}
     }
+
+	private int getPort() throws IOException {
+		try (ServerSocket socket = new ServerSocket(0)) {
+			return socket.getLocalPort();
+		}
+	}
 }

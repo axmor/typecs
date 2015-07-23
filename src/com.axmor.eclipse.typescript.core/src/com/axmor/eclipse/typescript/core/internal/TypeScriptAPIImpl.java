@@ -85,7 +85,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public JSONArray getScriptModel(IFile file) {
         checkBridge();
-        JSONObject obj = bridge.invokeBridgeMethod("getScriptLexicalStructure", file, (String) null);
+		JSONObject obj = bridge.invokeBridgeMethod("getScriptLexicalStructure", file);
         try {
             if (!obj.has("model")) {
                 return new JSONArray();
@@ -99,32 +99,25 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public void updateFileContent(IFile file, String content) {
         checkBridge();
-        bridge.invokeBridgeMethod("setFileContent", file, content);
+		bridge.invokeBridgeMethod("setFileContent", file, 0, content);
     }
 
     @Override
     public JSONObject getCompletion(IFile file, int position) {
         checkBridge();
-        return bridge.invokeBridgeMethod("getCompletions", file, String.valueOf(position));
+		return bridge.invokeBridgeMethod("getCompletions", file, position);
     }
 
     @Override
     public JSONObject getCompletionDetails(IFile file, int position, String entryName) {
         checkBridge();
-        try {
-            JSONObject params = new JSONObject();
-            params.put("position", String.valueOf(position));
-            params.put("entryName", entryName);
-            return bridge.invokeBridgeMethod("getCompletionDetails", file, params);
-        } catch (JSONException e) {
-            throw Throwables.propagate(e);
-        }
+		return bridge.invokeBridgeMethod("getCompletionDetails", file, position, entryName);
     }
 
     @Override
     public JSONObject getSignature(IFile file, int position) {
         checkBridge();
-		JSONObject object = bridge.invokeBridgeMethod("getSignature", file, String.valueOf(position));
+		JSONObject object = bridge.invokeBridgeMethod("getSignature", file, position);
 		try {
 			if (!object.isNull("model")) {
 				return object.getJSONObject("model");
@@ -138,7 +131,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public JSONObject getSignatureHelpItems(IFile file, int position) {
         checkBridge();
-        JSONObject object = bridge.invokeBridgeMethod("getSignatureHelpItems", file, String.valueOf(position));
+		JSONObject object = bridge.invokeBridgeMethod("getSignatureHelpItems", file, position);
         try {
             if (!object.isNull("model")) {
                 return object.getJSONObject("model");
@@ -152,7 +145,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public JSONArray getTypeDefinition(IFile file, int position) {
         checkBridge();
-        JSONObject object = bridge.invokeBridgeMethod("getTypeDefinition", file, String.valueOf(position));
+		JSONObject object = bridge.invokeBridgeMethod("getTypeDefinition", file, position);
         try {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
@@ -169,7 +162,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 			JSONObject tsConfig = new JSONObject(CharStreams.toString(new InputStreamReader(file.getContents(),
 					Charsets.UTF_8)));
 
-			JSONObject res = bridge.invokeBridgeMethod("compile", file, (String) null);
+			JSONObject res = bridge.invokeBridgeMethod("compile", file, 0, null);
 			if (tsConfig.has("compilerOptions") && tsConfig.getJSONObject("compilerOptions") != null) {
 				JSONObject options = tsConfig.getJSONObject("compilerOptions");
 				final AtomicReference<IResource> outResource = new AtomicReference<>();
@@ -263,7 +256,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             params.put("updateTC", false);
             params.put("codepage", (String) null);
 
-            JSONObject res = bridge.invokeBridgeMethod("compile", file, params);
+			JSONObject res = bridge.invokeBridgeMethod("compile", file, 0, params.toString());
 			if (targetResource.get() != null) {
 				new UIJob("Refresh target resources") {
 					@Override
@@ -311,7 +304,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
             params.put("end", String.valueOf(end));
             params.put("settings", settings);
 
-            JSONObject res = bridge.invokeBridgeMethod("getFormattingCode", file, params);
+			JSONObject res = bridge.invokeBridgeMethod("getFormattingCode", file, 0, params.toString());
             if (!res.isNull("model")) {
                 return res.getJSONArray("model");
             }
@@ -324,7 +317,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public JSONArray getReferencesAtPosition(IFile file, int position) {
         checkBridge();
-        JSONObject object = bridge.invokeBridgeMethod("getReferencesAtPosition", file, String.valueOf(position));
+		JSONObject object = bridge.invokeBridgeMethod("getReferencesAtPosition", file, position);
         try {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
@@ -338,13 +331,13 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public void addFile(IFile file) {
         checkBridge();
-        bridge.invokeBridgeMethod("addFile", file, file.getLocation().toFile().getAbsolutePath().replace('\\', '/'));
+		bridge.invokeBridgeMethod("addFile", file, 0, file.getLocation().toFile().getAbsolutePath().replace('\\', '/'));
     }  
 
     @Override
     public JSONArray getOccurrencesAtPosition(IFile file, int position) {
         checkBridge();
-        JSONObject object = bridge.invokeBridgeMethod("getOccurrencesAtPosition", file, String.valueOf(position));
+		JSONObject object = bridge.invokeBridgeMethod("getOccurrencesAtPosition", file, position);
         try {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
@@ -358,7 +351,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
     public JSONArray getSemanticDiagnostics(IFile file) {
         checkBridge();
-        JSONObject object = bridge.invokeBridgeMethod("getSemanticDiagnostics", file, (String) null);
+		JSONObject object = bridge.invokeBridgeMethod("getSemanticDiagnostics", file);
         try {
             if (!object.isNull("model")) {
                 return object.getJSONArray("model");
@@ -372,7 +365,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
     @Override
 	public JSONObject getSyntaxTree(IFile file) {
 		checkBridge();
-		JSONObject object = bridge.invokeBridgeMethod("getSyntaxTree", file, (String) null);
+		JSONObject object = bridge.invokeBridgeMethod("getSyntaxTree", file);
 		try {
 			if (!object.isNull("model")) {
 				return object.getJSONObject("model");
@@ -386,7 +379,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 	@Override
 	public JSONArray getReferences(IFile file) {
 		checkBridge();
-		JSONObject object = bridge.invokeBridgeMethod("getReferences", file, (String) null);
+		JSONObject object = bridge.invokeBridgeMethod("getReferences", file);
 		try {
 			if (!object.isNull("model")) {
 				return object.getJSONArray("model");
@@ -400,7 +393,7 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
 	@Override
 	public JSONArray getIdentifiers(IFile file) {
 		checkBridge();
-		JSONObject object = bridge.invokeBridgeMethod("getIdentifiers", file, (String) null);
+		JSONObject object = bridge.invokeBridgeMethod("getIdentifiers", file);
 		try {
 			if (!object.isNull("model")) {
 				return object.getJSONArray("model");

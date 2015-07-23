@@ -19,7 +19,6 @@ var TSBridgeService = require('./gen-nodejs/TSBridgeService.js'),
 
 var server = thrift.createServer(TSBridgeService, {
     invoke: function(method: string, file: string, position: number, params: string, result: any): void {
-        log.debug("server invoke: %s", method);
         try {
             switch (method) {
                 case 'exit':
@@ -69,7 +68,7 @@ var server = thrift.createServer(TSBridgeService, {
                     result(null, JSON.stringify({ 'model': tsService.getOccurrencesAtPosition(file, position) }));
                     break;
                 case 'compile':
-                    result(null, JSON.stringify(tsService.compile(file, JSON.parse(params))));
+                    result(null, JSON.stringify(tsService.compile(file, params ? JSON.parse(params) : null)));
                     break;
                 case 'getSemanticDiagnostics':
                     result(null, JSON.stringify({ 'model': tsService.getSemanticDiagnostics(file) },
