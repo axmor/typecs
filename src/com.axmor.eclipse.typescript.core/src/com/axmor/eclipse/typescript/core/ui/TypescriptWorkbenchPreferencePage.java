@@ -28,7 +28,7 @@ public class TypescriptWorkbenchPreferencePage extends FieldEditorPreferencePage
 	@Override
 	protected void createFieldEditors() {
 		addField(new ComboFieldEditor("ts_log_level", "TypeScript Console Log Level (A restart is required)",
-				new String[][] { new String[] { "error", "Error" }, new String[] { "Info", "info" },
-						new String[] { "debug", "Debug" } }, getFieldEditorParent()));
+				new String[][] { new String[] { "Error", "error" }, new String[] { "Info", "info" },
+						new String[] { "Debug", "debug" } }, getFieldEditorParent()));
 	}
 }

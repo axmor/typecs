@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.thrift.TException;
@@ -52,9 +51,6 @@ public class TypeScriptBridge implements Runnable {
     /** Indicate that problem with bridge was notified. */
     private static final AtomicBoolean NOTIFY_ERROR = new AtomicBoolean(false);
 
-    /** Wait lock constant. */
-    private static final int WAIT_TIMEOUT = 10;
-
     /** Empty json object */
     private static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
 
@@ -63,9 +59,6 @@ public class TypeScriptBridge implements Runnable {
 
     /** Location of bridge libraries in plugin. */
 	private static final String LIB_BRIDGE = "lib/typescript-bridge";
-
-    /** Lock object for correct multi-thread access. */
-    private CountDownLatch lock = new CountDownLatch(1);
 
     /** Underlie NodeJS process. */
     private Process p;
@@ -99,7 +92,7 @@ public class TypeScriptBridge implements Runnable {
      */
     public TypeScriptBridge(File baseDirectory) {
         this.baseDirectory = baseDirectory;
-        this.logLevel = Activator.getDefault().getPreferenceStore().getString("ts_log_level");
+		this.logLevel = Activator.getDefault().getPreferenceStore().getString("ts_log_level");
     }
 
     @Override
@@ -118,16 +111,7 @@ public class TypeScriptBridge implements Runnable {
 					"log=" + logLevel);
 			ps.directory(baseDirectory.getCanonicalFile());
             p = ps.start();
-
-			// String portLine = new BufferedReader(new
-			// InputStreamReader(p.getErrorStream())).readLine();
-			// if (!portLine.startsWith("@") && !portLine.endsWith("@")) {
-			// throw new IOException(Messages.TSBridge_cannotStart + portLine);
-			// }
-			// port = Integer.parseInt(portLine.substring(1, portLine.length() - 1));
-            lock.countDown();
 		} catch (IOException e) {
-            lock.countDown();
             Activator.getDefault().getLog()
                     .log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getLocalizedMessage(), e));
 
@@ -269,11 +253,6 @@ public class TypeScriptBridge implements Runnable {
 	 */
 	public synchronized JSONObject invokeBridgeMethod(String method, IFile file, int position, String params) {
         try {
-			// try {
-			// lock.await(WAIT_TIMEOUT, TimeUnit.SECONDS);
-			// } catch (InterruptedException e) {
-			// // ignore exception
-			// }
             if (port == 0) {
                 return EMPTY_JSON_OBJECT;
             }
@@ -293,64 +272,6 @@ public class TypeScriptBridge implements Runnable {
 				return EMPTY_JSON_OBJECT;
 			}
 			return new JSONObject(result);
-
-			// try (Socket socket = new Socket(InetAddress.getLoopbackAddress(), port)) {
-			// JSONObject obj = new JSONObject().put("method", method);
-			// if (file != null) {
-			// String path = file.getProjectRelativePath().toString();
-			// switch (method) {
-			// case "addFile":
-			// break;
-			// case "compile":
-			// path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
-			// default:
-			// // we too often invoke this method need find more better solution
-			// // if (!isFileNameExist(file.getProjectRelativePath().toString())) {
-			// // invokeBridgeMethod("addFile", file,
-			// // file.getLocation().toFile().getAbsolutePath().replace('\\', '/'), null);
-			// // }
-			// break;
-			// }
-			// obj.put("file", path);
-			// }
-			//
-			// if (!Strings.isNullOrEmpty(params)) {
-			// obj.put("params", params);
-			// } else if (jsonParams != null) {
-			// obj.put("params", jsonParams);
-			// }
-			//
-			// try (PrintStream writer = new PrintStream(socket.getOutputStream(), false, "UTF-8"))
-			// {
-			// writer.print(obj.toString());
-			// writer.flush();
-			// socket.shutdownOutput();
-			// socket.setSoTimeout(10000);
-			// try (InputStreamReader reader = new InputStreamReader(socket.getInputStream(),
-			// "UTF-8")) {
-			// String str = CharStreams.toString(reader);
-			// if ("null".equals(str) || str.trim().isEmpty()) {
-			// return EMPTY_JSON_OBJECT;
-			// }
-			// // System.err.println("[" + method + "]");
-			// // System.out.println(new JSONObject(str).toString(1));
-			// try {
-			// return new JSONObject(str);
-			// } catch (JSONException e) {
-			// System.err.println("Error in json for method: " + method);
-			// Activator.error(e);
-			// throw e;
-			// }
-			// } catch (SocketTimeoutException e) {
-			// StringBuilder sb = new StringBuilder("Timeout on method invokation: ");
-			// sb.append(method).append(", params: ").append(params);
-			// sb.append(", file:").append(file.getFullPath().toString());
-			// Activator.error(sb.toString());
-			// System.err.println(sb.toString());
-			// return EMPTY_JSON_OBJECT;
-			// }
-			// }
-			// }
 		} catch (JSONException | TException e) {
             throw Throwables.propagate(e);
         }
