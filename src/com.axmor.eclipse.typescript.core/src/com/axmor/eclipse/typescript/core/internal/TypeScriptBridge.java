@@ -94,6 +94,48 @@ public class TypeScriptBridge implements Runnable {
         this.baseDirectory = baseDirectory;
 		this.logLevel = Activator.getDefault().getPreferenceStore().getString("ts_log_level");
     }
+    
+    protected TSocket openBridgeSocket(final String hostname,
+    		final int port, final long timeoutInMilliseconds)
+    		throws TTransportException {
+
+    	final TSocket socket = new TSocket(hostname, port);
+    	
+		TTransportException exception = null;
+    	final long start = System.currentTimeMillis();
+    	do {
+
+        	try {
+        		exception = null;
+        		socket.open();
+    			return socket;
+    		} catch (TTransportException e) {
+    			exception = e;
+    		}
+        	
+        	try {
+        		final long remainingTime = timeoutInMilliseconds
+        				- (System.currentTimeMillis() - start);
+        		if (remainingTime > 100)  {
+        			Thread.sleep(100);
+        		} else if (remainingTime > 0) {
+        			Thread.sleep(remainingTime);
+        		} else {
+        			throw exception;
+        		}
+        	} catch (InterruptedException e) {
+        		final long remainingTime = timeoutInMilliseconds
+        				- (System.currentTimeMillis() - start);
+        		if (remainingTime < 1) { // assume it take a millisecond to restart the next attempt
+        			throw exception;
+        		}
+        	}
+        	
+    	} while ((System.currentTimeMillis() - start) < timeoutInMilliseconds);
+    	
+		throw exception;
+    			
+    }
 
     @Override
     public void run() {
@@ -133,19 +175,8 @@ public class TypeScriptBridge implements Runnable {
             errorStream = console.newMessageStream();
             outStream.println("TS Bridge: port = " + port + ", directory: " + baseDirectory);
 
-			transport = new TSocket("localhost", port);
-
 			try {
-				try {
-					transport.open();
-				} catch (TTransportException e) {
-					try {
-						Thread.sleep(100);
-					} catch (InterruptedException e1) {
-						// ignore exception
-					}
-					transport.open();
-				}
+				transport = openBridgeSocket("localhost", port, 10000);
 			} catch (TTransportException e) {
 				Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
 			}
