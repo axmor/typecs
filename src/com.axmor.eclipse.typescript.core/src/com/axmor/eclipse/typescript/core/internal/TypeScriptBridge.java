@@ -57,6 +57,9 @@ public class TypeScriptBridge implements Runnable {
     /** Buffer size for copy streams. */
     private static final int BUFF_SIZE = 1024;
 
+    /** Max connection retry count. */
+    private static final int MAX_CONNECT_RETRY = 10;
+
     /** Location of bridge libraries in plugin. */
 	private static final String LIB_BRIDGE = "lib/typescript-bridge";
 
@@ -135,20 +138,25 @@ public class TypeScriptBridge implements Runnable {
 
 			transport = new TSocket("localhost", port);
 
-			try {
-				try {
-					transport.open();
-				} catch (TTransportException e) {
-					try {
-						Thread.sleep(100);
-					} catch (InterruptedException e1) {
-						// ignore exception
-					}
-					transport.open();
-				}
-			} catch (TTransportException e) {
-				Activator.getDefault().getLog().log(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
-			}
+            int errorCount = 0;
+            TTransportException exp = null;
+            while (!transport.isOpen() && errorCount < MAX_CONNECT_RETRY) {
+                try {
+                    transport.open();
+                } catch (TTransportException e) {
+                    exp = e;
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e1) {
+                        // ignore exception
+                    }
+                    ++errorCount;
+                }
+            }
+            if (!transport.isOpen() && exp != null) {
+                Activator.getDefault().getLog()
+                        .log(new Status(Status.ERROR, Activator.PLUGIN_ID, exp.getMessage(), exp));
+            }
 
 			TBinaryProtocol protocol = new TBinaryProtocol(transport, 10000000, 10000000, false, false);
 			client = new TSBridgeService.Client(protocol);
