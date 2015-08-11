@@ -36,4 +36,4 @@
 # Development builds
 [![Build Status](https://drone.io/github.com/axmor/typecs/status.png)](https://drone.io/github.com/axmor/typecs/latest)
 
-[Zipped Update Site](https://drone.io/github.com/axmor/typecs/files/src/com.axmor.eclipse.typescript.repository/target/com.axmor.eclipse.typescript.repository-3.0.0-SNAPSHOT.zip)
+[Zipped Update Site](https://drone.io/github.com/axmor/typecs/files/src/com.axmor.eclipse.typescript.repository/target/com.axmor.eclipse.typescript.repository-4.0.0-SNAPSHOT.zip)
