@@ -58,7 +58,7 @@ public class TypeScriptBridge implements Runnable {
     private static final int BUFF_SIZE = 1024;
 
     /** Max connection retry count. */
-    private static final int MAX_CONNECT_RETRY = 10;
+    private static final int MAX_CONNECT_RETRY = 100;
 
     /** Location of bridge libraries in plugin. */
 	private static final String LIB_BRIDGE = "lib/typescript-bridge";
