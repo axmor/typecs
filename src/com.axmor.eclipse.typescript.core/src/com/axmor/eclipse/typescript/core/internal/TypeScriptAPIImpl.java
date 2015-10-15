@@ -13,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.filesystem.URIUtil;
-import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -232,12 +231,9 @@ public class TypeScriptAPIImpl implements TypeScriptAPI {
                 params.put("outFileOption", "");
                 String outDirOption = settingsTarget;
                 if (settings.isTargetRelativePathBasedOnSource()) {
-                    IContainer inputFileDir = file.getParent();
-                    IPath sourceDir = Strings.isNullOrEmpty(settings.getSource()) ? file.getProject().getFullPath()
-                            : file.getProject().getFolder(settings.getSource()).getFullPath();
-                    IPath relativePath = inputFileDir.getFullPath().makeRelativeTo(sourceDir);
-                    outDirOption = Strings.isNullOrEmpty(outDirOption) ? relativePath.toString() : outDirOption + "/"
-                            + relativePath.toString();
+                	String folder = Strings.isNullOrEmpty(settings.getSource()) ? "./" : settings.getSource();
+                	final String rootDir = file.getProject().getFolder(folder).getLocation().toFile().getAbsolutePath().replace('\\', '/');
+                   	params.put("rootDir", rootDir);
                 }
 				if (Strings.isNullOrEmpty(outDirOption)) {
 					outDirOption = file.getParent().getProjectRelativePath().toString();
