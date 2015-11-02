@@ -213,6 +213,7 @@ var TSService = (function () {
             module: s.moduleGenTarget,
             out: s.outFileOption === "" ? "" : basedir + "/" + s.outFileOption,
             outDir: s.outDirOption === "" ? "" : basedir + "/" + s.outDirOption,
+            rootDir: s.rootDir,
             sourceMap: s.mapSourceFiles,
             mapRoot: s.mapRoot,
             sourceRoot: s.sourceRoot,
