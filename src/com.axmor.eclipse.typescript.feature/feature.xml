@@ -18,17 +18,11 @@
       %license
    </license>
 
-   <includes
-         id="org.chromium.sdk"
-         version="0.0.0"/>
-
-   <includes
-         id="org.chromium.sdk.wipbackends"
-         version="0.0.0"/>
-
-   <includes
-         id="org.chromium.debug"
-         version="0.0.0"/>
+   <requires>
+      <import feature="org.chromium.debug" version="0.3.8" match="compatible"/>
+      <import feature="org.chromium.sdk" version="0.3.8" match="compatible"/>
+      <import feature="org.chromium.sdk.wipbackends" version="0.1.10" match="compatible"/>
+   </requires>
 
    <plugin
          id="com.axmor.eclipse.typescript"
