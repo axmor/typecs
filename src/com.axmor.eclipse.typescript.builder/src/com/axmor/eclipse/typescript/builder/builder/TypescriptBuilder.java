@@ -136,6 +136,9 @@ public class TypescriptBuilder extends IncrementalProjectBuilder {
 		delta.accept(new IResourceDeltaVisitor() {
 			@Override
 			public boolean visit(IResourceDelta delta) throws CoreException {
+				if (delta.getKind() == IResourceDelta.REMOVED) {
+					return true;
+				}
 				acceptTypeScriptFileWithDependencies(delta.getResource(), files);
 				return true;
 			}

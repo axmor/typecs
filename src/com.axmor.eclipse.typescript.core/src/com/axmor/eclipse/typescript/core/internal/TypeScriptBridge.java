@@ -266,12 +266,13 @@ public class TypeScriptBridge implements Runnable {
             }
 			String path = "";
 			if (file != null) {
-				if ("addFile".equals(method) || "compile".equals(method)) {
+				path = file.getProjectRelativePath().toString();
+				/*if ("addFile".equals(method) || "compile".equals(method)) {
 					path = file.getLocation().toFile().getAbsolutePath().replace('\\', '/');
 				} else {
 					path = file.getProjectRelativePath().toString();
-				}
-			}
+				}*/
+			}			
 			if (client == null) {
 				return EMPTY_JSON_OBJECT;
 			}
