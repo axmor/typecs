@@ -158,9 +158,11 @@ export class TSService {
         var _errors: any = []
 
         if (_settings == undefined) {
-            let result = _ts.readConfigFile(file)
+            let result = _ts.readConfigFile(file, function(path) {
+                return _ts.sys.readFile(path);
+            });
             var baseDir = path.getDirectoryPath(file)
-            let configParseResult = _ts.parseConfigFile(result.config, _ts.sys, baseDir)
+            let configParseResult = _ts.parseJsonConfigFileContent(result.config, _ts.sys, baseDir)
             if (configParseResult.errors.length > 0) {
                 this.reportError(_errors, configParseResult.errors, file)
                 return {
