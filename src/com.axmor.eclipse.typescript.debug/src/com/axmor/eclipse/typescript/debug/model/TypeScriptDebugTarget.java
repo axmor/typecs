@@ -36,6 +36,7 @@ import org.chromium.sdk.DebugContext;
 import org.chromium.sdk.DebugContext.StepAction;
 import org.chromium.sdk.DebugEventListener;
 import org.chromium.sdk.JavascriptVm;
+import org.chromium.sdk.JavascriptVm.ListBreakpointsCallback;
 import org.chromium.sdk.JavascriptVm.ScriptsCallback;
 import org.chromium.sdk.Script;
 import org.chromium.sdk.StandaloneVm;
@@ -268,7 +269,7 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 
     @Override
 	public void breakpointAdded(IBreakpoint breakpoint) {
-		if (supportsBreakpoint(breakpoint)) {
+    	if (supportsBreakpoint(breakpoint)) {
 			TypeScriptLineBreakpoint lineBreakpoint = (TypeScriptLineBreakpoint) breakpoint;
 			IResource resource = breakpoint.getMarker().getResource();
 			String path = resource.getFullPath().toString();
@@ -280,6 +281,7 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 				if (item != null) {
 					if (vm instanceof StandaloneVm) {
 						ScriptName target = new ScriptName(sourceMap.getFile());
+						item.setScriptName(target);
 						vm.setBreakpoint(target, item.getJsLine(),
 								Breakpoint.EMPTY_VALUE, true, null, null, null);
 						
@@ -292,6 +294,7 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 								for (Script script : scripts) {
 									if (Arrays.equals(digest(script.getSource().getBytes()), md5)) {
 										ScriptName target = new ScriptName(script.getName());
+										item.setScriptName(target);
 										vm.setBreakpoint(target, item.getJsLine(),
 												Breakpoint.EMPTY_VALUE, true, null, null, null);
 									}
@@ -316,7 +319,39 @@ public class TypeScriptDebugTarget extends AbstractTypeScriptDebugTarget
 	}
 
 	@Override
-	public void breakpointRemoved(IBreakpoint breakpoint, IMarkerDelta delta) {
+	public void breakpointRemoved(final IBreakpoint breakpoint, IMarkerDelta delta) {
+		if (supportsBreakpoint(breakpoint)) {
+			TypeScriptLineBreakpoint lineBreakpoint = (TypeScriptLineBreakpoint) breakpoint;
+			IResource resource = breakpoint.getMarker().getResource();
+			String path = resource.getFullPath().toString();
+			SourceMap sourceMap = tsMappings.get(path);
+			try {
+				final SourceMapItem item = sourceMap.getItemByTSLine(lineBreakpoint
+						.getLineNumber());
+				vm.listBreakpoints(new ListBreakpointsCallback() {
+					@Override
+					public void success(Collection<? extends Breakpoint> vmBreakpoints) {
+						for (Breakpoint vmBreakpoint : vmBreakpoints) {
+			                if (item.getScriptName().equals(vmBreakpoint.getTarget())) {
+			                    if (item.getJsLine() == vmBreakpoint.getLineNumber()) {
+			                    	vmBreakpoint.clear(null, null);
+								    return;
+								}
+			                }
+			            }
+					}
+					
+					@Override
+					public void failure(Exception arg0) {			
+					}
+					
+				}, null);
+				
+			} catch (CoreException e) {
+				e.printStackTrace();
+			}		
+		}
+		
 	}
 
 	@Override

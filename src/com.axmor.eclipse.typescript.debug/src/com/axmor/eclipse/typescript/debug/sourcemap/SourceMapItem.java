@@ -7,6 +7,8 @@
  *******************************************************************************/
 package com.axmor.eclipse.typescript.debug.sourcemap;
 
+import org.chromium.sdk.Breakpoint.Target.ScriptName;
+
 /**
  * Source map item, contains mapping between TypeScript source and JavaScript target file.
  * 
@@ -26,6 +28,7 @@ public class SourceMapItem {
     private int jsLine;
     /** JavaScript column position in source line. */
     private int jsColumn;
+    private ScriptName scriptName;
 
     /**
      * @return the tsFile
@@ -134,4 +137,12 @@ public class SourceMapItem {
         builder.append("]");
         return builder.toString();
     }
+
+	public ScriptName getScriptName() {
+		return scriptName;
+	}
+
+	public void setScriptName(ScriptName scriptName) {
+		this.scriptName = scriptName;
+	}
 }
