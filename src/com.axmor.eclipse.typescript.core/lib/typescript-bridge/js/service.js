@@ -129,9 +129,11 @@ var TSService = (function () {
         var settings;
         var _errors = [];
         if (_settings == undefined) {
-            var result = _ts.readConfigFile(file);
+        	var result = _ts.readConfigFile(file, function (path) { 
+           		return _ts.sys.readFile(path);
+            });
             var baseDir = path.getDirectoryPath(file);
-            var configParseResult = _ts.parseConfigFile(result.config, _ts.sys, baseDir);
+            var configParseResult = _ts.parseJsonConfigFileContent(result.config, _ts.sys, baseDir);
             if (configParseResult.errors.length > 0) {
                 this.reportError(_errors, configParseResult.errors, file);
                 return {
